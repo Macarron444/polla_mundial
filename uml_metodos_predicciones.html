@@ -1,0 +1,125 @@
+
+<div id="u2" style="padding:1rem 0;overflow-x:auto"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad:false, theme:'base',
+  fontFamily:'"Anthropic Sans", sans-serif',
+  themeVariables:{
+    darkMode:dark, fontSize:'13px',
+    fontFamily:'"Anthropic Sans", sans-serif',
+    lineColor: dark?'#9c9a92':'#73726c',
+    textColor: dark?'#c2c0b6':'#3d3d3a',
+    primaryColor: dark?'#3C3489':'#EEEDFE',
+    primaryTextColor: dark?'#CECBF6':'#26215C',
+    primaryBorderColor: dark?'#7F77DD':'#AFA9EC',
+    secondaryColor: dark?'#085041':'#E1F5EE',
+    secondaryTextColor: dark?'#9FE1CB':'#04342C',
+    secondaryBorderColor: dark?'#1D9E75':'#5DCAA5',
+    tertiaryColor: dark?'#633806':'#FAEEDA',
+    tertiaryTextColor: dark?'#FAC775':'#412402',
+    tertiaryBorderColor: dark?'#BA7517':'#EF9F27',
+    classText: dark?'#c2c0b6':'#3d3d3a',
+  }
+});
+const d = `classDiagram
+  direction TB
+
+  class Partido {
+    +int id
+    +int golesLocal
+    +int golesVisitante
+    +Date fechaHora
+    +EstadoPartido estado
+    +FasePartido fase
+    +actualizarEstado(estado EstadoPartido) void
+    +registrarResultado(golesL int, golesV int) void
+    +estaAbierto() boolean
+    +esFaseEliminatoria() boolean
+    +requiereClasificado() boolean
+  }
+
+  class Equipo {
+    +int id
+    +String nombre
+    +String grupo
+    +String codigoPais
+    +obtenerNombreCompleto() String
+    +esMismoEquipo(otro Equipo) boolean
+  }
+
+  class Prediccion {
+    +int id
+    +int golesLocalPredicho
+    +int golesVisitantePredicho
+    +EstadoPrediccion estado
+    +int puntosObtenidos
+    +registrar(golesL int, golesV int) void
+    +editarMarcador(golesL int, golesV int) void
+    +seleccionarClasificado(equipo Equipo) void
+    +evaluar(partido Partido) EstadoPrediccion
+    +estaEditable() boolean
+    +calcularPuntos(regla ReglaPuntuacion) int
+  }
+
+  class PrediccionGlobal {
+    +int id
+    +String maxGoleador
+    +boolean bloqueada
+    +int puntosObtenidos
+    +registrar(campeon Equipo, sub Equipo, goleador String) void
+    +editar(campeon Equipo, sub Equipo, goleador String) void
+    +bloquear() void
+    +evaluar(campeonReal Equipo, subReal Equipo) int
+    +estaBloqueada() boolean
+  }
+
+  class CriterioDesempate {
+    +int prediccionesExactas
+    +int resultadosCorrectos
+    +int prediccionesFallidas
+    +int posicionFinal
+    +calcular(historial List) void
+    +compararCon(otro CriterioDesempate) int
+    +resolverEmpate(participaciones List) List
+  }
+
+  class Notificacion {
+    +int id
+    +String mensaje
+    +TipoNotificacion tipo
+    +boolean leida
+    +Date fechaEnvio
+    +enviar() void
+    +marcarLeida() void
+    +crear(tipo TipoNotificacion, mensaje String, usuario Usuario) Notificacion
+    +esPendiente() boolean
+  }
+
+  class ResultadoAPI {
+    +String fuente
+    +boolean exitoso
+    +Date fechaConsulta
+    +String rawData
+    +consultar(partidoId int) ResultadoAPI
+    +parsear() Partido
+    +registrarFallo(error String) void
+    +estaDisponible() boolean
+    +notificarAdministrador() void
+  }
+
+  Partido "0..*" --> "1" Equipo : local
+  Partido "0..*" --> "1" Equipo : visitante
+  Prediccion "0..*" --> "1" Partido : sobre
+  Prediccion "0..*" --> "0..1" Equipo : clasifica
+  PrediccionGlobal "0..*" --> "0..1" Equipo : campeon
+  PrediccionGlobal "0..*" --> "0..1" Equipo : subcampeon
+  Partido "0..1" --> "0..1" ResultadoAPI : actualizado por
+`;
+const {svg} = await mermaid.render('u2-svg', d);
+document.getElementById('u2').innerHTML = svg;
+const el = document.querySelector('#u2 svg');
+if(el){el.style.width='100%';el.style.maxWidth='100%';}
+</script>
