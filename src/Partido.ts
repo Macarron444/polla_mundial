@@ -35,15 +35,39 @@ export class Partido implements IPartido {
   }
 
   /**
-   * RF-15 — Registra el resultado final del partido.
+   * RF-15 — Verifica si las apuestas están abiertas para este partido.
+   * Cierra automáticamente N minutos antes del inicio (default: 15 min).
+   * Equivalente dashboard: getBetStatus()
    */
-  registrarResultado(golesLocal: number, golesVisitante: number): void {
-    if (this.estado !== EstadoPartido.EN_CURSO) {
-      throw new Error("Solo se puede registrar resultado en partidos EN_CURSO");
+  estaDisponibleParaApuesta(minutosAntes: number = 15): boolean {
+    if (this.estado !== EstadoPartido.PROGRAMADO) return false;
+    const msSiniciо = this.fechaHora.getTime() - new Date().getTime();
+    return msSiniciо > minutosAntes * 60_000;
+  }
+
+  /**
+   * RF-15 — Registra o actualiza el resultado del partido.
+   * Permite editar desde EN_CURSO o FINALIZADO (corrección de errores).
+   * Equivalente dashboard: saveResult() en TabPartidos
+   */
+  actualizarResultado(golesLocal: number, golesVisitante: number): void {
+    if (
+      this.estado !== EstadoPartido.EN_CURSO &&
+      this.estado !== EstadoPartido.FINALIZADO
+    ) {
+      throw new Error("Solo se puede registrar resultado en partidos EN_CURSO o FINALIZADO");
     }
     this.golesLocal = golesLocal;
     this.golesVisitante = golesVisitante;
     this.estado = EstadoPartido.FINALIZADO;
+  }
+
+  /**
+   * RF-15 — Registra el resultado final del partido.
+   * @deprecated Usar actualizarResultado() que permite correcciones post-partido.
+   */
+  registrarResultado(golesLocal: number, golesVisitante: number): void {
+    this.actualizarResultado(golesLocal, golesVisitante);
   }
 
   /**
