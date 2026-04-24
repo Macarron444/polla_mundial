@@ -1,9 +1,3 @@
-/**
- * contexts/notificaciones/notificacion.service.ts
- * Lógica de negocio del contexto Notificaciones.
- * SRS: RF-09 (notificaciones, canales)
- */
-
 import { Notificacion } from "./Notificacion";
 import { INotificacion } from "./Interfaces";
 import { TipoNotificacion } from "./enums";
