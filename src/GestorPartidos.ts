@@ -177,28 +177,34 @@ export class GestorPartidos {
   }
 
   /**
+   * RF-15 — Verifica si las apuestas de un partido están abiertas.
+   * Delega en Partido.estaDisponibleParaApuesta().
+   * Equivalente dashboard: getBetStatus() === "ABIERTA"
+   */
+  estaAbiertaApuesta(idPartido: number, minutosAntes: number = 15): boolean {
+    const partido = this.partidos.get(idPartido);
+    if (!partido) throw new Error(`❌ Partido #${idPartido} no encontrado`);
+    return new Partido(partido).estaDisponibleParaApuesta(minutosAntes);
+  }
+
+  /**
    * 📝 Editar resultado de un partido
+   * Equivalente dashboard: saveResult() en TabPartidos
    */
   editarResultado(
     idPartido: number,
     golesLocal: number,
     golesVisitante: number
   ): Partido {
-    const partido = this.partidos.get(idPartido);
-    if (!partido) {
-      throw new Error(`❌ Partido #${idPartido} no encontrado`);
-    }
+    const data = this.partidos.get(idPartido);
+    if (!data) throw new Error(`❌ Partido #${idPartido} no encontrado`);
 
-    if (partido.estado !== EstadoPartido.EN_CURSO && partido.estado !== EstadoPartido.PROGRAMADO) {
-      throw new Error(`❌ No se puede editar un partido ${partido.estado}`);
-    }
+    const partido = new Partido(data);
+    partido.actualizarResultado(golesLocal, golesVisitante);
+    this.partidos.set(idPartido, partido.toJSON());
 
-    partido.golesLocal = golesLocal;
-    partido.golesVisitante = golesVisitante;
-    partido.estado = EstadoPartido.FINALIZADO;
-
-    console.log(`✅ Resultado actualizado: ${this.getNombreEquipo(partido.equipoLocalId)} ${golesLocal} - ${golesVisitante} ${this.getNombreEquipo(partido.equipoVisitanteId)}`);
-    return new Partido(partido);
+    console.log(`✅ Resultado actualizado: ${this.getNombreEquipo(data.equipoLocalId)} ${golesLocal} - ${golesVisitante} ${this.getNombreEquipo(data.equipoVisitanteId)}`);
+    return partido;
   }
 
   /**
