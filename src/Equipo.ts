@@ -1,9 +1,3 @@
-/**
- * contexts/torneo/Equipo.ts
- * Clase de dominio — UML: clase Equipo
- * SRS: RF-05 (equipos y grupos)
- */
-
 import { IEquipo } from "./Interfaces";
 
 export class Equipo implements IEquipo {
@@ -42,3 +36,4 @@ export class Equipo implements IEquipo {
     };
   }
 }
+
