@@ -1,9 +1,3 @@
-/**
- * contexts/predicciones/prediccion.service.ts
- * Lógica de negocio del contexto Predicciones.
- * SRS: RF-04 (predicciones), RF-07 (cálculo de puntajes), RF-14 (predicción global)
- */
-
 import { Prediccion } from "./Prediccion";
 import { PrediccionGlobal } from "./PrediccionGlobal";
 import { IPrediccion, IPrediccionGlobal, IReglaPuntuacion } from "./Interfaces";
