@@ -1,9 +1,3 @@
-/**
- * contexts/torneo/partido.service.ts
- * Lógica de negocio del contexto Partido.
- * SRS: RF-05 (partidos), RF-15 (ciclo de vida de partidos)
- */
-
 import { Partido } from "./Partido";
 import { Equipo } from "./Equipo";
 import { IPartido, IEquipo } from "./Interfaces";
