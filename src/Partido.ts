@@ -1,9 +1,3 @@
-/**
- * contexts/torneo/Partido.ts
- * Clase de dominio — UML: clase Partido
- * SRS: RF-05 (partidos), RF-15 (ciclo de vida de partidos)
- */
-
 import { IPartido } from "./Interfaces";
 import { EstadoPartido, FasePartido } from "./enums";
 
