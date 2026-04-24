@@ -1,9 +1,3 @@
-/**
- * contexts/polla/Polla.ts
- * Clase de dominio — UML: clase Polla
- * SRS: RF-02 (pollas), RF-10 (estado de pollas), RF-12 (reglas de puntuación)
- */
-
 import { IPolla, IReglaPuntuacion, IParticipacionPolla } from "./Interfaces";
 import { EstadoPolla, VisibilidadPolla, RolPolla } from "./enums";
 
