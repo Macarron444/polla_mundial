@@ -10,7 +10,32 @@ export class PrediccionService {
   private static nextGlobalId = 1;
 
   /**
+   * RF-15 — Valida que un partido esté disponible para recibir apuestas.
+   * Lanza error si el partido está EN_CURSO, FINALIZADO, o faltan ≤ 15 min.
+   * Equivalente dashboard: getBetStatus() !== "ABIERTA" en TabPredicciones
+   */
+  static validarApuestaAbierta(
+    partido: { estado: string; fechaHora: Date },
+    minutosAntes: number = 15
+  ): void {
+    if (partido.estado !== "PROGRAMADO") {
+      throw new Error(`Apuestas cerradas: el partido está ${partido.estado}`);
+    }
+    const msSinicio = new Date(partido.fechaHora).getTime() - Date.now();
+    if (msSinicio <= minutosAntes * 60_000) {
+      const mins = Math.max(0, Math.floor(msSinicio / 60_000));
+      throw new Error(
+        mins > 0
+          ? `Apuestas cerradas: faltan solo ${mins} minutos para el partido`
+          : "Apuestas cerradas: el partido ya comenzó"
+      );
+    }
+  }
+
+  /**
    * RF-04 — Crea una nueva predicción de partido.
+   * Requiere que el partido esté abierto para apuestas (RF-15).
+   * Equivalente dashboard: agregarPrediccion() en TabPredicciones
    */
   static crearPrediccion(
     usuarioId: number,
