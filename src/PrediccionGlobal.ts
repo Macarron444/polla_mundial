@@ -1,9 +1,3 @@
-/**
- * contexts/predicciones/PrediccionGlobal.ts
- * Clase de dominio — UML: clase Predicción Global
- * SRS: RF-14 (predicción global del torneo)
- */
-
 import { IPrediccionGlobal } from "./Interfaces";
 
 export class PrediccionGlobal implements IPrediccionGlobal {
