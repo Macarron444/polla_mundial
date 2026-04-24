@@ -36,4 +36,3 @@ export class Equipo implements IEquipo {
     };
   }
 }
-

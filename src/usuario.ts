@@ -1,72 +1,70 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { Usuario } from "./usuario";
 import { IUsuario } from "./Interfaces";
 
-const SALT_ROUNDS = 12;
-const JWT_SECRET  = process.env.JWT_SECRET ?? "cambia_este_secreto";
-const JWT_EXPIRES = "7d";
+export class Usuario implements IUsuario {
+  id: number;
+  nombre: string;
+  email: string;
+  passwordHash: string;
+  notifPushActiva: boolean;
+  notifEmailActiva: boolean;
+  fechaRegistro: Date;
 
-export class UsuarioService {
-  private static db = new Map<number, IUsuario>();
-  private static nextId = 1;
+  constructor(data: IUsuario) {
+    this.id              = data.id;
+    this.nombre          = data.nombre;
+    this.email           = data.email;
+    this.passwordHash    = data.passwordHash;
+    this.notifPushActiva = data.notifPushActiva;
+    this.notifEmailActiva= data.notifEmailActiva;
+    this.fechaRegistro   = data.fechaRegistro;
+  }
 
   /**
-   * RF-01 — Registra un usuario con credenciales válidas.
-   * Lanza error si el email ya existe.
+   * RF-01 — Prepara el payload para registrar un usuario nuevo.
+   * El hash de contraseña se genera en usuario.service.ts (bcrypt).
    */
-  static async registrar(email: string, password: string, nombre: string): Promise<Usuario> {
-    const existe = [...this.db.values()].find(u => u.email === email);
-    if (existe) throw new Error("El correo ya está registrado.");
-
-    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const data: IUsuario = {
-      ...Usuario.prepararRegistro(email, nombre),
-      id: this.nextId++,
-      passwordHash,
+  static prepararRegistro(
+    email: string,
+    nombre: string
+  ): Omit<IUsuario, "id" | "passwordHash"> {
+    return {
+      email,
+      nombre,
+      notifPushActiva:  false,
+      notifEmailActiva: false,
+      fechaRegistro:    new Date(),
     };
-    this.db.set(data.id, data);
-    return new Usuario(data);
+  }
+
+  /** RF-01 — Actualiza el nombre visible del usuario. */
+  actualizarPerfil(nombre: string): void {
+    this.nombre = nombre.trim();
+  }
+
+  /** RF-01 — Cierra la sesión (el token JWT se invalida en el middleware). */
+  cerrarSesion(): void {
+    // La lógica de invalidación del token se delega a usuario.middleware.ts
   }
 
   /**
-   * RF-01 — Autentica al usuario y devuelve un token JWT.
-   * RNF-03 — Uso de bcrypt y JWT firmado.
+   * RF-09 — Configura qué canales de notificación tiene activos el usuario.
+   * push  → Service Worker + VAPID (requiere consentimiento explícito)
+   * email → SendGrid/SMTP (opcional, configurable en perfil)
    */
-  static async autenticar(email: string, password: string): Promise<string> {
-    const data = [...this.db.values()].find(u => u.email === email);
-    if (!data) throw new Error("Credenciales inválidas.");
-
-    const valido = await bcrypt.compare(password, data.passwordHash);
-    if (!valido) throw new Error("Credenciales inválidas.");
-
-    return jwt.sign({ sub: data.id, email: data.email }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+  configurarNotificaciones(push: boolean, email: boolean): void {
+    this.notifPushActiva  = push;
+    this.notifEmailActiva = email;
   }
 
-  /** RF-01 — Obtiene los datos de perfil de un usuario por id. */
-  static obtenerPorId(id: number): Usuario {
-    const data = this.db.get(id);
-    if (!data) throw new Error(`Usuario ${id} no encontrado.`);
-    return new Usuario(data);
-  }
-
-  /** RF-01 — Actualiza el nombre del usuario en base de datos. */
-  static actualizarPerfil(id: number, nombre: string): Usuario {
-    const data = this.db.get(id);
-    if (!data) throw new Error(`Usuario ${id} no encontrado.`);
-    const usuario = new Usuario(data);
-    usuario.actualizarPerfil(nombre);
-    this.db.set(id, usuario.toJSON());
-    return usuario;
-  }
-
-  /** RF-09 — Guarda las preferencias de notificación del usuario. */
-  static configurarNotificaciones(id: number, push: boolean, email: boolean): Usuario {
-    const data = this.db.get(id);
-    if (!data) throw new Error(`Usuario ${id} no encontrado.`);
-    const usuario = new Usuario(data);
-    usuario.configurarNotificaciones(push, email);
-    this.db.set(id, usuario.toJSON());
-    return usuario;
+  toJSON(): IUsuario {
+    return {
+      id:               this.id,
+      nombre:           this.nombre,
+      email:            this.email,
+      passwordHash:     this.passwordHash,
+      notifPushActiva:  this.notifPushActiva,
+      notifEmailActiva: this.notifEmailActiva,
+      fechaRegistro:    this.fechaRegistro,
+    };
   }
 }
