@@ -73,74 +73,6 @@
       { partidoId:1, golesL:1, golesV:1, estado:"PENDIENTE", pts:0 },
     ];
 
-    const UML_CLASES = [
-      {
-        name:"Usuario", group:"gestion", color:"#3b5bdb",
-        attrs:["+int id","+String nombre","+String email","+String passwordHash","+boolean notifPushActiva","+boolean notifEmailActiva"],
-        methods:["+registrar()","+ autenticar()","+ cerrarSesion()","+ actualizarPerfil()","+ configurarNotificaciones()"],
-      },
-      {
-        name:"Polla", group:"gestion", color:"#3b5bdb",
-        attrs:["+int id","+String nombre","+String enlaceInvitacion","+VisibilidadPolla visibilidad","+EstadoPolla estado"],
-        methods:["+crear()","+generarEnlace()","+bloquearReglas()","+transferirPropiedad()","+cerrar()","+archivar()"],
-      },
-      {
-        name:"ParticipacionPolla", group:"gestion", color:"#3b5bdb",
-        attrs:["+RolPolla rol","+Date fechaUnion","+int puntajeTotal","+int posicionRanking"],
-        methods:["+calcularPuntajeTotal()","+actualizarPosicion()","+cambiarRol()","+salir()"],
-      },
-      {
-        name:"ReglaPuntuacion", group:"gestion", color:"#3b5bdb",
-        attrs:["+int puntosExacto","+int puntosResultadoCorrecto","+int puntosFallo","+int bonusPrediccionGlobal","+boolean bloqueada"],
-        methods:["+configurar()","+bloquear()","+calcularPuntos()","+restaurarDefecto()"],
-      },
-      {
-        name:"Partido", group:"prediccion", color:"#0f6e56",
-        attrs:["+int id","+int golesLocal","+int golesVisitante","+Date fechaHora","+EstadoPartido estado","+FasePartido fase"],
-        methods:["+actualizarEstado()","+registrarResultado()","+estaAbierto()","+esFaseEliminatoria()","+requiereClasificado()"],
-      },
-      {
-        name:"Equipo", group:"prediccion", color:"#0f6e56",
-        attrs:["+int id","+String nombre","+String grupo","+String codigoPais"],
-        methods:["+obtenerNombreCompleto()","+esMismoEquipo()"],
-      },
-      {
-        name:"Prediccion", group:"prediccion", color:"#0f6e56",
-        attrs:["+int id","+int golesLocalPredicho","+int golesVisitantePredicho","+EstadoPrediccion estado","+int puntosObtenidos"],
-        methods:["+registrar()","+editarMarcador()","+seleccionarClasificado()","+evaluar()","+calcularPuntos()"],
-      },
-      {
-        name:"PrediccionGlobal", group:"prediccion", color:"#0f6e56",
-        attrs:["+int id","+String maxGoleador","+boolean bloqueada","+int puntosObtenidos"],
-        methods:["+registrar()","+editar()","+bloquear()","+evaluar()","+estaBloqueada()"],
-      },
-      {
-        name:"Notificacion", group:"soporte", color:"#854f0b",
-        attrs:["+int id","+String mensaje","+TipoNotificacion tipo","+boolean leida","+Date fechaEnvio"],
-        methods:["+enviar()","+marcarLeida()","+crear()","+esPendiente()"],
-      },
-      {
-        name:"ResultadoAPI", group:"soporte", color:"#854f0b",
-        attrs:["+String fuente","+boolean exitoso","+Date fechaConsulta","+String rawData"],
-        methods:["+consultar()","+parsear()","+registrarFallo()","+estaDisponible()","+notificarAdministrador()"],
-      },
-      {
-        name:"CriterioDesempate", group:"soporte", color:"#854f0b",
-        attrs:["+int prediccionesExactas","+int resultadosCorrectos","+int prediccionesFallidas","+int posicionFinal"],
-        methods:["+calcular()","+compararCon()","+resolverEmpate()"],
-      },
-    ];
-
-    const ENUMS = [
-      { name:"EstadoPartido",    values:["PROGRAMADO","EN_CURSO","FINALIZADO","SUSPENDIDO","POSPUESTO"] },
-      { name:"FasePartido",      values:["GRUPOS","DIECISEISAVOS","OCTAVOS","CUARTOS","SEMIFINAL","FINAL"] },
-      { name:"EstadoPrediccion", values:["PENDIENTE","EXACTA","CORRECTA","FALLIDA"] },
-      { name:"RolPolla",         values:["CREADOR","ADMINISTRADOR","PARTICIPANTE"] },
-      { name:"TipoNotificacion", values:["PUSH","IN_APP","EMAIL"] },
-      { name:"VisibilidadPolla", values:["PUBLICA","PRIVADA"] },
-      { name:"EstadoPolla",      values:["ACTIVA","CERRADA","ARCHIVADA"] },
-    ];
-
     // ── HELPERS ───────────────────────────────────────────────────────────────────
 
     const getEquipo = (id) => EQUIPOS.find(e => e.id === id) || { nombre:"?", flag:"" };
@@ -191,7 +123,7 @@
     // ── SECTIONS ─────────────────────────────────────────────────────────────────
 
     function Header({ tab, setTab }) {
-      const tabs = ["Partidos", "Ranking", "Mis Predicciones", "Clases UML"];
+      const tabs = ["Partidos", "Gestionar Partidos", "Ranking", "Mis Predicciones"];
       return (
         <header style={{
           background:"#0a0f1e", borderBottom:"1px solid #1e2a45",
@@ -238,8 +170,7 @@
 
     // ── TAB: PARTIDOS ─────────────────────────────────────────────────────────────
 
-    function TabPartidos() {
-      const [partidos, setPartidos] = useState(initialPartidos);
+    function TabPartidos({ partidos }) {
       const [editId, setEditId] = useState(null);
       const [gl, setGl] = useState(""); const [gv, setGv] = useState("");
 
@@ -250,17 +181,11 @@
         const idx = ciclo.indexOf(p.estado);
         if (idx < 0) return;
         const next = ciclo[Math.min(idx+1, ciclo.length-1)];
-        setPartidos(prev => prev.map(x => x.id===p.id
-          ? { ...x, estado:next, golesL: next==="FINALIZADO"? (x.golesL??1) : x.golesL, golesV: next==="FINALIZADO"? (x.golesV??0) : x.golesV }
-          : x
-        ));
+        // Aquí iría la lógica de actualización
       };
 
       const saveResult = (p) => {
-        setPartidos(prev => prev.map(x => x.id===p.id
-          ? { ...x, golesL:parseInt(gl)||0, golesV:parseInt(gv)||0, estado:"FINALIZADO" }
-          : x
-        ));
+        // Aquí iría la lógica de guardado
         setEditId(null); setGl(""); setGv("");
       };
 
@@ -354,6 +279,211 @@
       );
     }
 
+    // ── TAB: GESTIONAR PARTIDOS ───────────────────────────────────────────────────
+
+    function TabGestionarPartidos({ partidos, setPartidos }) {
+      const [showForm, setShowForm] = useState(false);
+      const [newLocal, setNewLocal] = useState("");
+      const [newVisitante, setNewVisitante] = useState("");
+      const [newFecha, setNewFecha] = useState("");
+      const [newFase, setNewFase] = useState("GRUPOS");
+      const [deleteId, setDeleteId] = useState(null);
+
+      const agregarPartido = () => {
+        if (!newLocal || !newVisitante || !newFecha) {
+          alert("Completa todos los campos");
+          return;
+        }
+        if (parseInt(newLocal) === parseInt(newVisitante)) {
+          alert("Los equipos deben ser diferentes");
+          return;
+        }
+        const nuevoPartido = {
+          id: Math.max(...partidos.map(p => p.id), 0) + 1,
+          local: parseInt(newLocal),
+          visitante: parseInt(newVisitante),
+          golesL: null,
+          golesV: null,
+          fecha: newFecha,
+          estado: "PROGRAMADO",
+          fase: newFase,
+        };
+        setPartidos([...partidos, nuevoPartido]);
+        setNewLocal(""); setNewVisitante(""); setNewFecha(""); setNewFase("GRUPOS");
+        setShowForm(false);
+      };
+
+      const eliminarPartido = (id) => {
+        setPartidos(partidos.filter(p => p.id !== id));
+        setDeleteId(null);
+      };
+
+      const faseLabel = { GRUPOS:"Fase de Grupos", OCTAVOS:"Octavos", CUARTOS:"Cuartos", SEMIFINAL:"Semifinal", FINAL:"Final" };
+
+      return (
+        <div style={{ padding:"24px 0" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+            <div style={{ display:"flex", gap:12 }}>
+              <StatCard label="TOTAL" value={partidos.length} accent="#748ffc"/>
+              <StatCard label="PROGRAMADOS" value={partidos.filter(p=>p.estado==="PROGRAMADO").length} accent="#3b5bdb"/>
+              <StatCard label="EN JUEGO" value={partidos.filter(p=>p.estado==="EN_CURSO").length} accent="#69db7c"/>
+              <StatCard label="JUGADOS" value={partidos.filter(p=>p.estado==="FINALIZADO").length} accent="#aaa"/>
+            </div>
+            <button onClick={() => setShowForm(!showForm)} style={{
+              background: showForm ? "#c92a2a" : "#2f9e44",
+              border: "none", color: "#fff", fontSize: 12, fontWeight: 700,
+              padding: "8px 16px", borderRadius: 8, cursor: "pointer",
+              letterSpacing: "0.05em",
+            }}>
+              {showForm ? "✕ Cancelar" : "✚ Nuevo Partido"}
+            </button>
+          </div>
+
+          {showForm && (
+            <div style={{
+              background:"#0d1628", border:"1px solid #2f9e4455",
+              borderRadius:12, padding:"20px", marginBottom:20,
+            }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#69db7c", marginBottom:16, letterSpacing:"0.04em" }}>
+                ➕ CREAR NUEVO PARTIDO
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+                <div>
+                  <label style={{ display:"block", fontSize:11, color:"#4a6fa5", marginBottom:6, fontWeight:600 }}>
+                    Equipo Local
+                  </label>
+                  <select value={newLocal} onChange={e => setNewLocal(e.target.value)} style={{
+                    width:"100%", background:"#1e2a45", border:"1px solid #3b5bdb",
+                    color:"#e2e8f0", padding:"8px 12px", borderRadius:6, fontSize:12, fontFamily:"monospace",
+                  }}>
+                    <option value="">Seleccionar equipo</option>
+                    {EQUIPOS.map(e => (
+                      <option key={e.id} value={e.id}>{e.flag} {e.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display:"block", fontSize:11, color:"#4a6fa5", marginBottom:6, fontWeight:600 }}>
+                    Equipo Visitante
+                  </label>
+                  <select value={newVisitante} onChange={e => setNewVisitante(e.target.value)} style={{
+                    width:"100%", background:"#1e2a45", border:"1px solid #3b5bdb",
+                    color:"#e2e8f0", padding:"8px 12px", borderRadius:6, fontSize:12, fontFamily:"monospace",
+                  }}>
+                    <option value="">Seleccionar equipo</option>
+                    {EQUIPOS.map(e => (
+                      <option key={e.id} value={e.id}>{e.flag} {e.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display:"block", fontSize:11, color:"#4a6fa5", marginBottom:6, fontWeight:600 }}>
+                    Fecha y Hora
+                  </label>
+                  <input value={newFecha} onChange={e => setNewFecha(e.target.value)} type="datetime-local" style={{
+                    width:"100%", background:"#1e2a45", border:"1px solid #3b5bdb",
+                    color:"#e2e8f0", padding:"8px 12px", borderRadius:6, fontSize:12, fontFamily:"monospace",
+                  }}/>
+                </div>
+                <div>
+                  <label style={{ display:"block", fontSize:11, color:"#4a6fa5", marginBottom:6, fontWeight:600 }}>
+                    Fase del Torneo
+                  </label>
+                  <select value={newFase} onChange={e => setNewFase(e.target.value)} style={{
+                    width:"100%", background:"#1e2a45", border:"1px solid #3b5bdb",
+                    color:"#e2e8f0", padding:"8px 12px", borderRadius:6, fontSize:12, fontFamily:"monospace",
+                  }}>
+                    <option value="GRUPOS">Fase de Grupos</option>
+                    <option value="OCTAVOS">Octavos de Final</option>
+                    <option value="CUARTOS">Cuartos de Final</option>
+                    <option value="SEMIFINAL">Semifinal</option>
+                    <option value="FINAL">Final</option>
+                  </select>
+                </div>
+              </div>
+              <button onClick={agregarPartido} style={{
+                background:"#2f9e44", border:"none", color:"#fff", fontSize:12, fontWeight:700,
+                padding:"10px 20px", borderRadius:8, cursor:"pointer", width:"100%", letterSpacing:"0.05em",
+              }}>
+                ✓ Agregar Partido
+              </button>
+            </div>
+          )}
+
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {partidos.length === 0 ? (
+              <div style={{
+                background:"#0d1628", border:"1px dashed #3b5bdb",
+                borderRadius:12, padding:"20px", textAlign:"center", color:"#4a6fa5",
+              }}>
+                No hay partidos aún. ➕ Agrega uno para comenzar.
+              </div>
+            ) : (
+              partidos.map(p => {
+                const loc = getEquipo(p.local);
+                const vis = getEquipo(p.visitante);
+                const c = ESTADOS_COLOR[p.estado];
+                return (
+                  <div key={p.id} style={{
+                    background: deleteId === p.id ? "#2a0d0d" : "#0d1628",
+                    border:`1px solid ${deleteId === p.id ? "#c92a2a" : c.border}44`,
+                    borderRadius:12, padding:"14px 18px",
+                    transition:"all 0.2s",
+                  }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                      <span style={{ fontSize:9, fontWeight:700, color:"#aaa", background:"#1a1a1a", padding:"3px 8px", borderRadius:4 }}>
+                        #{p.id}
+                      </span>
+                      <span style={{ fontSize:10, color:"#4a6fa5", fontWeight:600, width:100, flexShrink:0 }}>
+                        {faseLabel[p.fase]}
+                      </span>
+                      <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:100 }}>
+                        <span style={{ fontSize:18 }}>{loc.flag}</span>
+                        <span style={{ fontSize:12, fontWeight:600, color:"#e2e8f0" }}>{loc.nombre}</span>
+                      </div>
+                      <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                        <span style={{
+                          fontSize:16, fontWeight:800,
+                          color: p.estado==="FINALIZADO" ? "#e2e8f0" : "#4a6fa5",
+                          letterSpacing:3, minWidth:50, textAlign:"center",
+                        }}>
+                          {p.golesL !== null ? `${p.golesL}–${p.golesV}` : "·–·"}
+                        </span>
+                      </div>
+                      <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:100, justifyContent:"flex-end" }}>
+                        <span style={{ fontSize:12, fontWeight:600, color:"#e2e8f0" }}>{vis.nombre}</span>
+                        <span style={{ fontSize:18 }}>{vis.flag}</span>
+                      </div>
+                      <BadgeEstado estado={p.estado}/>
+                      <div style={{ display:"flex", gap:6 }}>
+                        {deleteId === p.id ? (
+                          <>
+                            <button onClick={() => eliminarPartido(p.id)} style={btnStyle("#c92a2a")}>
+                              ✓ Confirmar
+                            </button>
+                            <button onClick={() => setDeleteId(null)} style={btnStyle("#555")}>
+                              ✕ Cancelar
+                            </button>
+                          </>
+                        ) : (
+                          <button onClick={() => setDeleteId(p.id)} style={btnStyle("#c92a2a")}>
+                            🗑️ Eliminar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ fontSize:9, color:"#4a6fa5", marginTop:8, paddingLeft:2 }}>
+                      📅 {new Date(p.fecha).toLocaleString("es-ES")}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      );
+    }
+
     // ── TAB: RANKING ──────────────────────────────────────────────────────────────
 
     function TabRanking() {
@@ -428,13 +558,13 @@
 
     // ── TAB: MIS PREDICCIONES ─────────────────────────────────────────────────────
 
-    function TabPredicciones() {
+    function TabPredicciones({ partidos }) {
       const [preds, setPreds] = useState(prediccionesUsuario);
       const [editId, setEditId] = useState(null);
       const [gl, setGl] = useState(""); const [gv, setGv] = useState("");
 
       const partidosDePreds = preds.map(pr => {
-        const partido = initialPartidos.find(p=>p.id===pr.partidoId);
+        const partido = partidos.find(p=>p.id===pr.partidoId);
         return { ...pr, partido };
       });
 
@@ -563,145 +693,17 @@
       );
     }
 
-    // ── TAB: CLASES UML ───────────────────────────────────────────────────────────
-
-    function UMLCard({ cls, selected, onClick }) {
-      return (
-        <div onClick={onClick} style={{
-          background: selected ? `${cls.color}22` : "#0d1628",
-          border: `1px solid ${selected ? cls.color : cls.color+"44"}`,
-          borderRadius:10, cursor:"pointer", overflow:"hidden",
-          transition:"all 0.15s", transform: selected?"scale(1.01)":"scale(1)",
-        }}>
-          <div style={{
-            background:`${cls.color}33`, padding:"8px 12px",
-            borderBottom:`1px solid ${cls.color}44`,
-            display:"flex", justifyContent:"space-between", alignItems:"center",
-          }}>
-            <span style={{ fontSize:13, fontWeight:700, color:"#e2e8f0" }}>{cls.name}</span>
-            <span style={{
-              fontSize:9, fontWeight:700, color:cls.color, background:`${cls.color}22`,
-              padding:"2px 8px", borderRadius:10, letterSpacing:"0.06em",
-            }}>«class»</span>
-          </div>
-          <div style={{ padding:"8px 12px", borderBottom:`1px solid ${cls.color}22` }}>
-            {cls.attrs.map(a => (
-              <div key={a} style={{ fontSize:10, color:"#9ca3af", padding:"1px 0", fontFamily:"monospace" }}>{a}</div>
-            ))}
-          </div>
-          {selected && (
-            <div style={{ padding:"8px 12px" }}>
-              {cls.methods.map(m => (
-                <div key={m} style={{ fontSize:10, color:"#6ee7b7", padding:"1px 0", fontFamily:"monospace" }}>{m}</div>
-              ))}
-            </div>
-          )}
-          {!selected && (
-            <div style={{ padding:"4px 12px" }}>
-              <span style={{ fontSize:10, color:"#4a6fa5" }}>{cls.methods.length} métodos · click para expandir</span>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    function TabUML() {
-      const [selected, setSelected] = useState(null);
-      const [activeGroup, setActiveGroup] = useState("all");
-      const groups = [
-        { id:"all", label:"Todas las clases" },
-        { id:"gestion", label:"Gestión" },
-        { id:"prediccion", label:"Predicciones" },
-        { id:"soporte", label:"Soporte" },
-        { id:"enums", label:"Enumeraciones" },
-      ];
-      const filtered = activeGroup==="all" || activeGroup==="enums"
-        ? UML_CLASES
-        : UML_CLASES.filter(c=>c.group===activeGroup);
-
-      return (
-        <div style={{ padding:"24px 0" }}>
-          <div style={{ display:"flex", gap:6, marginBottom:18, flexWrap:"wrap" }}>
-            {groups.map(g => (
-              <button key={g.id} onClick={()=>setActiveGroup(g.id)} style={{
-                background: activeGroup===g.id?"#1e3a6e":"transparent",
-                border: activeGroup===g.id?"1px solid #3b5bdb":"1px solid #1e2a45",
-                color: activeGroup===g.id?"#748ffc":"#4a6fa5",
-                fontSize:11, fontWeight:600, padding:"5px 14px", borderRadius:20,
-                cursor:"pointer", letterSpacing:"0.04em",
-              }}>{g.label}</button>
-            ))}
-          </div>
-
-          {activeGroup !== "enums" && (
-            <>
-              <div style={{ fontSize:11, color:"#4a6fa5", marginBottom:12 }}>
-                {filtered.length} clases · Haz clic en una tarjeta para ver los métodos
-              </div>
-              <div style={{
-                display:"grid", gap:10,
-                gridTemplateColumns:"repeat(auto-fill, minmax(240px, 1fr))",
-              }}>
-                {filtered.map(cls => (
-                  <UMLCard key={cls.name} cls={cls}
-                    selected={selected===cls.name}
-                    onClick={()=>setSelected(selected===cls.name ? null : cls.name)}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-
-          {(activeGroup==="all" || activeGroup==="enums") && (
-            <div style={{ marginTop: activeGroup==="all"?28:0 }}>
-              {activeGroup==="all" && (
-                <div style={{ fontSize:11, fontWeight:700, color:"#4a6fa5", letterSpacing:"0.08em", marginBottom:12 }}>
-                  ENUMERACIONES
-                </div>
-              )}
-              <div style={{
-                display:"grid", gap:10,
-                gridTemplateColumns:"repeat(auto-fill, minmax(180px, 1fr))",
-              }}>
-                {ENUMS.map(en => (
-                  <div key={en.name} style={{
-                    background:"#0d1628", border:"1px solid #2d1a4a",
-                    borderRadius:10, overflow:"hidden",
-                  }}>
-                    <div style={{
-                      background:"#2d1a4a", padding:"7px 12px",
-                      borderBottom:"1px solid #3d2060",
-                      display:"flex", justifyContent:"space-between", alignItems:"center",
-                    }}>
-                      <span style={{fontSize:12, fontWeight:700, color:"#e2e8f0"}}>{en.name}</span>
-                      <span style={{fontSize:9, color:"#a78bfa", fontWeight:600}}>«enum»</span>
-                    </div>
-                    <div style={{ padding:"8px 12px" }}>
-                      {en.values.map(v => (
-                        <div key={v} style={{ fontSize:10, color:"#c4b5fd", padding:"2px 0", fontFamily:"monospace" }}>
-                          {v}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
-
     // ── ROOT ──────────────────────────────────────────────────────────────────────
 
     function App() {
       const [tab, setTab] = useState("Partidos");
+      const [partidos, setPartidos] = useState(initialPartidos);
 
       const tabContent = {
-        "Partidos":          <TabPartidos/>,
-        "Ranking":           <TabRanking/>,
-        "Mis Predicciones":  <TabPredicciones/>,
-        "Clases UML":        <TabUML/>,
+        "Partidos":             <TabPartidos partidos={partidos}/>,
+        "Gestionar Partidos":   <TabGestionarPartidos partidos={partidos} setPartidos={setPartidos}/>,
+        "Ranking":              <TabRanking/>,
+        "Mis Predicciones":     <TabPredicciones partidos={partidos}/>,
       };
 
       return (
