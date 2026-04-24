@@ -50,6 +50,7 @@ export interface IEquipo {
   nombre: string;
   grupo: string;       // letra del grupo: A-L
   codigoPais: string;  // ISO 3166-1 alpha-3: "COL", "BRA"
+  flag?: string;       // emoji de bandera para la UI
 }
 
 export interface IPartido {
