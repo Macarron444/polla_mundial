@@ -1,9 +1,3 @@
-/**
- * contexts/notificaciones/Notificacion.ts
- * Clase de dominio — UML: clase Notificación
- * SRS: RF-09 (notificaciones)
- */
-
 import { INotificacion } from "./Interfaces";
 import { TipoNotificacion } from "./enums";
 
