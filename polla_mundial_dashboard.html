@@ -184,6 +184,7 @@
       const faseLabel = { GRUPOS:"Fase de Grupos", OCTAVOS:"Octavos de Final", CUARTOS:"Cuartos", SEMIFINAL:"Semifinal", FINAL:"Final" };
 
       const avanzarEstado = (p) => {
+        // [TS: Partido.avanzarEstado() → GestorPartidos.cambiarEstado()]
         const ciclo = ["PROGRAMADO","EN_CURSO","FINALIZADO"];
         const idx = ciclo.indexOf(p.estado);
         if (idx < 0 || idx >= ciclo.length - 1) return;
@@ -192,6 +193,7 @@
       };
 
       const saveResult = (p) => {
+        // [TS: Partido.actualizarResultado() → GestorPartidos.editarResultado()]
         const l = parseInt(gl);
         const v = parseInt(gv);
         if (isNaN(l) || isNaN(v) || l < 0 || v < 0) {
@@ -515,6 +517,7 @@
       const maxPts = sorted.length > 0 ? sorted[0].pts : 0;
 
       const agregarUsuario = () => {
+        // [TS: PollaService.agregarParticipante() → Polla.agregarParticipante()]
         if (!newNombre.trim()) { alert("Ingresa un nombre válido"); return; }
         const yaExiste = participantes.some(p => p.nombre.toLowerCase() === newNombre.trim().toLowerCase());
         if (yaExiste) { alert("Ya existe un usuario con ese nombre"); return; }
@@ -527,6 +530,8 @@
       };
 
       const eliminarUsuario = (id) => {
+        // [TS: PollaService.eliminarParticipante() → Polla.eliminarParticipante()]
+        // Polla.eliminarParticipante() lanza error si el rol es CREADOR
         const u = participantes.find(p=>p.id===id);
         if (u?.rol === "CREADOR") { alert("No se puede eliminar al CREADOR de la polla"); return; }
         setParticipantes(prev => prev.filter(p => p.id !== id));
@@ -669,9 +674,12 @@
     }
 
     // ── HELPERS DE TIEMPO ─────────────────────────────────────────────────────────
+    // Espejo de: Partido.estaDisponibleParaApuesta() [Partido.ts]
+    // y GestorPartidos.estaAbiertaApuesta()         [GestorPartidos.ts]
 
     function getBetStatus(partido) {
       // Devuelve: "ABIERTA" | "BLOQUEADA_PRONTO" | "BLOQUEADA" | "FINALIZADO"
+      // [TS: Partido.estaDisponibleParaApuesta(minutosAntes)]
       if (partido.estado === "FINALIZADO") return "FINALIZADO";
       if (partido.estado === "EN_CURSO")   return "BLOQUEADA";
       if (!partido.fechaISO) return "ABIERTA";
@@ -705,6 +713,7 @@
       );
 
       const agregarPrediccion = () => {
+        // [TS: PrediccionService.validarApuestaAbierta() + crearPrediccion()]
         const id = parseInt(newPartidoId);
         if (!id) { alert("Selecciona un partido"); return; }
         const partido = partidos.find(p => p.id === id);
@@ -728,6 +737,7 @@
       });
 
       const savePred = (partidoId) => {
+        // [TS: PrediccionService.validarApuestaAbierta() antes de actualizar]
         const partido = partidos.find(p => p.id === partidoId);
         if (!partido || getBetStatus(partido) !== "ABIERTA") {
           alert("Las apuestas para este partido ya están cerradas.");
