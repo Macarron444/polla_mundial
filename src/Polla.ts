@@ -100,10 +100,16 @@ export class Polla implements IPolla {
 
   /**
    * RF-17 — Elimina un participante de la polla.
+   * No permite eliminar al CREADOR.
+   * Equivalente dashboard: eliminarUsuario() en TabRanking
    */
   eliminarParticipante(usuarioId: number): void {
-    if (!this.participantes.has(usuarioId)) {
+    const participacion = this.participantes.get(usuarioId);
+    if (!participacion) {
       throw new Error("El usuario no es participante de esta polla");
+    }
+    if (participacion.rol === RolPolla.CREADOR) {
+      throw new Error("No se puede eliminar al CREADOR de la polla");
     }
     this.participantes.delete(usuarioId);
   }
