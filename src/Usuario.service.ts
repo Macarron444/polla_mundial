@@ -4,6 +4,7 @@
  * SRS: RF-01 (registro, autenticación, perfil), RNF-03 (seguridad / JWT)
  */
 
+
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Usuario } from "./usuario";
