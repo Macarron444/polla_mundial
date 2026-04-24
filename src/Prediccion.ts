@@ -1,9 +1,3 @@
-/**
- * contexts/predicciones/Prediccion.ts
- * Clase de dominio — UML: clase Predicción
- * SRS: RF-04 (predicciones), RF-07 (cálculo de puntajes)
- */
-
 import { IPrediccion } from "./Interfaces";
 import { EstadoPrediccion } from "./enums";
 
