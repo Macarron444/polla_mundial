@@ -71,6 +71,7 @@ export class PollaService {
 
   /**
    * RF-03 / RF-17 — Agrega un usuario a una polla.
+   * Equivalente dashboard: agregarUsuario() en TabRanking
    */
   static agregarParticipante(
     pollaId: number,
@@ -89,6 +90,8 @@ export class PollaService {
 
   /**
    * RF-03 / RF-17 — Elimina un participante de una polla.
+   * No permite eliminar al CREADOR (validado en Polla.eliminarParticipante).
+   * Equivalente dashboard: eliminarUsuario() en TabRanking
    */
   static eliminarParticipante(pollaId: number, usuarioId: number): void {
     const polla = this.obtenerPolla(pollaId);
