@@ -1,10 +1,3 @@
-/**
- * ejemplos-uso.ts
- * Ejemplos prácticos de cómo usar las clases reorganizadas
- * 
- * Este archivo contiene ejemplos de flujos completos del sistema
- */
-
 import { UsuarioService } from './Usuario.service';
 import { PartidoService } from './Partido.service';
 import { PollaService } from './Polla.service';
