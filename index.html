@@ -1,13 +1,1174 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>polla_mundial</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polla Mundial 2026 - Dashboard</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #060c18; 
+      color: #e2e8f0;
+      font-family: 'DM Mono', 'Fira Code', monospace;
+    }
+    input:focus { outline: none; }
+    button:hover { opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ── FOOTBALL-DATA.ORG API CONFIG ───────────────────────────────────────────────
+    // 1. Registrate en https://www.football-data.org/client/register
+    // 2. Pega tu API Key aquí:
+    const FOOTBALL_API_KEY = "67655057f3934e9f8674d35dec465040";
+    const FOOTBALL_BASE    = "https://api.football-data.org/v4";
+    const WORLD_CUP_ID     = 2000; // FIFA World Cup 2026
+
+    // ── MAPEO API → DOMINIO ───────────────────────────────────────────────────────
+
+    function areaCodeAEmoji(code) {
+      if (!code || code.length !== 2) return "🏳️";
+      const offset = 0x1F1E6 - 65;
+      return String.fromCodePoint(code.charCodeAt(0) + offset) +
+             String.fromCodePoint(code.charCodeAt(1) + offset);
+    }
+
+    function mapearEstado(status) {
+      const m = { SCHEDULED:"PROGRAMADO", TIMED:"PROGRAMADO", IN_PLAY:"EN_CURSO",
+                  PAUSED:"EN_CURSO", LIVE:"EN_CURSO", FINISHED:"FINALIZADO",
+                  SUSPENDED:"SUSPENDIDO", CANCELLED:"SUSPENDIDO", POSTPONED:"POSPUESTO" };
+      return m[status] || "PROGRAMADO";
+    }
+
+    function mapearFase(stage) {
+      const m = { GROUP_STAGE:"GRUPOS", ROUND_OF_16:"OCTAVOS",
+                  QUARTER_FINALS:"CUARTOS", SEMI_FINALS:"SEMIFINAL",
+                  FINAL:"FINAL", THIRD_PLACE:"SEMIFINAL" };
+      return m[stage] || "GRUPOS";
+    }
+
+    function extraerGrupo(group) {
+      if (!group) return "?";
+      const m = group.match(/[A-Z]$/);
+      return m ? m[0] : group;
+    }
+
+    function mapearPartidoAPI(match) {
+      const fecha = new Date(match.utcDate);
+      const label = fecha.toLocaleDateString("es-CO", { day:"2-digit", month:"short" })
+                  + " · "
+                  + fecha.toLocaleTimeString("es-CO", { hour:"2-digit", minute:"2-digit" });
+      return {
+        id:        match.id,
+        local:     match.homeTeam.id,
+        visitante: match.awayTeam.id,
+        golesL:    match.score.fullTime.home,
+        golesV:    match.score.fullTime.away,
+        fecha:     label,
+        fechaISO:  match.utcDate,
+        estado:    mapearEstado(match.status),
+        fase:      mapearFase(match.stage),
+      };
+    }
+
+    function mapearEquipoAPI(team, grupo = "?") {
+      return {
+        id:      team.id,
+        nombre:  team.shortName || team.name,
+        grupo:   grupo,
+        flag:    areaCodeAEmoji(team.area?.code ?? ""),
+      };
+    }
+
+    // ── CLIENTE API ────────────────────────────────────────────────────────────────
+    // Llama al proxy local (/api/*) que reenvía a football-data.org en el servidor
+    // Esto evita el bloqueo CORS del navegador
+
+    async function fdFetch(endpoint) {
+      const proxyUrl = "/api" + endpoint;
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error(`API Error ${res.status}: ${await res.text()}`);
+      return res.json();
+    }
+
+    async function cargarDatosAPI() {
+      const [matchesData, teamsData] = await Promise.all([
+        fdFetch(`/competitions/${WORLD_CUP_ID}/matches`),
+        fdFetch(`/competitions/${WORLD_CUP_ID}/teams`),
+      ]);
+
+      // Mapa teamId → grupo desde partidos de fase de grupos
+      const grupoMap = {};
+      for (const m of matchesData.matches) {
+        if (m.stage === "GROUP_STAGE") {
+          const g = extraerGrupo(m.group);
+          grupoMap[m.homeTeam.id] = g;
+          grupoMap[m.awayTeam.id] = g;
+        }
+      }
+
+      const equipos  = teamsData.teams.map(t => mapearEquipoAPI(t, grupoMap[t.id] || "?"));
+      const partidos = matchesData.matches.map(mapearPartidoAPI);
+      return { equipos, partidos };
+    }
+
+    // ── DATA ESTÁTICA DE RESPALDO ──────────────────────────────────────────────────
+    // Se usa si la API Key no está configurada o falla la conexión
+
+    const EQUIPOS_DEFAULT = [
+      { id: 1, nombre: "Argentina",  grupo: "A", flag: "🇦🇷" },
+      { id: 2, nombre: "Francia",    grupo: "A", flag: "🇫🇷" },
+      { id: 3, nombre: "Brasil",     grupo: "B", flag: "🇧🇷" },
+      { id: 4, nombre: "España",     grupo: "B", flag: "🇪🇸" },
+      { id: 5, nombre: "Alemania",   grupo: "C", flag: "🇩🇪" },
+      { id: 6, nombre: "Portugal",   grupo: "C", flag: "🇵🇹" },
+      { id: 7, nombre: "Inglaterra", grupo: "D", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+      { id: 8, nombre: "México",     grupo: "D", flag: "🇲🇽" },
+    ];
+
+    // Variable mutable de equipos (se actualiza cuando carga la API)
+    let EQUIPOS = EQUIPOS_DEFAULT;
+
+    const ESTADOS_COLOR = {
+      PROGRAMADO: { bg: "#1a2744", border: "#3b5bdb", text: "#748ffc", label: "Programado" },
+      EN_CURSO:   { bg: "#1a3320", border: "#2f9e44", text: "#69db7c", label: "En Curso"   },
+      FINALIZADO: { bg: "#1a1a1a", border: "#555",    text: "#aaa",    label: "Finalizado" },
+      SUSPENDIDO: { bg: "#2d1a00", border: "#e67700", text: "#ffa94d", label: "Suspendido" },
+      POSPUESTO:  { bg: "#2a1a2a", border: "#9c36b5", text: "#da77f2", label: "Pospuesto"  },
+    };
+
+    const PRED_COLOR = {
+      PENDIENTE: { bg:"#1a2744", text:"#748ffc", dot:"#3b5bdb" },
+      EXACTA:    { bg:"#0d2b1a", text:"#69db7c", dot:"#2f9e44" },
+      CORRECTA:  { bg:"#1a2744", text:"#a9e34b", dot:"#74b816" },
+      FALLIDA:   { bg:"#2a0d0d", text:"#ff8787", dot:"#c92a2a" },
+    };
+
+    const PARTIDOS_DEFAULT = [
+      { id:1, local:1, visitante:2, golesL:null, golesV:null, fecha:"11 Jun · 18:00", fechaISO: new Date(Date.now()+20*60000).toISOString(),   estado:"PROGRAMADO", fase:"GRUPOS" },
+      { id:2, local:3, visitante:4, golesL:2,    golesV:1,    fecha:"11 Jun · 21:00", fechaISO: new Date(Date.now()-120*60000).toISOString(), estado:"FINALIZADO",  fase:"GRUPOS" },
+      { id:3, local:5, visitante:6, golesL:null, golesV:null, fecha:"12 Jun · 18:00", fechaISO: new Date(Date.now()+10*60000).toISOString(),   estado:"EN_CURSO",   fase:"GRUPOS" },
+      { id:4, local:7, visitante:8, golesL:null, golesV:null, fecha:"12 Jun · 21:00", fechaISO: new Date(Date.now()+60*60000).toISOString(),   estado:"PROGRAMADO", fase:"OCTAVOS" },
+    ];
+
+    const initialParticipantes = [
+      { id:1, nombre:"Sebastián M.", pts:21, exactas:3, correctas:4, fallidas:1, rol:"CREADOR" },
+      { id:2, nombre:"Valentina R.", pts:18, exactas:2, correctas:5, fallidas:2, rol:"ADMINISTRADOR" },
+      { id:3, nombre:"Camilo T.",    pts:18, exactas:2, correctas:4, fallidas:3, rol:"PARTICIPANTE" },
+      { id:4, nombre:"Lucía P.",     pts:15, exactas:1, correctas:6, fallidas:2, rol:"PARTICIPANTE" },
+      { id:5, nombre:"Andrés B.",    pts:12, exactas:1, correctas:4, fallidas:4, rol:"PARTICIPANTE" },
+    ];
+
+    const prediccionesUsuario = [
+      { partidoId:2, golesL:2, golesV:0, estado:"CORRECTA",  pts:1 },
+      { partidoId:3, golesL:1, golesV:2, estado:"PENDIENTE", pts:0 },
+      { partidoId:1, golesL:1, golesV:1, estado:"PENDIENTE", pts:0 },
+    ];
+
+    // ── HELPERS ───────────────────────────────────────────────────────────────────
+
+    // getEquipo usa la variable mutable EQUIPOS (se actualiza con la API)
+    const getEquipo = (id) => EQUIPOS.find(e => e.id === id) || { nombre:"?", flag:"" };
+
+    const Dot = ({ color }) => (
+      <span style={{
+        display:"inline-block", width:7, height:7, borderRadius:"50%",
+        background:color, marginRight:5, flexShrink:0,
+      }}/>
+    );
+
+    function BadgeEstado({ estado }) {
+      const c = ESTADOS_COLOR[estado] || ESTADOS_COLOR.PROGRAMADO;
+      return (
+        <span style={{
+          background:c.bg, border:`1px solid ${c.border}`, color:c.text,
+          fontSize:10, fontWeight:600, padding:"2px 8px", borderRadius:20,
+          letterSpacing:"0.06em", display:"inline-flex", alignItems:"center", gap:4,
+        }}>
+          <Dot color={c.border}/>{c.label}
+        </span>
+      );
+    }
+
+    function BadgeRol({ rol }) {
+      const map = {
+        CREADOR:       { bg:"#1a1260", color:"#a5b4fc" },
+        ADMINISTRADOR: { bg:"#12261a", color:"#6ee7b7" },
+        PARTICIPANTE:  { bg:"#1a1a1a", color:"#9ca3af" },
+      };
+      const s = map[rol] || map.PARTICIPANTE;
+      return (
+        <span style={{
+          background:s.bg, color:s.color, fontSize:9, fontWeight:700,
+          padding:"2px 7px", borderRadius:10, letterSpacing:"0.07em",
+        }}>{rol}</span>
+      );
+    }
+
+    function btnStyle(color) {
+      return {
+        background: `${color}22`, border:`1px solid ${color}66`, color,
+        fontSize:10, fontWeight:700, padding:"4px 10px", borderRadius:6,
+        cursor:"pointer", letterSpacing:"0.05em",
+      };
+    }
+
+    // ── SECTIONS ─────────────────────────────────────────────────────────────────
+
+    function Header({ tab, setTab }) {
+      const tabs = ["Partidos", "Gestionar Partidos", "Ranking", "Mis Predicciones"];
+      return (
+        <header style={{
+          background:"#0a0f1e", borderBottom:"1px solid #1e2a45",
+          padding:"0 24px", position:"sticky", top:0, zIndex:10,
+        }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", height:56 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <span style={{ fontSize:22 }}>⚽</span>
+              <div>
+                <div style={{ fontSize:13, fontWeight:700, color:"#e2e8f0", letterSpacing:"0.04em" }}>
+                  Polla Mundial 2026
+                </div>
+                <div style={{ fontSize:10, color:"#4a6fa5", letterSpacing:"0.05em" }}>FIFA WORLD CUP · PWA</div>
+              </div>
+            </div>
+            <div style={{ display:"flex", gap:4 }}>
+              {tabs.map(t => (
+                <button key={t} onClick={() => setTab(t)} style={{
+                  background: tab===t ? "#1e3a6e" : "transparent",
+                  border: tab===t ? "1px solid #3b5bdb" : "1px solid transparent",
+                  color: tab===t ? "#748ffc" : "#6b7280",
+                  fontSize:11, fontWeight:600, padding:"5px 12px", borderRadius:6,
+                  cursor:"pointer", letterSpacing:"0.04em", transition:"all 0.15s",
+                }}>{t}</button>
+              ))}
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    function StatCard({ label, value, sub, accent }) {
+      return (
+        <div style={{
+          background:"#0d1628", border:`1px solid ${accent}33`,
+          borderRadius:12, padding:"16px 20px", flex:1, minWidth:110,
+        }}>
+          <div style={{ fontSize:11, color:"#6b7280", fontWeight:600, letterSpacing:"0.06em", marginBottom:6 }}>{label}</div>
+          <div style={{ fontSize:28, fontWeight:800, color:accent, lineHeight:1 }}>{value}</div>
+          {sub && <div style={{ fontSize:11, color:"#4a6fa5", marginTop:4 }}>{sub}</div>}
+        </div>
+      );
+    }
+
+    // ── TAB: PARTIDOS ─────────────────────────────────────────────────────────────
+
+    function TabPartidos({ partidos, setPartidos }) {
+      const [editId, setEditId] = useState(null);
+      const [gl, setGl] = useState(""); const [gv, setGv] = useState("");
+
+      const faseLabel = { GRUPOS:"Fase de Grupos", OCTAVOS:"Octavos de Final", CUARTOS:"Cuartos", SEMIFINAL:"Semifinal", FINAL:"Final" };
+
+      const avanzarEstado = (p) => {
+        // [TS: Partido.avanzarEstado() → GestorPartidos.cambiarEstado()]
+        const ciclo = ["PROGRAMADO","EN_CURSO","FINALIZADO"];
+        const idx = ciclo.indexOf(p.estado);
+        if (idx < 0 || idx >= ciclo.length - 1) return;
+        const next = ciclo[idx + 1];
+        setPartidos(prev => prev.map(x => x.id === p.id ? { ...x, estado: next } : x));
+      };
+
+      const saveResult = (p) => {
+        // [TS: Partido.actualizarResultado() → GestorPartidos.editarResultado()]
+        const l = parseInt(gl);
+        const v = parseInt(gv);
+        if (isNaN(l) || isNaN(v) || l < 0 || v < 0) {
+          alert("Ingresa un resultado válido (números ≥ 0)");
+          return;
+        }
+        setPartidos(prev => prev.map(x => x.id === p.id ? { ...x, golesL: l, golesV: v } : x));
+        setEditId(null); setGl(""); setGv("");
+      };
+
+      return (
+        <div style={{ padding:"24px 0" }}>
+          <div style={{ display:"flex", gap:12, marginBottom:20, flexWrap:"wrap" }}>
+            <StatCard label="PARTIDOS" value={partidos.length} sub="Total registrados" accent="#748ffc"/>
+            <StatCard label="EN CURSO" value={partidos.filter(p=>p.estado==="EN_CURSO").length} accent="#69db7c"/>
+            <StatCard label="FINALIZADOS" value={partidos.filter(p=>p.estado==="FINALIZADO").length} accent="#aaa"/>
+            <StatCard label="PENDIENTES" value={partidos.filter(p=>p.estado==="PROGRAMADO").length} accent="#4dabf7"/>
+          </div>
+
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {partidos.map(p => {
+              const loc = getEquipo(p.local);
+              const vis = getEquipo(p.visitante);
+              const isEdit = editId === p.id;
+              const c = ESTADOS_COLOR[p.estado];
+              return (
+                <div key={p.id} style={{
+                  background:"#0d1628", border:`1px solid ${c.border}44`,
+                  borderRadius:12, padding:"14px 18px",
+                  transition:"border-color 0.2s",
+                }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                    <span style={{ fontSize:10, color:"#4a6fa5", fontWeight:600, width:90, flexShrink:0 }}>
+                      {faseLabel[p.fase] || p.fase}
+                    </span>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:100 }}>
+                      <span style={{ fontSize:20 }}>{loc.flag}</span>
+                      <span style={{ fontSize:13, fontWeight:600, color:"#e2e8f0" }}>{loc.nombre}</span>
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                      {isEdit ? (
+                        <>
+                          <input value={gl} onChange={e=>setGl(e.target.value)} type="number" min="0" max="20" style={{
+                            width:36, textAlign:"center", background:"#1e2a45", border:"1px solid #3b5bdb",
+                            color:"#e2e8f0", borderRadius:6, padding:"4px", fontSize:16, fontWeight:700,
+                          }}/>
+                          <span style={{ color:"#4a6fa5", fontWeight:700 }}>–</span>
+                          <input value={gv} onChange={e=>setGv(e.target.value)} type="number" min="0" max="20" style={{
+                            width:36, textAlign:"center", background:"#1e2a45", border:"1px solid #3b5bdb",
+                            color:"#e2e8f0", borderRadius:6, padding:"4px", fontSize:16, fontWeight:700,
+                          }}/>
+                        </>
+                      ) : (
+                        <span style={{
+                          fontSize:20, fontWeight:800,
+                          color: p.estado==="FINALIZADO" ? "#e2e8f0" : "#4a6fa5",
+                          letterSpacing:4, minWidth:60, textAlign:"center",
+                        }}>
+                          {p.golesL !== null ? `${p.golesL} – ${p.golesV}` : "· – ·"}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:100, justifyContent:"flex-end" }}>
+                      <span style={{ fontSize:13, fontWeight:600, color:"#e2e8f0" }}>{vis.nombre}</span>
+                      <span style={{ fontSize:20 }}>{vis.flag}</span>
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+                      <BadgeEstado estado={p.estado}/>
+                      {isEdit ? (
+                        <>
+                          <button onClick={()=>saveResult(p)} style={btnStyle("#2f9e44")}>✓ Guardar</button>
+                          <button onClick={()=>setEditId(null)} style={btnStyle("#555")}>✕</button>
+                        </>
+                      ) : (
+                        <>
+                          {p.estado !== "FINALIZADO" && (
+                            <button onClick={()=>avanzarEstado(p)} style={btnStyle("#3b5bdb")}>
+                              {p.estado==="PROGRAMADO" ? "▶ Iniciar" : "✓ Finalizar"}
+                            </button>
+                          )}
+                          {p.estado === "EN_CURSO" || p.estado==="FINALIZADO" ? (
+                            <button onClick={()=>{ setEditId(p.id); setGl(p.golesL??""); setGv(p.golesV??""); }} style={btnStyle("#666")}>
+                              ✎ Editar
+                            </button>
+                          ) : null}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ fontSize:10, color:"#4a6fa5", marginTop:8, paddingLeft:2 }}>
+                    {p.fecha} · RF-05 / RF-15
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // ── TAB: GESTIONAR PARTIDOS ───────────────────────────────────────────────────
+
+    function TabGestionarPartidos({ partidos, setPartidos }) {
+      const [showForm, setShowForm] = useState(false);
+      const [newLocal, setNewLocal] = useState("");
+      const [newVisitante, setNewVisitante] = useState("");
+      const [newFecha, setNewFecha] = useState("");
+      const [newFase, setNewFase] = useState("GRUPOS");
+      const [deleteId, setDeleteId] = useState(null);
+
+      const agregarPartido = () => {
+        if (!newLocal || !newVisitante || !newFecha) {
+          alert("Completa todos los campos");
+          return;
+        }
+        if (parseInt(newLocal) === parseInt(newVisitante)) {
+          alert("Los equipos deben ser diferentes");
+          return;
+        }
+        const nuevoPartido = {
+          id: Math.max(...partidos.map(p => p.id), 0) + 1,
+          local: parseInt(newLocal),
+          visitante: parseInt(newVisitante),
+          golesL: null,
+          golesV: null,
+          fecha: newFecha,
+          estado: "PROGRAMADO",
+          fase: newFase,
+        };
+        setPartidos([...partidos, nuevoPartido]);
+        setNewLocal(""); setNewVisitante(""); setNewFecha(""); setNewFase("GRUPOS");
+        setShowForm(false);
+      };
+
+      const eliminarPartido = (id) => {
+        setPartidos(partidos.filter(p => p.id !== id));
+        setDeleteId(null);
+      };
+
+      const faseLabel = { GRUPOS:"Fase de Grupos", OCTAVOS:"Octavos", CUARTOS:"Cuartos", SEMIFINAL:"Semifinal", FINAL:"Final" };
+
+      return (
+        <div style={{ padding:"24px 0" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+            <div style={{ display:"flex", gap:12 }}>
+              <StatCard label="TOTAL" value={partidos.length} accent="#748ffc"/>
+              <StatCard label="PROGRAMADOS" value={partidos.filter(p=>p.estado==="PROGRAMADO").length} accent="#3b5bdb"/>
+              <StatCard label="EN JUEGO" value={partidos.filter(p=>p.estado==="EN_CURSO").length} accent="#69db7c"/>
+              <StatCard label="JUGADOS" value={partidos.filter(p=>p.estado==="FINALIZADO").length} accent="#aaa"/>
+            </div>
+            <button onClick={() => setShowForm(!showForm)} style={{
+              background: showForm ? "#c92a2a" : "#2f9e44",
+              border: "none", color: "#fff", fontSize: 12, fontWeight: 700,
+              padding: "8px 16px", borderRadius: 8, cursor: "pointer",
+              letterSpacing: "0.05em",
+            }}>
+              {showForm ? "✕ Cancelar" : "✚ Nuevo Partido"}
+            </button>
+          </div>
+
+          {showForm && (
+            <div style={{
+              background:"#0d1628", border:"1px solid #2f9e4455",
+              borderRadius:12, padding:"20px", marginBottom:20,
+            }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#69db7c", marginBottom:16, letterSpacing:"0.04em" }}>
+                ➕ CREAR NUEVO PARTIDO
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+                <div>
+                  <label style={{ display:"block", fontSize:11, color:"#4a6fa5", marginBottom:6, fontWeight:600 }}>
+                    Equipo Local
+                  </label>
+                  <select value={newLocal} onChange={e => setNewLocal(e.target.value)} style={{
+                    width:"100%", background:"#1e2a45", border:"1px solid #3b5bdb",
+                    color:"#e2e8f0", padding:"8px 12px", borderRadius:6, fontSize:12, fontFamily:"monospace",
+                  }}>
+                    <option value="">Seleccionar equipo</option>
+                    {EQUIPOS.map(e => (
+                      <option key={e.id} value={e.id}>{e.flag} {e.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display:"block", fontSize:11, color:"#4a6fa5", marginBottom:6, fontWeight:600 }}>
+                    Equipo Visitante
+                  </label>
+                  <select value={newVisitante} onChange={e => setNewVisitante(e.target.value)} style={{
+                    width:"100%", background:"#1e2a45", border:"1px solid #3b5bdb",
+                    color:"#e2e8f0", padding:"8px 12px", borderRadius:6, fontSize:12, fontFamily:"monospace",
+                  }}>
+                    <option value="">Seleccionar equipo</option>
+                    {EQUIPOS.map(e => (
+                      <option key={e.id} value={e.id}>{e.flag} {e.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display:"block", fontSize:11, color:"#4a6fa5", marginBottom:6, fontWeight:600 }}>
+                    Fecha y Hora
+                  </label>
+                  <input value={newFecha} onChange={e => setNewFecha(e.target.value)} type="datetime-local" style={{
+                    width:"100%", background:"#1e2a45", border:"1px solid #3b5bdb",
+                    color:"#e2e8f0", padding:"8px 12px", borderRadius:6, fontSize:12, fontFamily:"monospace",
+                  }}/>
+                </div>
+                <div>
+                  <label style={{ display:"block", fontSize:11, color:"#4a6fa5", marginBottom:6, fontWeight:600 }}>
+                    Fase del Torneo
+                  </label>
+                  <select value={newFase} onChange={e => setNewFase(e.target.value)} style={{
+                    width:"100%", background:"#1e2a45", border:"1px solid #3b5bdb",
+                    color:"#e2e8f0", padding:"8px 12px", borderRadius:6, fontSize:12, fontFamily:"monospace",
+                  }}>
+                    <option value="GRUPOS">Fase de Grupos</option>
+                    <option value="OCTAVOS">Octavos de Final</option>
+                    <option value="CUARTOS">Cuartos de Final</option>
+                    <option value="SEMIFINAL">Semifinal</option>
+                    <option value="FINAL">Final</option>
+                  </select>
+                </div>
+              </div>
+              <button onClick={agregarPartido} style={{
+                background:"#2f9e44", border:"none", color:"#fff", fontSize:12, fontWeight:700,
+                padding:"10px 20px", borderRadius:8, cursor:"pointer", width:"100%", letterSpacing:"0.05em",
+              }}>
+                ✓ Agregar Partido
+              </button>
+            </div>
+          )}
+
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {partidos.length === 0 ? (
+              <div style={{
+                background:"#0d1628", border:"1px dashed #3b5bdb",
+                borderRadius:12, padding:"20px", textAlign:"center", color:"#4a6fa5",
+              }}>
+                No hay partidos aún. ➕ Agrega uno para comenzar.
+              </div>
+            ) : (
+              partidos.map(p => {
+                const loc = getEquipo(p.local);
+                const vis = getEquipo(p.visitante);
+                const c = ESTADOS_COLOR[p.estado];
+                return (
+                  <div key={p.id} style={{
+                    background: deleteId === p.id ? "#2a0d0d" : "#0d1628",
+                    border:`1px solid ${deleteId === p.id ? "#c92a2a" : c.border}44`,
+                    borderRadius:12, padding:"14px 18px",
+                    transition:"all 0.2s",
+                  }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                      <span style={{ fontSize:9, fontWeight:700, color:"#aaa", background:"#1a1a1a", padding:"3px 8px", borderRadius:4 }}>
+                        #{p.id}
+                      </span>
+                      <span style={{ fontSize:10, color:"#4a6fa5", fontWeight:600, width:100, flexShrink:0 }}>
+                        {faseLabel[p.fase]}
+                      </span>
+                      <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:100 }}>
+                        <span style={{ fontSize:18 }}>{loc.flag}</span>
+                        <span style={{ fontSize:12, fontWeight:600, color:"#e2e8f0" }}>{loc.nombre}</span>
+                      </div>
+                      <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                        <span style={{
+                          fontSize:16, fontWeight:800,
+                          color: p.estado==="FINALIZADO" ? "#e2e8f0" : "#4a6fa5",
+                          letterSpacing:3, minWidth:50, textAlign:"center",
+                        }}>
+                          {p.golesL !== null ? `${p.golesL}–${p.golesV}` : "·–·"}
+                        </span>
+                      </div>
+                      <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:100, justifyContent:"flex-end" }}>
+                        <span style={{ fontSize:12, fontWeight:600, color:"#e2e8f0" }}>{vis.nombre}</span>
+                        <span style={{ fontSize:18 }}>{vis.flag}</span>
+                      </div>
+                      <BadgeEstado estado={p.estado}/>
+                      <div style={{ display:"flex", gap:6 }}>
+                        {deleteId === p.id ? (
+                          <>
+                            <button onClick={() => eliminarPartido(p.id)} style={btnStyle("#c92a2a")}>
+                              ✓ Confirmar
+                            </button>
+                            <button onClick={() => setDeleteId(null)} style={btnStyle("#555")}>
+                              ✕ Cancelar
+                            </button>
+                          </>
+                        ) : (
+                          <button onClick={() => setDeleteId(p.id)} style={btnStyle("#c92a2a")}>
+                            🗑️ Eliminar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ fontSize:9, color:"#4a6fa5", marginTop:8, paddingLeft:2 }}>
+                      📅 {new Date(p.fecha).toLocaleString("es-ES")}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ── TAB: RANKING ──────────────────────────────────────────────────────────────
+
+    function TabRanking({ participantes, setParticipantes }) {
+      const [showForm, setShowForm] = useState(false);
+      const [newNombre, setNewNombre] = useState("");
+      const [newRol, setNewRol] = useState("PARTICIPANTE");
+      const [confirmDel, setConfirmDel] = useState(null);
+
+      const sorted = [...participantes].sort((a,b) => {
+        if (b.pts !== a.pts) return b.pts - a.pts;
+        if (b.exactas !== a.exactas) return b.exactas - a.exactas;
+        if (b.correctas !== a.correctas) return b.correctas - a.correctas;
+        return a.fallidas - b.fallidas;
+      });
+
+      const maxPts = sorted.length > 0 ? sorted[0].pts : 0;
+
+      const agregarUsuario = () => {
+        // [TS: PollaService.agregarParticipante() → Polla.agregarParticipante()]
+        if (!newNombre.trim()) { alert("Ingresa un nombre válido"); return; }
+        const yaExiste = participantes.some(p => p.nombre.toLowerCase() === newNombre.trim().toLowerCase());
+        if (yaExiste) { alert("Ya existe un usuario con ese nombre"); return; }
+        const nuevoId = Math.max(...participantes.map(p=>p.id), 0) + 1;
+        setParticipantes(prev => [...prev, {
+          id: nuevoId, nombre: newNombre.trim(),
+          pts:0, exactas:0, correctas:0, fallidas:0, rol: newRol,
+        }]);
+        setNewNombre(""); setShowForm(false);
+      };
+
+      const eliminarUsuario = (id) => {
+        // [TS: PollaService.eliminarParticipante() → Polla.eliminarParticipante()]
+        // Polla.eliminarParticipante() lanza error si el rol es CREADOR
+        const u = participantes.find(p=>p.id===id);
+        if (u?.rol === "CREADOR") { alert("No se puede eliminar al CREADOR de la polla"); return; }
+        setParticipantes(prev => prev.filter(p => p.id !== id));
+        setConfirmDel(null);
+      };
+
+      const inputStyle = {
+        background:"#0d1628", border:"1px solid #2a3a5a", color:"#e2e8f0",
+        borderRadius:6, padding:"7px 10px", fontSize:12, fontFamily:"inherit",
+        outline:"none",
+      };
+
+      return (
+        <div style={{ padding:"24px 0" }}>
+          <div style={{ display:"flex", gap:12, marginBottom:20, flexWrap:"wrap" }}>
+            <StatCard label="PARTICIPANTES" value={sorted.length} accent="#748ffc"/>
+            <StatCard label="PUNTAJE MÁXIMO" value={maxPts} sub="pts" accent="#ffd43b"/>
+            <StatCard label="PROMEDIO" value={sorted.length > 0 ? Math.round(sorted.reduce((a,p)=>a+p.pts,0)/sorted.length) : 0} sub="pts" accent="#69db7c"/>
+          </div>
+
+          {/* ── Botón agregar usuario ── */}
+          <div style={{ marginBottom:14 }}>
+            {!showForm ? (
+              <button onClick={()=>setShowForm(true)} style={{
+                background:"#1a3a2a", border:"1px solid #2f9e44", color:"#69db7c",
+                fontSize:11, fontWeight:700, padding:"8px 16px", borderRadius:8,
+                cursor:"pointer", letterSpacing:"0.05em",
+              }}>+ Agregar Participante</button>
+            ) : (
+              <div style={{
+                background:"#0d1628", border:"1px solid #2f9e4455", borderRadius:10,
+                padding:"16px 18px", display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end",
+              }}>
+                <div style={{ display:"flex", flexDirection:"column", gap:4, flex:1, minWidth:160 }}>
+                  <label style={{ fontSize:9, color:"#4a6fa5", fontWeight:700, letterSpacing:"0.07em" }}>NOMBRE</label>
+                  <input
+                    value={newNombre} onChange={e=>setNewNombre(e.target.value)}
+                    placeholder="Nombre del participante"
+                    style={{ ...inputStyle, width:"100%" }}
+                    onKeyDown={e=>e.key==="Enter" && agregarUsuario()}
+                  />
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                  <label style={{ fontSize:9, color:"#4a6fa5", fontWeight:700, letterSpacing:"0.07em" }}>ROL</label>
+                  <select value={newRol} onChange={e=>setNewRol(e.target.value)} style={{ ...inputStyle, minWidth:140 }}>
+                    <option value="PARTICIPANTE">PARTICIPANTE</option>
+                    <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+                  </select>
+                </div>
+                <div style={{ display:"flex", gap:8 }}>
+                  <button onClick={agregarUsuario} style={btnStyle("#2f9e44")}>✓ Guardar</button>
+                  <button onClick={()=>{setShowForm(false);setNewNombre("");}} style={btnStyle("#555")}>✕ Cancelar</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── Tabla de ranking ── */}
+          <div style={{ background:"#0d1628", border:"1px solid #1e2a45", borderRadius:12, overflow:"hidden" }}>
+            <div style={{
+              display:"grid", gridTemplateColumns:"40px 1fr 72px 72px 72px 100px 90px 36px",
+              gap:6, padding:"10px 18px", borderBottom:"1px solid #1e2a45",
+              fontSize:9, fontWeight:700, color:"#4a6fa5", letterSpacing:"0.08em",
+            }}>
+              <span>#</span><span>USUARIO</span>
+              <span style={{textAlign:"center"}}>EXACTAS</span>
+              <span style={{textAlign:"center"}}>CORRECTAS</span>
+              <span style={{textAlign:"center"}}>FALLIDAS</span>
+              <span style={{textAlign:"center"}}>ROL</span>
+              <span style={{textAlign:"right"}}>PUNTOS</span>
+              <span></span>
+            </div>
+
+            {sorted.length === 0 && (
+              <div style={{ padding:"30px 18px", textAlign:"center", color:"#4a6fa5", fontSize:13 }}>
+                No hay participantes. Agrega el primero.
+              </div>
+            )}
+
+            {sorted.map((p, i) => {
+              const pos = i+1;
+              const posColor = pos===1?"#ffd43b":pos===2?"#adb5bd":pos===3?"#cd7f32":"#4a6fa5";
+              const pct = maxPts > 0 ? Math.round((p.pts/maxPts)*100) : 0;
+              const esCreador = p.rol === "CREADOR";
+              return (
+                <div key={p.id} style={{
+                  borderBottom:"1px solid #111827",
+                  background: pos===1?"#12180a":undefined,
+                }}>
+                  <div style={{
+                    display:"grid", gridTemplateColumns:"40px 1fr 72px 72px 72px 100px 90px 36px",
+                    gap:6, padding:"13px 18px", alignItems:"center",
+                  }}>
+                    <span style={{ fontSize:16, fontWeight:800, color:posColor }}>{pos}</span>
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:700, color:"#e2e8f0" }}>{p.nombre}</div>
+                      <div style={{ fontSize:10, color:"#4a6fa5", marginTop:2 }}>ID #{p.id}</div>
+                    </div>
+                    <span style={{ textAlign:"center", fontSize:14, fontWeight:700, color:"#69db7c" }}>{p.exactas}</span>
+                    <span style={{ textAlign:"center", fontSize:14, fontWeight:700, color:"#a9e34b" }}>{p.correctas}</span>
+                    <span style={{ textAlign:"center", fontSize:14, fontWeight:700, color:"#ff8787" }}>{p.fallidas}</span>
+                    <div style={{ display:"flex", justifyContent:"center" }}>
+                      <BadgeRol rol={p.rol}/>
+                    </div>
+                    <div style={{ textAlign:"right" }}>
+                      <div style={{ fontSize:18, fontWeight:800, color: pos===1?"#ffd43b":"#e2e8f0" }}>{p.pts}</div>
+                      <div style={{ height:4, background:"#1e2a45", borderRadius:2, marginTop:4, overflow:"hidden" }}>
+                        <div style={{ width:`${pct}%`, height:"100%", background: pos===1?"#ffd43b":"#3b5bdb", borderRadius:2 }}/>
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", justifyContent:"center" }}>
+                      {!esCreador && (
+                        confirmDel === p.id ? (
+                          <div style={{ display:"flex", gap:4 }}>
+                            <button onClick={()=>eliminarUsuario(p.id)} style={{
+                              background:"#3a0a0a", border:"1px solid #c92a2a", color:"#ff8787",
+                              fontSize:9, fontWeight:700, padding:"3px 6px", borderRadius:5, cursor:"pointer",
+                            }}>Sí</button>
+                            <button onClick={()=>setConfirmDel(null)} style={{
+                              background:"#1a1a1a", border:"1px solid #444", color:"#9ca3af",
+                              fontSize:9, fontWeight:700, padding:"3px 6px", borderRadius:5, cursor:"pointer",
+                            }}>No</button>
+                          </div>
+                        ) : (
+                          <button onClick={()=>setConfirmDel(p.id)} title="Eliminar participante" style={{
+                            background:"transparent", border:"1px solid #3a1a1a", color:"#c92a2a",
+                            fontSize:13, fontWeight:700, padding:"3px 7px", borderRadius:6, cursor:"pointer",
+                            lineHeight:1,
+                          }}>✕</button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // ── HELPERS DE TIEMPO ─────────────────────────────────────────────────────────
+    // Espejo de: Partido.estaDisponibleParaApuesta() [Partido.ts]
+    // y GestorPartidos.estaAbiertaApuesta()         [GestorPartidos.ts]
+
+    function getBetStatus(partido) {
+      // Devuelve: "ABIERTA" | "BLOQUEADA_PRONTO" | "BLOQUEADA" | "FINALIZADO"
+      // [TS: Partido.estaDisponibleParaApuesta(minutosAntes)]
+      if (partido.estado === "FINALIZADO") return "FINALIZADO";
+      if (partido.estado === "EN_CURSO")   return "BLOQUEADA";
+      if (!partido.fechaISO) return "ABIERTA";
+      const msHastaPartido = new Date(partido.fechaISO) - new Date();
+      if (msHastaPartido <= 0)          return "BLOQUEADA";
+      if (msHastaPartido <= 15 * 60000) return "BLOQUEADA_PRONTO";
+      return "ABIERTA";
+    }
+
+    function minutosRestantes(partido) {
+      if (!partido.fechaISO) return null;
+      const ms = new Date(partido.fechaISO) - new Date();
+      return Math.max(0, Math.floor(ms / 60000));
+    }
+
+    // ── TAB: MIS PREDICCIONES ─────────────────────────────────────────────────────
+
+    function TabPredicciones({ partidos }) {
+      const [preds, setPreds] = useState(prediccionesUsuario);
+      const [editId, setEditId] = useState(null);
+      const [gl, setGl] = useState(""); const [gv, setGv] = useState("");
+      const [showAddForm, setShowAddForm] = useState(false);
+      const [newPartidoId, setNewPartidoId] = useState("");
+      const [newGl, setNewGl] = useState("0");
+      const [newGv, setNewGv] = useState("0");
+
+      // Partidos disponibles para apostar: ABIERTA y sin predicción existente
+      const partidosDisponibles = partidos.filter(p =>
+        getBetStatus(p) === "ABIERTA" &&
+        !preds.some(pr => pr.partidoId === p.id)
+      );
+
+      const agregarPrediccion = () => {
+        // [TS: PrediccionService.validarApuestaAbierta() + crearPrediccion()]
+        const id = parseInt(newPartidoId);
+        if (!id) { alert("Selecciona un partido"); return; }
+        const partido = partidos.find(p => p.id === id);
+        if (!partido || getBetStatus(partido) !== "ABIERTA") {
+          alert("Este partido ya no acepta apuestas"); return;
+        }
+        setPreds(prev => [...prev, {
+          partidoId: id,
+          golesL: parseInt(newGl) || 0,
+          golesV: parseInt(newGv) || 0,
+          estado: "PENDIENTE",
+          pts: 0,
+        }]);
+        setNewPartidoId(""); setNewGl("0"); setNewGv("0");
+        setShowAddForm(false);
+      };
+
+      const partidosDePreds = preds.map(pr => {
+        const partido = partidos.find(p=>p.id===pr.partidoId);
+        return { ...pr, partido };
+      });
+
+      const savePred = (partidoId) => {
+        // [TS: PrediccionService.validarApuestaAbierta() antes de actualizar]
+        const partido = partidos.find(p => p.id === partidoId);
+        if (!partido || getBetStatus(partido) !== "ABIERTA") {
+          alert("Las apuestas para este partido ya están cerradas.");
+          setEditId(null);
+          return;
+        }
+        setPreds(prev => prev.map(p => p.partidoId===partidoId
+          ? { ...p, golesL:parseInt(gl)||0, golesV:parseInt(gv)||0 }
+          : p
+        ));
+        setEditId(null);
+      };
+
+      const totalPts = preds.reduce((a,p)=>a+p.pts,0);
+
+      const inputNum = {
+        width:38, textAlign:"center", background:"#1e2a45", border:"1px solid #3b5bdb",
+        color:"#e2e8f0", borderRadius:6, padding:"5px", fontSize:16, fontWeight:700,
+        fontFamily:"inherit", outline:"none",
+      };
+
+      return (
+        <div style={{ padding:"24px 0" }}>
+          <div style={{ display:"flex", gap:12, marginBottom:20, flexWrap:"wrap" }}>
+            <StatCard label="MIS PUNTOS" value={totalPts} accent="#ffd43b"/>
+            <StatCard label="EXACTAS" value={preds.filter(p=>p.estado==="EXACTA").length} accent="#69db7c"/>
+            <StatCard label="CORRECTAS" value={preds.filter(p=>p.estado==="CORRECTA").length} accent="#a9e34b"/>
+            <StatCard label="FALLIDAS" value={preds.filter(p=>p.estado==="FALLIDA").length} accent="#ff8787"/>
+          </div>
+
+          {/* ── Botón / Formulario agregar predicción ── */}
+          <div style={{ marginBottom:14 }}>
+            {!showAddForm ? (
+              <button
+                onClick={() => setShowAddForm(true)}
+                disabled={partidosDisponibles.length === 0}
+                style={{
+                  background: partidosDisponibles.length === 0 ? "#111" : "#1a2744",
+                  border: `1px solid ${partidosDisponibles.length === 0 ? "#2a2a2a" : "#3b5bdb"}`,
+                  color: partidosDisponibles.length === 0 ? "#444" : "#748ffc",
+                  fontSize:11, fontWeight:700, padding:"8px 16px", borderRadius:8,
+                  cursor: partidosDisponibles.length === 0 ? "not-allowed" : "pointer",
+                  letterSpacing:"0.05em",
+                }}
+              >
+                {partidosDisponibles.length === 0
+                  ? "⚽ Sin partidos disponibles para apostar"
+                  : `+ Agregar Predicción (${partidosDisponibles.length} disponible${partidosDisponibles.length>1?"s":""})`}
+              </button>
+            ) : (
+              <div style={{
+                background:"#0d1628", border:"1px solid #3b5bdb44",
+                borderRadius:10, padding:"16px 18px",
+              }}>
+                <div style={{ fontSize:11, fontWeight:700, color:"#748ffc", marginBottom:12, letterSpacing:"0.05em" }}>
+                  ⚽ Nueva Predicción
+                </div>
+                <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"flex-end" }}>
+                  {/* Selector de partido */}
+                  <div style={{ display:"flex", flexDirection:"column", gap:4, flex:1, minWidth:200 }}>
+                    <label style={{ fontSize:9, color:"#4a6fa5", fontWeight:700, letterSpacing:"0.07em" }}>PARTIDO</label>
+                    <select
+                      value={newPartidoId}
+                      onChange={e => setNewPartidoId(e.target.value)}
+                      style={{
+                        background:"#0d1628", border:"1px solid #2a3a5a", color: newPartidoId ? "#e2e8f0" : "#4a6fa5",
+                        borderRadius:6, padding:"7px 10px", fontSize:12, fontFamily:"inherit", outline:"none",
+                      }}
+                    >
+                      <option value="">— Selecciona un partido —</option>
+                      {partidosDisponibles.map(p => {
+                        const loc = getEquipo(p.local);
+                        const vis = getEquipo(p.visitante);
+                        return (
+                          <option key={p.id} value={p.id}>
+                            {loc.flag} {loc.nombre} vs {vis.nombre} {vis.flag} · {p.fecha}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  {/* Marcador predicho */}
+                  <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                    <label style={{ fontSize:9, color:"#4a6fa5", fontWeight:700, letterSpacing:"0.07em" }}>MI PREDICCIÓN</label>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <input value={newGl} onChange={e=>setNewGl(e.target.value)} type="number" min="0" max="20" style={inputNum}/>
+                      <span style={{ color:"#4a6fa5", fontWeight:800, fontSize:16 }}>–</span>
+                      <input value={newGv} onChange={e=>setNewGv(e.target.value)} type="number" min="0" max="20" style={inputNum}/>
+                    </div>
+                  </div>
+
+                  <div style={{ display:"flex", gap:8 }}>
+                    <button onClick={agregarPrediccion} style={btnStyle("#2f9e44")}>✓ Guardar</button>
+                    <button onClick={()=>{setShowAddForm(false);setNewPartidoId("");setNewGl("0");setNewGv("0");}} style={btnStyle("#555")}>✕ Cancelar</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {partidosDePreds.map(({ partido, golesL, golesV, estado, pts, partidoId }) => {
+              if (!partido) return null;
+              const loc = getEquipo(partido.local);
+              const vis = getEquipo(partido.visitante);
+              const c = PRED_COLOR[estado] || PRED_COLOR.PENDIENTE;
+              const betStatus = getBetStatus(partido);
+              const editable = betStatus === "ABIERTA";
+              const bloqueadoProximamente = betStatus === "BLOQUEADA_PRONTO";
+              const finalizado = betStatus === "FINALIZADO";
+              const minsLeft = bloqueadoProximamente ? minutosRestantes(partido) : null;
+              const isEdit = editId === partidoId;
+
+              return (
+                <div key={partidoId} style={{
+                  background: finalizado ? "#0d1010" : bloqueadoProximamente ? "#1a1500" : c.bg,
+                  border:`1px solid ${finalizado ? "#33444422" : bloqueadoProximamente ? "#e6770066" : c.dot+"44"}`,
+                  borderRadius:12, padding:"14px 18px",
+                }}>
+                  {/* Banner bloqueado / finalizado */}
+                  {(betStatus !== "ABIERTA") && (
+                    <div style={{
+                      display:"flex", alignItems:"center", gap:8, marginBottom:10,
+                      padding:"6px 10px", borderRadius:6,
+                      background: finalizado ? "#111a11" : "#1a1200",
+                      border: `1px solid ${finalizado ? "#2f9e4433" : "#e6770044"}`,
+                    }}>
+                      <span style={{ fontSize:13 }}>{finalizado ? "🏁" : "⏱️"}</span>
+                      <span style={{
+                        fontSize:11, fontWeight:700,
+                        color: finalizado ? "#69db7c" : "#ffa94d",
+                        letterSpacing:"0.05em",
+                      }}>
+                        {finalizado
+                          ? `PARTIDO FINALIZADO · Resultado final: ${partido.golesL} – ${partido.golesV}`
+                          : betStatus === "BLOQUEADA_PRONTO"
+                            ? `APUESTAS CIERRAN EN ${minsLeft} MIN · El partido está por comenzar`
+                            : "APUESTAS CERRADAS · Partido en curso"}
+                      </span>
+                    </div>
+                  )}
+                  <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                    <span style={{
+                      display:"inline-flex", alignItems:"center", gap:4,
+                      fontSize:10, fontWeight:700, color:c.text, minWidth:80,
+                    }}>
+                      <Dot color={c.dot}/>{estado}
+                    </span>
+
+                    <div style={{ flex:1, display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{fontSize:16}}>{loc.flag}</span>
+                      <span style={{fontSize:12, fontWeight:600, color:"#e2e8f0"}}>{loc.nombre}</span>
+                      <span style={{color:"#4a6fa5", fontSize:12}}>vs</span>
+                      <span style={{fontSize:12, fontWeight:600, color:"#e2e8f0"}}>{vis.nombre}</span>
+                      <span style={{fontSize:16}}>{vis.flag}</span>
+                    </div>
+
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{ fontSize:11, color:"#4a6fa5" }}>Mi predicción:</span>
+                      {isEdit ? (
+                        <>
+                          <input value={gl} onChange={e=>setGl(e.target.value)} type="number" min="0" max="20" style={{
+                            width:32, textAlign:"center", background:"#1e2a45", border:"1px solid #3b5bdb",
+                            color:"#e2e8f0", borderRadius:5, padding:"3px", fontSize:14, fontWeight:700,
+                          }}/>
+                          <span style={{color:"#4a6fa5"}}>–</span>
+                          <input value={gv} onChange={e=>setGv(e.target.value)} type="number" min="0" max="20" style={{
+                            width:32, textAlign:"center", background:"#1e2a45", border:"1px solid #3b5bdb",
+                            color:"#e2e8f0", borderRadius:5, padding:"3px", fontSize:14, fontWeight:700,
+                          }}/>
+                          <button onClick={()=>savePred(partidoId)} style={btnStyle("#2f9e44")}>✓</button>
+                          <button onClick={()=>setEditId(null)} style={btnStyle("#555")}>✕</button>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{
+                            fontSize:16, fontWeight:800, color:c.text, letterSpacing:3,
+                          }}>{golesL} – {golesV}</span>
+                          {editable && (
+                            <button onClick={()=>{setEditId(partidoId);setGl(golesL);setGv(golesV);}} style={btnStyle("#4a6fa5")}>
+                              ✎
+                            </button>
+                          )}
+                          {!editable && betStatus !== "FINALIZADO" && (
+                            <span style={{
+                              fontSize:10, color:"#6b7280", fontStyle:"italic",
+                            }}>🔒</span>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {partido.golesL !== null && (
+                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                        <span style={{ fontSize:11, color:"#4a6fa5" }}>Real:</span>
+                        <span style={{ fontSize:16, fontWeight:800, color:"#e2e8f0", letterSpacing:3 }}>
+                          {partido.golesL} – {partido.golesV}
+                        </span>
+                      </div>
+                    )}
+
+                    <span style={{
+                      fontSize:18, fontWeight:800,
+                      color: pts>0?"#ffd43b":"#4a6fa5",
+                      minWidth:40, textAlign:"right",
+                    }}>+{pts}pts</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{
+            marginTop:20, background:"#0d1628", border:"1px solid #ffd43b33",
+            borderRadius:12, padding:"16px 20px",
+          }}>
+            <div style={{ fontSize:12, fontWeight:700, color:"#ffd43b", marginBottom:10, letterSpacing:"0.05em" }}>
+              ⚽ Predicción Global del Torneo (RF-14)
+            </div>
+            <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
+              {[
+                { label:"Campeón", value:"🇦🇷 Argentina" },
+                { label:"Subcampeón", value:"🇫🇷 Francia" },
+                { label:"Máx. Goleador", value:"L. Martínez" },
+              ].map(item => (
+                <div key={item.label} style={{
+                  background:"#12180a", border:"1px solid #ffd43b22", borderRadius:8, padding:"10px 16px",
+                }}>
+                  <div style={{fontSize:10, color:"#6b7280", marginBottom:4}}>{item.label}</div>
+                  <div style={{fontSize:14, fontWeight:700, color:"#ffd43b"}}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── ROOT ──────────────────────────────────────────────────────────────────────
+
+    function App() {
+      const [tab, setTab] = useState("Partidos");
+      const [partidos, setPartidos] = useState(PARTIDOS_DEFAULT);
+      const [participantes, setParticipantes] = useState(initialParticipantes);
+      const [apiStatus, setApiStatus] = useState("idle"); // idle | loading | ok | error
+      const [apiMsg, setApiMsg]       = useState("");
+
+      // Carga automática al iniciar si hay API Key configurada
+      useEffect(() => {
+        if (FOOTBALL_API_KEY !== "TU_API_KEY_AQUI") {
+          sincronizarConAPI();
+        }
+      }, []);
+
+      const sincronizarConAPI = async () => {
+        setApiStatus("loading");
+        setApiMsg("");
+        try {
+          const { equipos, partidos: partidosAPI } = await cargarDatosAPI();
+          // Actualizar la variable global de equipos
+          EQUIPOS = equipos;
+          setPartidos(partidosAPI);
+          setApiStatus("ok");
+          setApiMsg(`✅ ${partidosAPI.length} partidos · ${equipos.length} equipos sincronizados`);
+        } catch (err) {
+          setApiStatus("error");
+          setApiMsg(`❌ ${err.message}`);
+        }
+      };
+
+      const tabContent = {
+        "Partidos":           <TabPartidos partidos={partidos} setPartidos={setPartidos}/>,
+        "Gestionar Partidos": <TabGestionarPartidos partidos={partidos} setPartidos={setPartidos}/>,
+        "Ranking":            <TabRanking participantes={participantes} setParticipantes={setParticipantes}/>,
+        "Mis Predicciones":   <TabPredicciones partidos={partidos}/>,
+      };
+
+      const apiBtnColor = apiStatus === "ok" ? "#2f9e44" : apiStatus === "error" ? "#c92a2a" : "#3b5bdb";
+      const apiBtnText  = apiStatus === "loading" ? "⏳ Sincronizando…"
+                        : apiStatus === "ok"      ? "🔄 Actualizar datos"
+                        : "🌐 Sincronizar con API";
+
+      return (
+        <div style={{
+          background:"#060c18", minHeight:"100vh",
+          fontFamily:"'DM Mono', 'Fira Code', monospace",
+          color:"#e2e8f0",
+        }}>
+          <Header tab={tab} setTab={setTab}/>
+
+          {/* ── Banner API ── */}
+          <div style={{
+            maxWidth:860, margin:"0 auto", padding:"10px 20px 0",
+            display:"flex", alignItems:"center", gap:10, flexWrap:"wrap",
+          }}>
+            <button
+              onClick={sincronizarConAPI}
+              disabled={apiStatus === "loading"}
+              style={{
+                background:"#0d1628", border:`1px solid ${apiBtnColor}`,
+                color: apiBtnColor, fontSize:10, fontWeight:700,
+                padding:"5px 12px", borderRadius:6, cursor:"pointer",
+                letterSpacing:"0.05em", opacity: apiStatus==="loading" ? 0.6 : 1,
+              }}
+            >{apiBtnText}</button>
+            {apiMsg && (
+              <span style={{ fontSize:10, color: apiStatus==="ok" ? "#69db7c" : "#ff8787" }}>
+                {apiMsg}
+              </span>
+            )}
+            {FOOTBALL_API_KEY === "TU_API_KEY_AQUI" && (
+              <span style={{ fontSize:10, color:"#ffa94d" }}>
+                ⚠️ Configura tu API Key en <code>FOOTBALL_API_KEY</code> para datos reales
+              </span>
+            )}
+          </div>
+
+          <main style={{ maxWidth:860, margin:"0 auto", padding:"0 20px" }}>
+            {tabContent[tab]}
+          </main>
+        </div>
+      );
+    }
+
+    // ── RENDER ────────────────────────────────────────────────────────────────────
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('✅ Service Worker registrado:', reg.scope))
+          .catch(err => console.error('❌ Service Worker error:', err));
+      });
+    }
+  </script>
+</body>
 </html>
