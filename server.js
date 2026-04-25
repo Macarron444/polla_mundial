@@ -1,15 +1,3 @@
-/**
- * server.js
- * Servidor Express que:
- *  1. Sirve el dashboard (index.html, sw.js)
- *  2. Hace de proxy hacia football-data.org para evitar el bloqueo CORS
- *
- * Uso:
- *   node server.js
- *
- * Luego abre: http://localhost:3000
- */
-
 const http    = require("http");
 const https   = require("https");
 const fs      = require("fs");
@@ -101,7 +89,19 @@ const server = http.createServer((req, res) => {
 
     const ext  = path.extname(filePath);
     const mime = MIME[ext] || "application/octet-stream";
-    res.writeHead(200, { "Content-Type": mime });
+
+    // El sw.js NUNCA debe cachearse por el navegador — siempre debe
+    // descargar la versión más reciente para detectar actualizaciones
+    const isServiceWorker = req.url === "/sw.js";
+    const extraHeaders = isServiceWorker
+      ? {
+          "Cache-Control":        "no-store, no-cache, must-revalidate",
+          "Pragma":               "no-cache",
+          "Service-Worker-Allowed": "/",   // permite que el SW controle todo el origen
+        }
+      : {};
+
+    res.writeHead(200, { "Content-Type": mime, ...extraHeaders });
     res.end(data);
   });
 });
