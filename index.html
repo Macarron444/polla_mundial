@@ -5,30 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Polla Mundial 2026</title>
 
-  <!-- Estilos -->
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="src/css/styles.css">
 
-  <!-- React -->
+  <!-- React sin babel en el cliente (el servidor transpila JSX) -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
   <div id="root"></div>
 
-  <!-- Lógica de la aplicación -->
-  <script type="text/babel" src="js/config.js"></script>
-  <script type="text/babel" src="js/utils.js"></script>
-  <script type="text/babel" src="js/components/shared.js"></script>
-  <script type="text/babel" src="js/components/Header.js"></script>
-  <script type="text/babel" src="js/components/Login.js"></script>
-  <script type="text/babel" src="js/components/TabPartidos.js"></script>
-  <script type="text/babel" src="js/components/TabGestionarPartidos.js"></script>
-  <script type="text/babel" src="js/components/TabRanking.js"></script>
-  <script type="text/babel" src="js/components/TabPredicciones.js"></script>
-  <script type="text/babel" src="js/app.js"></script>
+  <script src="src/js/config.js"></script>
+  <script src="src/js/utils.js"></script>
+  <script src="src/js/components/shared.js"></script>
+  <script src="src/js/components/Header.js"></script>
+  <script src="src/js/components/Login.js"></script>
+  <script src="src/js/components/TabPartidos.js"></script>
+  <script src="src/js/components/TabGestionarPartidos.js"></script>
+  <script src="src/js/components/TabRanking.js"></script>
+  <script src="src/js/components/TabPredicciones.js"></script>
+  <script src="src/js/app.js"></script>
 
-  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
