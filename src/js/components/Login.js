@@ -1,11 +1,9 @@
-// ── USUARIOS REGISTRADOS (simulado - reemplazar con backend real) ──────────────
-// [TS: UsuarioService.registrar() / UsuarioService.autenticar()]
 const USUARIOS_REGISTRADOS = [
-  { id:1, nombre:"Sebastián M.", email:"admin@polla.com",  password:"admin123",  rol:"CREADOR"       },
-  { id:2, nombre:"Valentina R.", email:"vale@polla.com",   password:"vale123",   rol:"ADMINISTRADOR" },
-  { id:3, nombre:"Camilo T.",    email:"camilo@polla.com", password:"camilo123", rol:"PARTICIPANTE"  },
-  { id:4, nombre:"Lucía P.",     email:"lucia@polla.com",  password:"lucia123",  rol:"PARTICIPANTE"  },
-  { id:5, nombre:"Andrés B.",    email:"andres@polla.com", password:"andres123", rol:"PARTICIPANTE"  },
+  { id:1, nombre:"Sebastián M.", email:"admin@gmail.com",  password:"admin123",  rol:"CREADOR"       },
+  { id:2, nombre:"Valentina R.", email:"vale@gmail.com",   password:"vale123",   rol:"ADMINISTRADOR" },
+  { id:3, nombre:"Camilo T.",    email:"camilo@gmail.com", password:"camilo123", rol:"PARTICIPANTE"  },
+  { id:4, nombre:"Lucía P.",     email:"lucia@gmail.com",  password:"lucia123",  rol:"PARTICIPANTE"  },
+  { id:5, nombre:"Andrés B.",    email:"andres@gmail.com", password:"andres123", rol:"PARTICIPANTE"  },
 ];
 
 // ── COMPONENTE LOGIN ──────────────────────────────────────────────────────────
