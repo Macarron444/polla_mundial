@@ -1,16 +1,24 @@
 function App() {
+  const [usuario, setUsuario]         = useState(null); // null = no autenticado
   const [tab, setTab]                 = useState("Partidos");
   const [partidos, setPartidos]       = useState(PARTIDOS_DEFAULT);
   const [participantes, setParticipantes] = useState(PARTICIPANTES_DEFAULT);
-  const [apiStatus, setApiStatus]     = useState("idle"); // idle | loading | ok | error
+  const [apiStatus, setApiStatus]     = useState("idle");
   const [apiMsg, setApiMsg]           = useState("");
 
-  // Carga automática al iniciar si hay API Key configurada
-  useEffect(() => {
+  // [TS: UsuarioService.autenticar()] - guarda sesión en memoria
+  const handleLogin = (usuarioAutenticado) => {
+    setUsuario(usuarioAutenticado);
+    // Carga la API al ingresar
     if (FOOTBALL_API_KEY !== "TU_API_KEY_AQUI") {
       sincronizarConAPI();
     }
-  }, []);
+  };
+
+  const handleLogout = () => {
+    setUsuario(null);
+    setTab("Partidos");
+  };
 
   // [TS: FootballDataService.sincronizarTodo()]
   const sincronizarConAPI = async () => {
@@ -20,17 +28,20 @@ function App() {
       EQUIPOS = equipos;
       setPartidos(partidosAPI);
       setApiStatus("ok");
-      setApiMsg(`✅ ${partidosAPI.length} partidos · ${equipos.length} equipos sincronizados`);
+      setApiMsg(`✅ ${partidosAPI.length} partidos · ${equipos.length} equipos`);
     } catch (err) {
       setApiStatus("error");
       setApiMsg(`❌ ${err.message}`);
     }
   };
 
+  // Si no hay sesión → mostrar login
+  if (!usuario) return <Login onLogin={handleLogin}/>;
+
   const apiBtnColor = apiStatus==="ok" ? "#2f9e44" : apiStatus==="error" ? "#c92a2a" : "#3b5bdb";
   const apiBtnText  = apiStatus==="loading" ? "⏳ Sincronizando…"
-                    : apiStatus==="ok"      ? "🔄 Actualizar datos"
-                    : "🌐 Sincronizar con API";
+                    : apiStatus==="ok"      ? "🔄 Actualizar"
+                    : "🌐 Sincronizar API";
 
   const tabContent = {
     "Partidos":           <TabPartidos         partidos={partidos}           setPartidos={setPartidos}/>,
@@ -41,7 +52,7 @@ function App() {
 
   return (
     <div style={{ background:"#060c18", minHeight:"100vh" }}>
-      <Header tab={tab} setTab={setTab}/>
+      <Header tab={tab} setTab={setTab} usuario={usuario} onLogout={handleLogout}/>
 
       {/* Banner sincronización API */}
       <div className="api-banner">
@@ -58,7 +69,7 @@ function App() {
 
         {FOOTBALL_API_KEY === "TU_API_KEY_AQUI" && (
           <span style={{ fontSize:10, color:"#ffa94d" }}>
-            ⚠️ Configura tu API Key en <code>js/config.js</code> para datos reales
+            ⚠️ Configura tu API Key en <code>js/config.js</code>
           </span>
         )}
       </div>
