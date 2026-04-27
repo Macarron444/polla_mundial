@@ -7,6 +7,17 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/sw.js',
+  '/src/css/styles.css',
+  '/src/js/config.js',
+  '/src/js/utils.js',
+  '/src/js/components/shared.js',
+  '/src/js/components/Login.js',
+  '/src/js/components/Header.js',
+  '/src/js/components/TabPartidos.js',
+  '/src/js/components/TabGestionarPartidos.js',
+  '/src/js/components/TabRanking.js',
+  '/src/js/components/TabPredicciones.js',
+  '/src/js/app.js',
 ];
 
 // ── INSTALL: pre-cachea los archivos estáticos ────────────────────────────────
