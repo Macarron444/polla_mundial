@@ -1,6 +1,6 @@
 // ── NOMBRES DE CACHÉ ──────────────────────────────────────────────────────────
-const CACHE_APP   = 'polla-mundial-app-v1';   // HTML, JS, CSS (estáticos)
-const CACHE_API   = 'polla-mundial-api-v1';   // Respuestas del proxy /api/*
+const CACHE_APP   = 'polla-mundial-app-v2';   // HTML, JS, CSS (estáticos)
+const CACHE_API   = 'polla-mundial-api-v2';   // Respuestas del proxy /api/*
 
 // ── ARCHIVOS ESTÁTICOS A PRE-CACHEAR ──────────────────────────────────────────
 const ASSETS_TO_CACHE = [
@@ -61,8 +61,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ── Archivos estáticos → Cache First ──────────────────────────────────────
-  event.respondWith(cacheFirstApp(event.request));
+  // ── Archivos estáticos → Stale While Revalidate ───────────────────────────
+  event.respondWith(staleWhileRevalidate(event.request));
 });
 
 // ── ESTRATEGIA: Network First para la API ────────────────────────────────────
@@ -85,19 +85,19 @@ async function networkFirstAPI(request) {
       });
 
       cache.put(request, cachedResponse);
-      console.log('[SW] ✅ API cacheada:', request.url);
+      console.log('[SW] API cacheada:', request.url);
     }
 
     return networkResponse;
 
   } catch (error) {
-    console.log('[SW] 📦 Sin red, usando caché para:', request.url);
+    console.log('[SW] Sin red, usando caché para:', request.url);
     const cached = await cache.match(request);
 
     if (cached) {
       const cachedAt = cached.headers.get('sw-cached-at');
       const age = cachedAt ? Math.round((Date.now() - parseInt(cachedAt)) / 60000) : '?';
-      console.log(`[SW] ⏱️ Datos del caché (hace ${age} min)`);
+      console.log(`[SW] Datos del caché (hace ${age} min)`);
       return cached;
     }
 
@@ -123,5 +123,37 @@ async function cacheFirstApp(request) {
   } catch (error) {
     const fallback = await caches.match('/index.html');
     return fallback || new Response('Sin conexión', { status: 503 });
+  }
+}
+
+// ── ESTRATEGIA: Stale While Revalidate para archivos estáticos ──────────────
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_APP);
+  const cachedResponse = await cache.match(request);
+
+  if (cachedResponse) {
+    // Revalidar en background sin esperar
+    fetch(request).then((networkResponse) => {
+      if (networkResponse.ok) {
+        cache.put(request, networkResponse.clone());
+        console.log('[SW] 🔄 Revalidado y cacheado:', request.url);
+      }
+    }).catch((error) => {
+      console.log('[SW] ❌ Error revalidando:', request.url, error);
+    });
+    return cachedResponse;
+  } else {
+    // No hay caché, obtener de la red
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse.ok) {
+        cache.put(request, networkResponse.clone());
+      }
+      return networkResponse;
+    } catch (error) {
+      console.log('[SW] ❌ Error obteniendo:', request.url, error);
+      const fallback = await caches.match('/index.html');
+      return fallback || new Response('Sin conexión', { status: 503 });
+    }
   }
 }
