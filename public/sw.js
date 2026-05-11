@@ -1,67 +1,101 @@
-const CACHE_NAME = 'polla-mundial-cache-v1';
+const CACHE_APP = 'polla-mundial-app-v1'
+const CACHE_API = 'polla-mundial-api-v1'
+
 const ASSETS_TO_CACHE = [
   '/',
-  '/polla_mundial_dashboard.html',
-  '/favicon.svg',
-];
+  '/index.html',
+  '/sw.js',
+  '/src/app/main.jsx',
+  '/src/app/App.jsx',
+  '/src/shared/styles/styles.css',
+]
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
-  );
-});
+  self.skipWaiting()
+  event.waitUntil(caches.open(CACHE_APP).then((cache) => cache.addAll(ASSETS_TO_CACHE)))
+})
 
 self.addEventListener('activate', (event) => {
+  const cachesActuales = [CACHE_APP, CACHE_API]
   event.waitUntil(
-    caches.keys().then((cacheNames) =>
+    caches.keys().then((nombres) =>
       Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
+        nombres.map((nombre) => {
+          if (!cachesActuales.includes(nombre)) {
+            return caches.delete(nombre)
           }
-          return Promise.resolve();
+          return undefined
         })
       )
     )
-  );
-  self.clients.claim();
-});
+  )
+  self.clients.claim()
+})
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') {
-    return;
+  if (event.request.method !== 'GET') return
+
+  const url = new URL(event.request.url)
+
+  if (url.origin !== self.location.origin) return
+
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirstAPI(event.request))
+    return
   }
 
-  const requestUrl = new URL(event.request.url);
+  event.respondWith(cacheFirstApp(event.request))
+})
 
-  // Intercept only same-origin requests
-  if (requestUrl.origin !== self.location.origin) {
-    return;
+async function networkFirstAPI(request) {
+  const cache = await caches.open(CACHE_API)
+
+  try {
+    const networkResponse = await fetch(request)
+
+    if (networkResponse.ok) {
+      const responseToCache = networkResponse.clone()
+      const headers = new Headers(responseToCache.headers)
+      headers.append('sw-cached-at', Date.now().toString())
+
+      const body = await responseToCache.arrayBuffer()
+      const cachedResponse = new Response(body, {
+        status: responseToCache.status,
+        statusText: responseToCache.statusText,
+        headers,
+      })
+
+      cache.put(request, cachedResponse)
+    }
+
+    return networkResponse
+  } catch (error) {
+    const cached = await cache.match(request)
+
+    if (cached) {
+      return cached
+    }
+
+    return new Response(
+      JSON.stringify({ error: 'Sin conexion y sin datos en cache', offline: true }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
+    )
   }
+}
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+async function cacheFirstApp(request) {
+  const cached = await caches.match(request)
+  if (cached) return cached
 
-      return fetch(event.request)
-        .then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-            return networkResponse;
-          }
-
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
-          return networkResponse;
-        })
-        .catch(() => {
-          return caches.match('/index.html');
-        });
-    })
-  );
-});
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse.ok) {
+      const cache = await caches.open(CACHE_APP)
+      cache.put(request, networkResponse.clone())
+    }
+    return networkResponse
+  } catch (error) {
+    const fallback = await caches.match('/index.html')
+    return fallback || new Response('Sin conexion', { status: 503 })
+  }
+}

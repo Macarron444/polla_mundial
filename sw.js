@@ -1,23 +1,15 @@
 // ── NOMBRES DE CACHÉ ──────────────────────────────────────────────────────────
-const CACHE_APP   = 'polla-mundial-app-v1';   // HTML, JS, CSS (estáticos)
-const CACHE_API   = 'polla-mundial-api-v1';   // Respuestas del proxy /api/*
+const CACHE_APP = 'polla-mundial-app-v1';   // HTML, JS, CSS (estáticos)
+const CACHE_API = 'polla-mundial-api-v1';   // Respuestas del proxy /api/*
 
 // ── ARCHIVOS ESTÁTICOS A PRE-CACHEAR ──────────────────────────────────────────
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/sw.js',
-  '/src/css/styles.css',
-  '/src/js/config.js',
-  '/src/js/utils.js',
-  '/src/js/components/shared.js',
-  '/src/js/components/Login.js',
-  '/src/js/components/Header.js',
-  '/src/js/components/TabPartidos.js',
-  '/src/js/components/TabGestionarPartidos.js',
-  '/src/js/components/TabRanking.js',
-  '/src/js/components/TabPredicciones.js',
-  '/src/js/app.js',
+  '/src/app/main.jsx',
+  '/src/app/App.jsx',
+  '/src/shared/styles/styles.css',
 ];
 
 // ── INSTALL: pre-cachea los archivos estáticos ────────────────────────────────
