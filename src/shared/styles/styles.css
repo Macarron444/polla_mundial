@@ -177,12 +177,35 @@ button:hover {
 
 .api-banner {
     max-width: 860px;
+    width: 100%;
     margin: 0 auto;
     padding: 10px 20px 0;
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
     gap: 10px;
-    flex-wrap: wrap;
+    align-items: center;
+}
+
+.api-banner span {
+    min-width: 0;
+}
+
+@media (max-width: 640px) {
+    .api-banner {
+        grid-template-columns: 1fr;
+        text-align: center;
+        justify-items: center;
+        padding: 10px 16px 0;
+    }
+
+    .api-banner .btn-api {
+        width: 100%;
+        max-width: 280px;
+    }
+
+    .api-banner span {
+        width: 100%;
+    }
 }
 
 .loading-page {
