@@ -57,6 +57,11 @@ function App() {
         return (
             <div className="loading-page">
                 <div className="loading-card">
+                    <div className="loading-spinner" aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                    </div>
                     <div className="loading-text">⏳ Conectando con la API…</div>
                     <div className="loading-subtext">
                         Espera unos segundos mientras cargamos los partidos y los equipos.
