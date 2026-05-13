@@ -185,6 +185,38 @@ button:hover {
     flex-wrap: wrap;
 }
 
+.loading-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    background: #060c18;
+}
+
+.loading-card {
+    width: 100%;
+    max-width: 420px;
+    background: #0c172d;
+    border-radius: 20px;
+    padding: 32px 28px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+    text-align: center;
+}
+
+.loading-text {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 14px;
+}
+
+.loading-subtext {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #a3b3d0;
+}
+
 .tab-section {
     padding: 24px 0;
 }

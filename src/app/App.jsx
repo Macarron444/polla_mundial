@@ -16,8 +16,8 @@ import {
 function App() {
     const [usuario, setUsuario] = useState(null)
     const [tab, setTab] = useState('Partidos')
-    const [partidos, setPartidos] = useState(PARTIDOS_DEFAULT)
-    const [participantes, setParticipantes] = useState(PARTICIPANTES_DEFAULT)
+    const [partidos, setPartidos] = useState([])
+    const [participantes, setParticipantes] = useState([])
     const [equipos, setEquipos] = useState(EQUIPOS_DEFAULT)
     const [apiStatus, setApiStatus] = useState('idle')
     const [apiMsg, setApiMsg] = useState('')
@@ -28,6 +28,8 @@ function App() {
             sincronizarConAPI()
         }
     }
+
+    const showInitialApiLoading = usuario && apiStatus === 'loading' && partidos.length === 0
 
     const handleLogout = () => {
         setUsuario(null)
@@ -50,6 +52,19 @@ function App() {
     }
 
     if (!usuario) return <Login onLogin={handleLogin} />
+
+    if (showInitialApiLoading) {
+        return (
+            <div className="loading-page">
+                <div className="loading-card">
+                    <div className="loading-text">⏳ Conectando con la API…</div>
+                    <div className="loading-subtext">
+                        Espera unos segundos mientras cargamos los partidos y los equipos.
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     const apiBtnColor =
         apiStatus === 'ok' ? '#2f9e44' : apiStatus === 'error' ? '#c92a2a' : '#3b5bdb'
