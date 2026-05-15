@@ -471,6 +471,14 @@ button:hover {
     padding: 16px 20px;
 }
 
+.offline-storage-note {
+    margin: -6px 0 16px;
+    color: #69db7c;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
 /* ── BOTONES GENERALES ───────────────────────────────────────────────────────── */
 .btn {
     font-family: inherit;

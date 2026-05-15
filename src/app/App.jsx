@@ -12,6 +12,7 @@ import {
     PARTIDOS_DEFAULT,
     PARTICIPANTES_DEFAULT,
 } from '../core/data/defaults.js'
+import { guardarUsuario } from '../core/storage/indexedDb.js'
 
 function App() {
     const [usuario, setUsuario] = useState(null)
@@ -24,6 +25,9 @@ function App() {
 
     const handleLogin = (usuarioAutenticado) => {
         setUsuario(usuarioAutenticado)
+        guardarUsuario(usuarioAutenticado).catch((error) => {
+            console.warn('No se pudo guardar el usuario en IndexedDB:', error)
+        })
         if (FOOTBALL_API_KEY && FOOTBALL_API_KEY !== 'TU_API_KEY_AQUI') {
             sincronizarConAPI()
         }
@@ -94,7 +98,7 @@ function App() {
         Ranking: (
             <TabRanking participantes={participantes} setParticipantes={setParticipantes} />
         ),
-        'Mis Predicciones': <TabPredicciones partidos={partidos} equipos={equipos} />,
+        'Mis Predicciones': <TabPredicciones usuario={usuario} partidos={partidos} equipos={equipos} />,
     }
 
     return (

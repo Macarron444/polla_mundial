@@ -1,13 +1,14 @@
-const CACHE_APP = 'polla-mundial-app-v1'
+const CACHE_APP = 'polla-mundial-app-v2'
 const CACHE_API = 'polla-mundial-api-v1'
 
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/sw.js',
-  '/src/app/main.jsx',
-  '/src/app/App.jsx',
-  '/src/shared/styles/styles.css',
+  '/manifest.webmanifest',
+  '/favicon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
 ]
 
 self.addEventListener('install', (event) => {

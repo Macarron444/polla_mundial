@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Dot, PRED_COLOR, StatCard, btnStyle } from '../../shared/ui/index.jsx'
 import { getBetStatus, minutosRestantes } from '../../core/utils/betting.js'
 import { getEquipo } from '../../core/utils/teams.js'
 import { PREDICCIONES_DEFAULT } from '../../core/data/defaults.js'
+import {
+    guardarPrediccionesUsuario,
+    obtenerPrediccionesUsuario,
+} from '../../core/storage/indexedDb.js'
 
-function TabPredicciones({ partidos, equipos }) {
+function TabPredicciones({ usuario, partidos, equipos }) {
     const [preds, setPreds] = useState(PREDICCIONES_DEFAULT)
     const [editId, setEditId] = useState(null)
     const [gl, setGl] = useState('')
@@ -13,6 +17,50 @@ function TabPredicciones({ partidos, equipos }) {
     const [newPartidoId, setNewPartidoId] = useState('')
     const [newGl, setNewGl] = useState('0')
     const [newGv, setNewGv] = useState('0')
+    const [dbStatus, setDbStatus] = useState('Cargando predicciones locales...')
+    const hydratedRef = useRef(false)
+
+    useEffect(() => {
+        hydratedRef.current = false
+        setDbStatus('Cargando predicciones locales...')
+
+        obtenerPrediccionesUsuario(usuario?.id)
+            .then((registro) => {
+                const predicciones = registro?.predicciones?.length
+                    ? registro.predicciones
+                    : PREDICCIONES_DEFAULT
+
+                setPreds(predicciones)
+
+                if (!registro && usuario?.id) {
+                    return guardarPrediccionesUsuario(usuario.id, predicciones).then(() => {
+                        setDbStatus('Predicciones iniciales guardadas en IndexedDB')
+                    })
+                }
+
+                setDbStatus('Predicciones restauradas desde IndexedDB')
+                return null
+            })
+            .catch((error) => {
+                console.warn('No se pudieron cargar predicciones desde IndexedDB:', error)
+                setPreds(PREDICCIONES_DEFAULT)
+                setDbStatus('IndexedDB no disponible; usando datos demo')
+            })
+            .finally(() => {
+                hydratedRef.current = true
+            })
+    }, [usuario?.id])
+
+    useEffect(() => {
+        if (!hydratedRef.current || !usuario?.id) return
+
+        guardarPrediccionesUsuario(usuario.id, preds)
+            .then(() => setDbStatus('Predicciones guardadas en IndexedDB'))
+            .catch((error) => {
+                console.warn('No se pudieron guardar predicciones en IndexedDB:', error)
+                setDbStatus('No se pudieron guardar las predicciones locales')
+            })
+    }, [preds, usuario?.id])
 
     const partidosDisponibles = partidos.filter(
         (p) => getBetStatus(p) === 'ABIERTA' && !preds.some((pr) => pr.partidoId === p.id)
@@ -97,6 +145,8 @@ function TabPredicciones({ partidos, equipos }) {
                     accent="#ff8787"
                 />
             </div>
+
+            <div className="offline-storage-note">{dbStatus}</div>
 
             <div style={{ marginBottom: 14 }}>
                 {!showAddForm ? (
