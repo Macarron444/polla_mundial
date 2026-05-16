@@ -156,6 +156,57 @@ button:hover {
     color: #6b7280;
 }
 
+/* Responsive header / nav adjustments */
+/* Allow tabs to scroll on narrow screens, reduce padding and hide subtitle if needed */
+@media (max-width: 900px) {
+    .header__inner {
+        flex-wrap: wrap;
+        height: auto;
+        gap: 10px;
+        padding: 10px 0;
+    }
+
+    .header__brand {
+        min-width: 180px;
+        flex: 1 1 220px;
+        gap: 8px;
+    }
+
+    .header__nav {
+        order: 2;
+        flex: 1 1 300px;
+        justify-content: flex-start;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 6px 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .header__nav::-webkit-scrollbar { display: none; }
+
+    .nav-tab {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        max-width: 160px;
+        padding: 6px 10px;
+        font-size: 10px;
+    }
+
+    /* Move user area below on very narrow widths to avoid overlap */
+    .header__inner > div:last-child {
+        order: 3;
+        flex: 0 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .header__title { font-size: 12px; }
+    .header__subtitle { display: none; }
+    .header__logo { font-size: 20px; }
+    .nav-tab { max-width: 120px; padding: 5px 8px; font-size: 9px; }
+}
+
 /* Banner offline */
 .offline-banner {
     background: #1a0d0d;
