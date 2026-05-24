@@ -2,33 +2,22 @@
   "name": "polla-mundial",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server-prod.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
     "build": "vite build",
+    "start": "node server-prod.js",
     "preview": "vite preview"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.10.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.0",
-    "@babel/preset-react": "^7.28.5",
-    "@types/bcrypt": "^6.0.0",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.6.2",
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^8.0.12"

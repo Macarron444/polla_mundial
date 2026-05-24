@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -11,9 +10,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, '/v4'),
-        headers: {
-          'X-Auth-Token': '67655057f3934e9f8674d35dec465040',
-        },
+        headers: { 'X-Auth-Token': '67655057f3934e9f8674d35dec465040' },
+      },
+      '/db': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
       },
     },
   },

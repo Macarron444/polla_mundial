@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { obtenerTodosUsuarios, guardarTodosUsuarios } from '../../core/storage/indexedDb.js'
+import { useState } from 'react'
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@(gmail|hotmail|outlook|yahoo|live|icloud)\.(com|es|co|net|org|com\.co)$/i
 
@@ -12,37 +11,28 @@ function Login({ onLogin }) {
     const [error, setError]         = useState('')
     const [exito, setExito]         = useState('')
     const [loading, setLoading]     = useState(false)
-    const [sinUsuarios, setSinUsuarios] = useState(false)
-
-    // Verificar si hay usuarios registrados (para mostrar aviso)
-    useEffect(() => {
-        obtenerTodosUsuarios().then((us) => setSinUsuarios(us.length === 0)).catch(() => {})
-    }, [modo])
 
     const resetForm = () => {
         setNombre(''); setEmail(''); setPassword('')
         setConfirmar(''); setError(''); setExito('')
     }
 
-    const cambiarModo = (nuevoModo) => { setModo(nuevoModo); resetForm() }
+    const cambiarModo = (m) => { setModo(m); resetForm() }
 
     /* ── LOGIN ── */
     const handleLogin = async () => {
         if (!email.trim() || !password.trim()) { setError('Ingresa tu correo y contraseña'); return }
         setLoading(true); setError('')
-        await new Promise((r) => setTimeout(r, 400))
         try {
-            const usuarios = await obtenerTodosUsuarios()
-            const usuario  = usuarios.find(
-                (u) => u.email.toLowerCase() === email.toLowerCase().trim() && u.password === password
-            )
-            if (usuario) {
-                const { password: _pwd, ...usuarioSeguro } = usuario
-                onLogin(usuarioSeguro)
-            } else {
-                setError('Correo o contraseña incorrectos')
-            }
-        } catch { setError('Error al verificar credenciales') }
+            const res = await fetch('/db/usuarios/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+            })
+            const data = await res.json()
+            if (!res.ok) { setError(data.error ?? 'Credenciales incorrectas'); setLoading(false); return }
+            onLogin(data.usuario)
+        } catch { setError('Error de conexión con el servidor') }
         setLoading(false)
     }
 
@@ -59,10 +49,9 @@ function Login({ onLogin }) {
         if (password !== confirmar) { setError('Las contraseñas no coinciden'); return }
 
         setLoading(true)
-        await new Promise((r) => setTimeout(r, 400))
         try {
-            const usuarios = await obtenerTodosUsuarios()
-            const existe   = usuarios.find((u) => u.email.toLowerCase() === email.toLowerCase().trim())
+            const todos = await fetch('/db/usuarios/todos').then(r => r.json())
+            const existe = todos.find(u => u.email.toLowerCase() === email.toLowerCase().trim())
             if (existe) { setError('Este correo ya está registrado'); setLoading(false); return }
 
             const nuevoUsuario = {
@@ -70,13 +59,20 @@ function Login({ onLogin }) {
                 nombre: nombre.trim(),
                 email: email.toLowerCase().trim(),
                 password,
-                rol: usuarios.length === 0 ? 'CREADOR' : 'PARTICIPANTE',
+                rol: todos.length === 0 ? 'CREADOR' : 'PARTICIPANTE',
                 fechaRegistro: new Date().toISOString(),
             }
-            await guardarTodosUsuarios([...usuarios, nuevoUsuario])
+
+            const res = await fetch('/db/usuarios', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nuevoUsuario),
+            })
+            if (!res.ok) { const d = await res.json(); setError(d.error); setLoading(false); return }
+
             setExito(`✅ ¡Listo, ${nuevoUsuario.nombre}! Ya puedes iniciar sesión.`)
             setTimeout(() => { cambiarModo('login'); setEmail(nuevoUsuario.email) }, 1800)
-        } catch { setError('Error al registrar el usuario') }
+        } catch { setError('Error de conexión con el servidor') }
         setLoading(false)
     }
 
@@ -89,44 +85,26 @@ function Login({ onLogin }) {
                     <div className="login-logo__subtitle">FIFA WORLD CUP · PWA</div>
                 </div>
 
-                {/* ── FORMULARIO LOGIN ── */}
                 {modo === 'login' && (
                     <>
-                        {sinUsuarios && (
-                            <div className="login-notice">
-                                👋 Aún no hay usuarios. <br />
-                                <strong onClick={() => cambiarModo('registro')} style={{ cursor: 'pointer', color: '#748ffc' }}>
-                                    Regístrate primero →
-                                </strong>
-                            </div>
-                        )}
-
                         <div className="login-field">
                             <label className="login-label">CORREO ELECTRÓNICO</label>
-                            <input
-                                type="email" className="login-input" placeholder="tu@correo.com"
+                            <input type="email" className="login-input" placeholder="tu@correo.com"
                                 value={email} onChange={(e) => setEmail(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                                autoComplete="email"
-                            />
+                                autoComplete="email" />
                         </div>
-
                         <div className="login-field">
                             <label className="login-label">CONTRASEÑA</label>
-                            <input
-                                type="password" className="login-input" placeholder="••••••••"
+                            <input type="password" className="login-input" placeholder="••••••••"
                                 value={password} onChange={(e) => setPassword(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                                autoComplete="current-password"
-                            />
+                                autoComplete="current-password" />
                         </div>
-
                         <button className="login-btn" onClick={handleLogin} disabled={loading}>
                             {loading ? '⏳ Verificando...' : 'Ingresar →'}
                         </button>
-
                         {error && <div className="login-error">⚠️ {error}</div>}
-
                         <div className="login-hint">
                             ¿No tienes cuenta?{' '}
                             <strong style={{ color: '#748ffc', cursor: 'pointer' }} onClick={() => cambiarModo('registro')}>
@@ -136,60 +114,41 @@ function Login({ onLogin }) {
                     </>
                 )}
 
-                {/* ── FORMULARIO REGISTRO ── */}
                 {modo === 'registro' && (
                     <>
                         <div className="login-field">
                             <label className="login-label">NOMBRE COMPLETO</label>
-                            <input
-                                type="text" className="login-input" placeholder="Juan Pérez"
-                                value={nombre} onChange={(e) => setNombre(e.target.value)}
-                                autoComplete="name"
-                            />
+                            <input type="text" className="login-input" placeholder="Juan Pérez"
+                                value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="name" />
                         </div>
-
                         <div className="login-field">
                             <label className="login-label">CORREO ELECTRÓNICO</label>
-                            <input
-                                type="email" className="login-input" placeholder="tu@gmail.com · tu@hotmail.com"
-                                value={email} onChange={(e) => setEmail(e.target.value)}
-                                autoComplete="email"
-                            />
+                            <input type="email" className="login-input" placeholder="tu@gmail.com"
+                                value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
                         </div>
-
                         <div className="login-field">
                             <label className="login-label">CONTRASEÑA</label>
-                            <input
-                                type="password" className="login-input" placeholder="Mínimo 6 caracteres"
-                                value={password} onChange={(e) => setPassword(e.target.value)}
-                                autoComplete="new-password"
-                            />
+                            <input type="password" className="login-input" placeholder="Mínimo 6 caracteres"
+                                value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
                         </div>
-
                         <div className="login-field">
                             <label className="login-label">CONFIRMAR CONTRASEÑA</label>
-                            <input
-                                type="password" className="login-input" placeholder="Repite tu contraseña"
+                            <input type="password" className="login-input" placeholder="Repite tu contraseña"
                                 value={confirmar} onChange={(e) => setConfirmar(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleRegistro()}
-                                autoComplete="new-password"
-                            />
+                                autoComplete="new-password" />
                         </div>
-
                         <button className="login-btn" onClick={handleRegistro} disabled={loading}>
                             {loading ? '⏳ Registrando...' : 'Crear cuenta →'}
                         </button>
-
                         {error && <div className="login-error">⚠️ {error}</div>}
                         {exito && <div className="login-success">{exito}</div>}
-
                         <div className="login-hint">
                             ¿Ya tienes cuenta?{' '}
                             <strong style={{ color: '#748ffc', cursor: 'pointer' }} onClick={() => cambiarModo('login')}>
                                 Inicia sesión
                             </strong>
                         </div>
-
                         <div className="login-note">
                             📧 Correos aceptados: Gmail, Hotmail, Outlook, Yahoo, Live, iCloud
                         </div>
