@@ -241,7 +241,7 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
             )}
 
             {tabActiva === 'Apuesta' && esAdmin && (
-                <ConfigApuesta grupo={grupo} usuario={usuario} onActualizado={onCambio} />
+                <ConfigApuesta grupo={grupo} usuario={usuario} partidos={partidos} onActualizado={onCambio} />
             )}
             {tabActiva === 'Invitar' && esAdmin && <InvitacionLink grupo={grupo} />}
         </div>

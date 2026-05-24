@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { btnStyle, PRED_COLOR, BadgeEstado } from '../../../shared/ui/index.jsx'
 import {
     getPredicion,
@@ -7,20 +7,33 @@ import {
 } from '../../../core/storage/prediccionesGrupo.js'
 
 function CardPartidoPrediccion({ partido, equipos, grupo, usuario, onGuardado }) {
-    const pred = getPredicion(grupo.id, usuario.id, partido.id)
-    const [golesL, setGolesL] = useState(pred?.golesL ?? '')
-    const [golesV, setGolesV] = useState(pred?.golesV ?? '')
-    const [comodin, setComodin] = useState(pred?.usaComodin ?? false)
+    const [pred, setPred] = useState(null)
+    const [golesL, setGolesL] = useState('')
+    const [golesV, setGolesV] = useState('')
+    const [comodin, setComodin] = useState(false)
     const [msg, setMsg] = useState('')
+
+    useEffect(() => {
+        getPredicion(grupo.id, usuario.id, partido.id).then((p) => {
+            setPred(p)
+            setGolesL(p?.golesL ?? '')
+            setGolesV(p?.golesV ?? '')
+            setComodin(p?.usaComodin ?? false)
+        })
+    }, [grupo.id, usuario.id, partido.id])
 
     const local = equipos.find((e) => e.id === partido.local)
     const visitante = equipos.find((e) => e.id === partido.visitante)
     const bloqueado = partido.estado !== 'PROGRAMADO'
-    const comodinDisp = usaComodinDisponible(grupo.id, usuario.id)
 
-    const handleGuardar = () => {
+    const [comodinDisp, setComodinDisp] = useState(false)
+    useEffect(() => {
+        usaComodinDisponible(grupo.id, usuario.id).then(setComodinDisp)
+    }, [grupo.id, usuario.id])
+
+    const handleGuardar = async () => {
         if (golesL === '' || golesV === '') { setMsg('Ingresa ambos marcadores'); return }
-        guardarPrediccion(grupo.id, usuario.id, partido.id, Number(golesL), Number(golesV), comodin)
+        await guardarPrediccion(grupo.id, usuario.id, partido.id, Number(golesL), Number(golesV), comodin)
         setMsg('✓ Guardado')
         setTimeout(() => { setMsg(''); onGuardado() }, 1200)
     }
@@ -97,13 +110,28 @@ function CardPartidoPrediccion({ partido, equipos, grupo, usuario, onGuardado })
 
 function TabPrediccionesGrupo({ grupo, usuario, partidos, equipos }) {
     const [refresh, setRefresh] = useState(0)
-    const comodinUsado = !usaComodinDisponible(grupo.id, usuario.id)
+    const [comodinUsado, setComodinUsado] = useState(false)
+
+    // ── Partidos seleccionados para este grupo ────────────────────────────────
+    // grupo.partidosSeleccionados es un array de IDs; si no existe, muestra todos
+    const partidosGrupo = grupo.partidosSeleccionados
+        ? partidos.filter((p) => grupo.partidosSeleccionados.includes(p.id))
+        : partidos
+
+    useEffect(() => {
+        usaComodinDisponible(grupo.id, usuario.id).then((disp) => setComodinUsado(!disp))
+    }, [grupo.id, usuario.id, refresh])
 
     return (
         <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div style={{ fontSize: 12, color: '#4a6fa5' }}>
                     Predice el marcador exacto para ganar 3 pts, o solo el ganador para 1 pt.
+                    {grupo.partidosSeleccionados && (
+                        <span style={{ color: '#748ffc', marginLeft: 6 }}>
+                            ({partidosGrupo.length} partidos seleccionados)
+                        </span>
+                    )}
                 </div>
                 <div style={{
                     fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
@@ -115,7 +143,13 @@ function TabPrediccionesGrupo({ grupo, usuario, partidos, equipos }) {
                 </div>
             </div>
 
-            {partidos.map((p) => (
+            {partidosGrupo.length === 0 && (
+                <div style={{ padding: '30px 0', textAlign: 'center', color: '#4a6fa5', fontSize: 13 }}>
+                    El administrador aún no ha seleccionado partidos para este grupo.
+                </div>
+            )}
+
+            {partidosGrupo.map((p) => (
                 <CardPartidoPrediccion key={`${p.id}-${refresh}`}
                     partido={p} equipos={equipos} grupo={grupo}
                     usuario={usuario} onGuardado={() => setRefresh(r => r + 1)} />

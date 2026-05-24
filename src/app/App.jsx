@@ -97,7 +97,7 @@ function App() {
             />
         ),
         Ranking: (
-            <TabRanking participantes={participantes} setParticipantes={setParticipantes} />
+            <TabRanking usuario={usuario} />
         ),
         'Mis Predicciones': <TabPredicciones usuario={usuario} partidos={partidos} equipos={equipos} />,
         'Mis Grupos': <TabGrupos usuario={usuario} partidos={partidos} equipos={equipos} />,

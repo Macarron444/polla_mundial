@@ -62,3 +62,8 @@ export async function usaComodinDisponible(grupoId, usuarioId) {
     const preds = await getPredicionesPorGrupoUsuario(grupoId, usuarioId)
     return !preds.some((p) => p.usaComodin)
 }
+// Todas las predicciones de un usuario en TODOS los grupos (para ranking global)
+export async function getPredicionesPorUsuario(usuarioId) {
+    const todas = await obtenerTodasPrediccionesGrupo()
+    return todas.filter((p) => p.usuarioId === usuarioId)
+}
