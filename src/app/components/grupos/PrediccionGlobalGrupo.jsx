@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { guardarPrediccionGlobal, getPrediccionGlobal } from '../../../core/storage/grupos.js'
+import { guardarPrediccionGlobalGrupo as guardarPrediccionGlobal, getPrediccionGlobal } from '../../../core/storage/grupos.js'
 import { btnStyle } from '../../../shared/ui/index.jsx'
 
 function PrediccionGlobalGrupo({ grupo, usuario, equipos }) {
