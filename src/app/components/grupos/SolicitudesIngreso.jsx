@@ -1,24 +1,39 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getSolicitudesPorGrupo, resolverSolicitud } from '../../../core/storage/solicitudes.js'
 import { agregarMiembro } from '../../../core/storage/grupos.js'
 import { btnStyle } from '../../../shared/ui/index.jsx'
 
 function SolicitudesIngreso({ grupo, onCambio }) {
-    const [solicitudes, setSolicitudes] = useState(() => getSolicitudesPorGrupo(grupo.id))
-    const [error, setError] = useState('')
+    const [solicitudes, setSolicitudes] = useState([])
+    const [error, setError]             = useState('')
+    const [cargando, setCargando]       = useState(true)
 
-    const recargar = () => setSolicitudes(getSolicitudesPorGrupo(grupo.id))
+    const recargar = async () => {
+        setCargando(true)
+        try {
+            const s = await getSolicitudesPorGrupo(grupo.id)
+            setSolicitudes(s)
+        } finally {
+            setCargando(false)
+        }
+    }
 
-    const handleResolver = (sol, decision) => {
+    useEffect(() => { recargar() }, [grupo.id])
+
+    const handleResolver = async (sol, decision) => {
         setError('')
         try {
-            resolverSolicitud(sol.id, decision)
+            await resolverSolicitud(sol.id, decision)
             if (decision === 'APROBADA') {
-                agregarMiembro(grupo.id, { id: sol.usuarioId, nombre: sol.nombre, email: sol.email })
+                await agregarMiembro(grupo.id, { id: sol.usuarioId, nombre: sol.nombre, email: sol.email })
             }
-            recargar()
+            await recargar()
             onCambio()
         } catch (e) { setError(e.message) }
+    }
+
+    if (cargando) {
+        return <div style={{ fontSize: 11, color: '#4a6fa5', padding: '12px 0' }}>Cargando solicitudes…</div>
     }
 
     if (solicitudes.length === 0) {
