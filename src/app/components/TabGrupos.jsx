@@ -2,13 +2,15 @@ import { useState, useCallback } from 'react'
 import CardGrupo from './grupos/CardGrupo.jsx'
 import FormCrearGrupo from './grupos/FormCrearGrupo.jsx'
 import VistaGrupo from './grupos/VistaGrupo.jsx'
+import GruposPublicos from './grupos/GruposPublicos.jsx'
 import { btnStyle, StatCard } from '../../shared/ui/index.jsx'
 import { getGruposDeUsuario } from '../../core/storage/grupos.js'
 
-function TabGrupos({ usuario }) {
+function TabGrupos({ usuario, partidos, equipos }) {
     const [grupos, setGrupos] = useState(() => getGruposDeUsuario(usuario.id))
     const [vistaDetalle, setVistaDetalle] = useState(null)
     const [creando, setCreando] = useState(false)
+    const [verPublicos, setVerPublicos] = useState(false)
 
     const recargar = useCallback(() => {
         const actualizados = getGruposDeUsuario(usuario.id)
@@ -19,25 +21,17 @@ function TabGrupos({ usuario }) {
         }
     }, [usuario.id, vistaDetalle])
 
-    const handleCreado = (grupo) => {
-        setCreando(false)
-        recargar()
-        setVistaDetalle(grupo)
-    }
+    const handleCreado = (grupo) => { setCreando(false); recargar(); setVistaDetalle(grupo) }
 
-    const gruposComoAdmin = grupos.filter((g) =>
-        g.miembros.some((m) => m.usuarioId === usuario.id && m.rol === 'ADMIN')
-    )
-    const gruposComoParticipante = grupos.filter((g) =>
-        g.miembros.some((m) => m.usuarioId === usuario.id && m.rol === 'PARTICIPANTE')
-    )
+    const gruposComoAdmin = grupos.filter((g) => g.miembros.some((m) => m.usuarioId === usuario.id && m.rol === 'ADMIN'))
+    const gruposComoParticipante = grupos.filter((g) => g.miembros.some((m) => m.usuarioId === usuario.id && m.rol === 'PARTICIPANTE'))
 
     if (vistaDetalle) {
         return (
             <div className="tab-section">
                 <VistaGrupo
-                    grupo={vistaDetalle}
-                    usuario={usuario}
+                    grupo={vistaDetalle} usuario={usuario}
+                    partidos={partidos} equipos={equipos}
                     onVolver={() => { setVistaDetalle(null); recargar() }}
                     onCambio={recargar}
                 />
@@ -48,11 +42,7 @@ function TabGrupos({ usuario }) {
     if (creando) {
         return (
             <div className="tab-section">
-                <FormCrearGrupo
-                    usuario={usuario}
-                    onCreado={handleCreado}
-                    onCancelar={() => setCreando(false)}
-                />
+                <FormCrearGrupo usuario={usuario} onCreado={handleCreado} onCancelar={() => setCreando(false)} />
             </div>
         )
     }
@@ -65,47 +55,41 @@ function TabGrupos({ usuario }) {
                 <StatCard label="SOY PARTICIPANTE" value={gruposComoParticipante.length} accent="#69db7c" />
             </div>
 
-            <button onClick={() => setCreando(true)} style={{ ...btnStyle('#3b5bdb'), marginBottom: 22 }}>
-                + Crear grupo de apuestas
-            </button>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 22, flexWrap: 'wrap' }}>
+                <button onClick={() => setCreando(true)} style={btnStyle('#3b5bdb')}>+ Crear grupo</button>
+                <button onClick={() => setVerPublicos(!verPublicos)} style={btnStyle(verPublicos ? '#748ffc' : '#2a3a5a')}>
+                    🌐 {verPublicos ? 'Ocultar públicos' : 'Ver grupos públicos'}
+                </button>
+            </div>
 
-            {grupos.length === 0 && (
-                <div style={{
-                    background: '#0d1628', border: '1px solid #1e2a45',
-                    borderRadius: 12, padding: '36px 24px', textAlign: 'center',
-                }}>
+            {verPublicos && (
+                <div style={{ marginBottom: 24 }}>
+                    <GruposPublicos usuario={usuario} onCambio={recargar} />
+                </div>
+            )}
+
+            {grupos.length === 0 && !verPublicos && (
+                <div style={{ background: '#0d1628', border: '1px solid #1e2a45', borderRadius: 12, padding: '36px 24px', textAlign: 'center' }}>
                     <div style={{ fontSize: 36, marginBottom: 12 }}>🏆</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', marginBottom: 8 }}>
-                        Aún no tienes grupos
-                    </div>
-                    <div style={{ fontSize: 11, color: '#4a6fa5' }}>
-                        Crea tu primer grupo para hacer apuestas privadas con tus amigos.
-                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', marginBottom: 8 }}>Aún no tienes grupos</div>
+                    <div style={{ fontSize: 11, color: '#4a6fa5' }}>Crea uno o únete a un grupo público.</div>
                 </div>
             )}
 
             {gruposComoAdmin.length > 0 && (
                 <>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 10 }}>
-                        GRUPOS QUE ADMINISTRO
-                    </div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 10 }}>GRUPOS QUE ADMINISTRO</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-                        {gruposComoAdmin.map((g) => (
-                            <CardGrupo key={g.id} grupo={g} usuario={usuario} onAbrir={() => setVistaDetalle(g)} />
-                        ))}
+                        {gruposComoAdmin.map((g) => <CardGrupo key={g.id} grupo={g} usuario={usuario} onAbrir={() => setVistaDetalle(g)} />)}
                     </div>
                 </>
             )}
 
             {gruposComoParticipante.length > 0 && (
                 <>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 10 }}>
-                        GRUPOS EN LOS QUE PARTICIPO
-                    </div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 10 }}>GRUPOS EN LOS QUE PARTICIPO</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {gruposComoParticipante.map((g) => (
-                            <CardGrupo key={g.id} grupo={g} usuario={usuario} onAbrir={() => setVistaDetalle(g)} />
-                        ))}
+                        {gruposComoParticipante.map((g) => <CardGrupo key={g.id} grupo={g} usuario={usuario} onAbrir={() => setVistaDetalle(g)} />)}
                     </div>
                 </>
             )}
