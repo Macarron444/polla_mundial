@@ -1,17 +1,51 @@
+import { useState, useEffect } from 'react'
 import { calcularRanking, getHistorialRanking } from '../../../core/storage/puntuacion.js'
 
 const MEDALLAS = ['🥇', '🥈', '🥉']
 
 function TabRankingGrupo({ grupo, usuario }) {
-    const ranking = calcularRanking(grupo)
-    const historial = getHistorialRanking(grupo.id)
+    const [ranking, setRanking] = useState([])
+    const [historial, setHistorial] = useState([])
+    const [cargando, setCargando] = useState(true)
+
+    useEffect(() => {
+        cargar()
+    }, [grupo.id])
+
+    const cargar = async () => {
+        setCargando(true)
+        try {
+            const [r, h] = await Promise.all([
+                calcularRanking(grupo),
+                getHistorialRanking(grupo.id),
+            ])
+            setRanking(r)
+            setHistorial(h)
+        } catch (e) {
+            console.error('Error cargando ranking del grupo:', e)
+        }
+        setCargando(false)
+    }
+
     const hayHistorial = historial.length > 1
+
+    if (cargando) return (
+        <div style={{ padding: '30px 0', textAlign: 'center', color: '#4a6fa5', fontSize: 13 }}>
+            Cargando ranking del grupo…
+        </div>
+    )
 
     return (
         <div>
-            {/* Tabla actual */}
-            <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 10 }}>
-                POSICIONES ACTUALES
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em' }}>
+                    POSICIONES ACTUALES — GRUPO
+                </div>
+                <button onClick={cargar} style={{
+                    fontSize: 10, background: 'transparent', border: '1px solid #1e2a45',
+                    color: '#4a6fa5', padding: '4px 10px', borderRadius: 6,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                }}>🔄</button>
             </div>
 
             {ranking.length === 0 && (
@@ -39,9 +73,9 @@ function TabRankingGrupo({ grupo, usuario }) {
                                 </div>
                                 <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                                     {[
-                                        { label: 'Exactas', val: r.exactas, color: '#69db7c' },
-                                        { label: 'Correctas', val: r.correctas, color: '#a9e34b' },
-                                        { label: 'Fallidas', val: r.fallidas, color: '#ff8787' },
+                                        { label: 'Exactas',    val: r.exactas,    color: '#69db7c' },
+                                        { label: 'Correctas',  val: r.correctas,  color: '#a9e34b' },
+                                        { label: 'Fallidas',   val: r.fallidas,   color: '#ff8787' },
                                         { label: 'Pendientes', val: r.pendientes, color: '#748ffc' },
                                     ].map((s) => (
                                         <span key={s.label} style={{ fontSize: 10, color: '#4a6fa5' }}>
@@ -59,7 +93,6 @@ function TabRankingGrupo({ grupo, usuario }) {
                 })}
             </div>
 
-            {/* Historial de evolución */}
             {hayHistorial && (
                 <>
                     <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 10 }}>
