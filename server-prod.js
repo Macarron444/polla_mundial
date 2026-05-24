@@ -36,7 +36,7 @@ app.use('/api', (req, res) => {
 
 // ── Servir frontend (dist de Vite) ────────────────────────────────────────────
 app.use(express.static(join(__dirname, 'dist')))
-app.get('*', (req, res) => {
+app.get('*splat', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'))
 })
 
