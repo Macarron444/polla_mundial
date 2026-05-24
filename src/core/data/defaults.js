@@ -56,13 +56,7 @@ export const PARTIDOS_DEFAULT = [
     },
 ]
 
-export const PARTICIPANTES_DEFAULT = [
-    { id: 1, nombre: 'Sebastian M.', pts: 21, exactas: 3, correctas: 4, fallidas: 1, rol: 'CREADOR' },
-    { id: 2, nombre: 'Valentina R.', pts: 18, exactas: 2, correctas: 5, fallidas: 2, rol: 'ADMINISTRADOR' },
-    { id: 3, nombre: 'Camilo T.', pts: 18, exactas: 2, correctas: 4, fallidas: 3, rol: 'PARTICIPANTE' },
-    { id: 4, nombre: 'Lucia P.', pts: 15, exactas: 1, correctas: 6, fallidas: 2, rol: 'PARTICIPANTE' },
-    { id: 5, nombre: 'Andres B.', pts: 12, exactas: 1, correctas: 4, fallidas: 4, rol: 'PARTICIPANTE' },
-]
+export const PARTICIPANTES_DEFAULT = []
 
 export const PREDICCIONES_DEFAULT = [
     { partidoId: 2, golesL: 2, golesV: 0, estado: 'CORRECTA', pts: 1 },

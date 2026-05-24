@@ -1,46 +1,123 @@
 import { useState } from 'react'
 
-const USUARIOS_REGISTRADOS = [
-    { id: 1, nombre: 'Sebastian M.', email: 'admin@gmail.com', password: 'admin123', rol: 'CREADOR' },
-    { id: 2, nombre: 'Valentina R.', email: 'vale@gmail.com', password: 'vale123', rol: 'ADMINISTRADOR' },
-    { id: 3, nombre: 'Camilo T.', email: 'camilo@gmail.com', password: 'camilo123', rol: 'PARTICIPANTE' },
-    { id: 4, nombre: 'Lucia P.', email: 'lucia@gmail.com', password: 'lucia123', rol: 'PARTICIPANTE' },
-    { id: 5, nombre: 'Andres B.', email: 'andres@gmail.com', password: 'andres123', rol: 'PARTICIPANTE' },
-]
+const STORAGE_KEY = 'polla_mundial_usuarios'
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@(gmail|hotmail|outlook|yahoo|live|icloud)\.(com|es|co|net|org|com\.co)$/i
+
+function getUsuarios() {
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+    } catch {
+        return []
+    }
+}
+
+function saveUsuarios(usuarios) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(usuarios))
+}
 
 function Login({ onLogin }) {
+    const [modo, setModo] = useState('login') // 'login' | 'registro'
+    const [nombre, setNombre] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [confirmar, setConfirmar] = useState('')
     const [error, setError] = useState('')
+    const [exito, setExito] = useState('')
     const [loading, setLoading] = useState(false)
 
+    const resetForm = () => {
+        setNombre('')
+        setEmail('')
+        setPassword('')
+        setConfirmar('')
+        setError('')
+        setExito('')
+    }
+
+    const cambiarModo = (nuevoModo) => {
+        setModo(nuevoModo)
+        resetForm()
+    }
+
+    /* ── LOGIN ── */
     const handleLogin = async () => {
         if (!email.trim() || !password.trim()) {
-            setError('Ingresa tu correo y contrasena')
+            setError('Ingresa tu correo y contraseña')
             return
         }
         setLoading(true)
         setError('')
+        await new Promise((r) => setTimeout(r, 500))
 
-        await new Promise((r) => setTimeout(r, 600))
-
-        const usuario = USUARIOS_REGISTRADOS.find(
-            (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+        const usuarios = getUsuarios()
+        const usuario = usuarios.find(
+            (u) => u.email.toLowerCase() === email.toLowerCase().trim() && u.password === password
         )
 
         if (usuario) {
-            const { password: _password, ...usuarioSeguro } = usuario
+            const { password: _pwd, ...usuarioSeguro } = usuario
             onLogin(usuarioSeguro)
         } else {
-            setError('Correo o contrasena incorrectos')
+            setError('Correo o contraseña incorrectos')
         }
         setLoading(false)
     }
 
-    const loginRapido = (u) => {
-        setEmail(u.email)
-        setPassword(u.password)
+    /* ── REGISTRO ── */
+    const handleRegistro = async () => {
+        setError('')
+        setExito('')
+
+        if (!nombre.trim() || !email.trim() || !password.trim() || !confirmar.trim()) {
+            setError('Todos los campos son obligatorios')
+            return
+        }
+
+        if (!EMAIL_REGEX.test(email.trim())) {
+            setError('Usa un correo real: Gmail, Hotmail, Outlook, Yahoo, etc.')
+            return
+        }
+
+        if (password.length < 6) {
+            setError('La contraseña debe tener al menos 6 caracteres')
+            return
+        }
+
+        if (password !== confirmar) {
+            setError('Las contraseñas no coinciden')
+            return
+        }
+
+        setLoading(true)
+        await new Promise((r) => setTimeout(r, 500))
+
+        const usuarios = getUsuarios()
+        const existe = usuarios.find((u) => u.email.toLowerCase() === email.toLowerCase().trim())
+        if (existe) {
+            setError('Este correo ya está registrado')
+            setLoading(false)
+            return
+        }
+
+        const nuevoUsuario = {
+            id: Date.now(),
+            nombre: nombre.trim(),
+            email: email.toLowerCase().trim(),
+            password,
+            rol: usuarios.length === 0 ? 'CREADOR' : 'PARTICIPANTE',
+            fechaRegistro: new Date().toISOString(),
+        }
+
+        saveUsuarios([...usuarios, nuevoUsuario])
+        setExito(`✅ ¡Listo, ${nuevoUsuario.nombre}! Ya puedes iniciar sesión.`)
+        setLoading(false)
+        setTimeout(() => {
+            cambiarModo('login')
+            setEmail(nuevoUsuario.email)
+        }, 1800)
     }
+
+    const totalUsuarios = getUsuarios().length
 
     return (
         <div className="login-page">
@@ -51,54 +128,152 @@ function Login({ onLogin }) {
                     <div className="login-logo__subtitle">FIFA WORLD CUP · PWA</div>
                 </div>
 
-                <div className="login-field">
-                    <label className="login-label">CORREO ELECTRONICO</label>
-                    <input
-                        type="email"
-                        className="login-input"
-                        placeholder="tu@correo.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                    />
+                {/* Pestañas */}
+                <div className="login-tabs">
+                    <button
+                        className={`login-tab ${modo === 'login' ? 'login-tab--active' : ''}`}
+                        onClick={() => cambiarModo('login')}
+                    >
+                        Ingresar
+                    </button>
+                    <button
+                        className={`login-tab ${modo === 'registro' ? 'login-tab--active' : ''}`}
+                        onClick={() => cambiarModo('registro')}
+                    >
+                        Registrarse
+                    </button>
                 </div>
 
-                <div className="login-field">
-                    <label className="login-label">CONTRASENA</label>
-                    <input
-                        type="password"
-                        className="login-input"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                    />
-                </div>
+                {/* ── FORMULARIO LOGIN ── */}
+                {modo === 'login' && (
+                    <>
+                        {totalUsuarios === 0 && (
+                            <div className="login-notice">
+                                👋 Aún no hay usuarios. <br />
+                                <strong onClick={() => cambiarModo('registro')} style={{ cursor: 'pointer', color: '#748ffc' }}>
+                                    Regístrate primero →
+                                </strong>
+                            </div>
+                        )}
 
-                <button className="login-btn" onClick={handleLogin} disabled={loading}>
-                    {loading ? '⏳ Verificando...' : 'Ingresar →'}
-                </button>
+                        <div className="login-field">
+                            <label className="login-label">CORREO ELECTRÓNICO</label>
+                            <input
+                                type="email"
+                                className="login-input"
+                                placeholder="tu@correo.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                                autoComplete="email"
+                            />
+                        </div>
 
-                {error && <div className="login-error">⚠️ {error}</div>}
+                        <div className="login-field">
+                            <label className="login-label">CONTRASEÑA</label>
+                            <input
+                                type="password"
+                                className="login-input"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                                autoComplete="current-password"
+                            />
+                        </div>
 
-                <div className="login-hint">
-                    <div style={{ marginBottom: 8 }}>Acceso rapido (demo)</div>
-                    <div className="login-quick">
-                        {USUARIOS_REGISTRADOS.map((u) => (
-                            <button
-                                key={u.id}
-                                className="login-user-badge"
-                                onClick={() => loginRapido(u)}
+                        <button className="login-btn" onClick={handleLogin} disabled={loading}>
+                            {loading ? '⏳ Verificando...' : 'Ingresar →'}
+                        </button>
+
+                        {error && <div className="login-error">⚠️ {error}</div>}
+
+                        <div className="login-hint">
+                            ¿No tienes cuenta?{' '}
+                            <strong
+                                style={{ color: '#748ffc', cursor: 'pointer' }}
+                                onClick={() => cambiarModo('registro')}
                             >
-                                {u.rol === 'CREADOR' ? '👑' : u.rol === 'ADMINISTRADOR' ? '🛡️' : '👤'}{' '}
-                                {u.nombre.split(' ')[0]}
-                            </button>
-                        ))}
-                    </div>
-                    <div style={{ marginTop: 10 }}>
-                        Haz clic en un nombre para prellenar · luego <strong>Ingresar</strong>
-                    </div>
-                </div>
+                                Regístrate aquí
+                            </strong>
+                        </div>
+                    </>
+                )}
+
+                {/* ── FORMULARIO REGISTRO ── */}
+                {modo === 'registro' && (
+                    <>
+                        <div className="login-field">
+                            <label className="login-label">NOMBRE COMPLETO</label>
+                            <input
+                                type="text"
+                                className="login-input"
+                                placeholder="Juan Pérez"
+                                value={nombre}
+                                onChange={(e) => setNombre(e.target.value)}
+                                autoComplete="name"
+                            />
+                        </div>
+
+                        <div className="login-field">
+                            <label className="login-label">CORREO ELECTRÓNICO</label>
+                            <input
+                                type="email"
+                                className="login-input"
+                                placeholder="tu@gmail.com · tu@hotmail.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                autoComplete="email"
+                            />
+                        </div>
+
+                        <div className="login-field">
+                            <label className="login-label">CONTRASEÑA</label>
+                            <input
+                                type="password"
+                                className="login-input"
+                                placeholder="Mínimo 6 caracteres"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                autoComplete="new-password"
+                            />
+                        </div>
+
+                        <div className="login-field">
+                            <label className="login-label">CONFIRMAR CONTRASEÑA</label>
+                            <input
+                                type="password"
+                                className="login-input"
+                                placeholder="Repite tu contraseña"
+                                value={confirmar}
+                                onChange={(e) => setConfirmar(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleRegistro()}
+                                autoComplete="new-password"
+                            />
+                        </div>
+
+                        <button className="login-btn" onClick={handleRegistro} disabled={loading}>
+                            {loading ? '⏳ Registrando...' : 'Crear cuenta →'}
+                        </button>
+
+                        {error && <div className="login-error">⚠️ {error}</div>}
+                        {exito && <div className="login-success">{exito}</div>}
+
+                        <div className="login-hint">
+                            ¿Ya tienes cuenta?{' '}
+                            <strong
+                                style={{ color: '#748ffc', cursor: 'pointer' }}
+                                onClick={() => cambiarModo('login')}
+                            >
+                                Inicia sesión
+                            </strong>
+                        </div>
+
+                        <div className="login-note">
+                            📧 Correos aceptados: Gmail, Hotmail, Outlook, Yahoo, Live, iCloud
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     )
