@@ -20,7 +20,7 @@ const TABS_MIEMBRO = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', '
 const TABS_ADMIN   = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', 'Global', 'Miembros', 'Apuesta', 'Invitar']
 
 function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
-    const rolActual  = getRolEnGrupo(grupo, usuario.id)
+    const rolActual  = getRolEnGrupo(grupo, usuario.id) ?? null
     const esAdmin    = rolActual === 'ADMIN'
     const esCreador  = grupo.creadoPor === usuario.id
     const tabs       = esAdmin ? TABS_ADMIN : TABS_MIEMBRO

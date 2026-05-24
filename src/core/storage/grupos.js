@@ -112,7 +112,7 @@ export async function getGrupoPorToken(token) {
 }
 
 export function getRolEnGrupo(grupo, usuarioId) {
-    return grupo.miembros.find((m) => m.usuarioId === usuarioId)?.rol ?? null
+    return (grupo?.miembros ?? []).find((m) => m.usuarioId === usuarioId)?.rol ?? null
 }
 
 export async function guardarPrediccionGlobalGrupo(grupoId, usuarioId, campeon, goleador) {
