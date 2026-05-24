@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Dot, PRED_COLOR, StatCard, btnStyle } from '../../shared/ui/index.jsx'
 import { getBetStatus, minutosRestantes } from '../../core/utils/betting.js'
 import { getEquipo } from '../../core/utils/teams.js'
-import { PREDICCIONES_DEFAULT } from '../../core/data/defaults.js'
+
 import {
     guardarPrediccionesUsuario,
     obtenerPrediccionesUsuario,
 } from '../../core/storage/indexedDb.js'
 
 function TabPredicciones({ usuario, partidos, equipos }) {
-    const [preds, setPreds] = useState(PREDICCIONES_DEFAULT)
+    const [preds, setPreds] = useState([])
     const [editId, setEditId] = useState(null)
     const [gl, setGl] = useState('')
     const [gv, setGv] = useState('')
@@ -28,7 +28,7 @@ function TabPredicciones({ usuario, partidos, equipos }) {
             .then((registro) => {
                 const predicciones = registro?.predicciones?.length
                     ? registro.predicciones
-                    : PREDICCIONES_DEFAULT
+                    : []
 
                 setPreds(predicciones)
 
@@ -43,7 +43,7 @@ function TabPredicciones({ usuario, partidos, equipos }) {
             })
             .catch((error) => {
                 console.warn('No se pudieron cargar predicciones desde IndexedDB:', error)
-                setPreds(PREDICCIONES_DEFAULT)
+                setPreds([])
                 setDbStatus('IndexedDB no disponible; usando datos demo')
             })
             .finally(() => {

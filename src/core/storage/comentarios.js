@@ -1,35 +1,26 @@
-const KEY = 'polla_mundial_comentarios'
+import { obtenerComentarios, guardarComentarios } from './indexedDb.js'
 
-function getTodos() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '{}') } catch { return {} }
-}
-function saveTodos(data) { localStorage.setItem(KEY, JSON.stringify(data)) }
-
-function buildKey(grupoId, partidoId) { return `${grupoId}_${partidoId}` }
-
-export function getComentarios(grupoId, partidoId) {
-    return getTodos()[buildKey(grupoId, partidoId)] ?? []
+export async function getComentarios(grupoId, partidoId) {
+    return obtenerComentarios(grupoId, partidoId)
 }
 
-export function agregarComentario(grupoId, partidoId, usuario, texto) {
+export async function agregarComentario(grupoId, partidoId, usuario, texto) {
     if (!texto.trim()) return
-    const todos = getTodos()
-    const k = buildKey(grupoId, partidoId)
-    if (!todos[k]) todos[k] = []
-    todos[k].push({
+    const comentarios = await obtenerComentarios(grupoId, partidoId)
+    comentarios.push({
         id: Date.now(),
         usuarioId: usuario.id,
         nombre: usuario.nombre,
         texto: texto.trim(),
         fecha: new Date().toISOString(),
     })
-    saveTodos(todos)
+    await guardarComentarios(grupoId, partidoId, comentarios)
 }
 
-export function eliminarComentario(grupoId, partidoId, comentarioId, usuarioId) {
-    const todos = getTodos()
-    const k = buildKey(grupoId, partidoId)
-    if (!todos[k]) return
-    todos[k] = todos[k].filter((c) => !(c.id === comentarioId && c.usuarioId === usuarioId))
-    saveTodos(todos)
+export async function eliminarComentario(grupoId, partidoId, comentarioId, usuarioId) {
+    const comentarios = await obtenerComentarios(grupoId, partidoId)
+    const filtrados   = comentarios.filter(
+        (c) => !(c.id === comentarioId && c.usuarioId === usuarioId)
+    )
+    await guardarComentarios(grupoId, partidoId, filtrados)
 }

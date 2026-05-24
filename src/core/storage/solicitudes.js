@@ -1,23 +1,25 @@
-const KEY = 'polla_mundial_solicitudes'
+import {
+    obtenerTodasSolicitudes,
+    guardarSolicitud,
+    actualizarSolicitud,
+    guardarTodasSolicitudes,
+} from './indexedDb.js'
 
-function getTodos() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '[]') } catch { return [] }
-}
-function saveTodos(data) { localStorage.setItem(KEY, JSON.stringify(data)) }
-
-export function getSolicitudesPorGrupo(grupoId) {
-    return getTodos().filter((s) => s.grupoId === grupoId && s.estado === 'PENDIENTE')
-}
-
-export function getSolicitudDeUsuario(grupoId, usuarioId) {
-    return getTodos().find((s) => s.grupoId === grupoId && s.usuarioId === usuarioId) ?? null
+export async function getSolicitudesPorGrupo(grupoId) {
+    const todas = await obtenerTodasSolicitudes()
+    return todas.filter((s) => s.grupoId === grupoId && s.estado === 'PENDIENTE')
 }
 
-export function crearSolicitud(grupoId, usuario) {
-    const todas = getTodos()
+export async function getSolicitudDeUsuario(grupoId, usuarioId) {
+    const todas = await obtenerTodasSolicitudes()
+    return todas.find((s) => s.grupoId === grupoId && s.usuarioId === usuarioId) ?? null
+}
+
+export async function crearSolicitud(grupoId, usuario) {
+    const todas    = await obtenerTodasSolicitudes()
     const yaExiste = todas.find((s) => s.grupoId === grupoId && s.usuarioId === usuario.id)
     if (yaExiste) throw new Error('Ya tienes una solicitud pendiente para este grupo')
-    todas.push({
+    const nueva = {
         id: Date.now(),
         grupoId,
         usuarioId: usuario.id,
@@ -25,15 +27,16 @@ export function crearSolicitud(grupoId, usuario) {
         email: usuario.email,
         estado: 'PENDIENTE',
         fecha: new Date().toISOString(),
-    })
-    saveTodos(todas)
+    }
+    await guardarSolicitud(nueva)
+    return nueva
 }
 
-export function resolverSolicitud(solicitudId, decision) {
-    const todas = getTodos()
-    const s = todas.find((x) => x.id === solicitudId)
+export async function resolverSolicitud(solicitudId, decision) {
+    const todas = await obtenerTodasSolicitudes()
+    const s     = todas.find((x) => x.id === solicitudId)
     if (!s) throw new Error('Solicitud no encontrada')
-    s.estado = decision // 'APROBADA' | 'RECHAZADA'
-    saveTodos(todas)
+    s.estado = decision   // 'APROBADA' | 'RECHAZADA'
+    await actualizarSolicitud(s)
     return s
 }

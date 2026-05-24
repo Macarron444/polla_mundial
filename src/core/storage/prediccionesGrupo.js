@@ -1,74 +1,64 @@
-const KEY = 'polla_mundial_pred_grupo'
+import {
+    obtenerTodasPrediccionesGrupo,
+    guardarPrediccionGrupo,
+    guardarTodasPrediccionesGrupo,
+} from './indexedDb.js'
 
-function getTodos() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '{}') } catch { return {} }
-}
-function saveTodos(data) { localStorage.setItem(KEY, JSON.stringify(data)) }
-
-// key: `${grupoId}_${usuarioId}_${partidoId}`
-function buildKey(grupoId, usuarioId, partidoId) {
-    return `${grupoId}_${usuarioId}_${partidoId}`
-}
-
-export function getPredicion(grupoId, usuarioId, partidoId) {
-    return getTodos()[buildKey(grupoId, usuarioId, partidoId)] ?? null
+// ── API PÚBLICA ───────────────────────────────────────────────────────────────
+export async function getPredicion(grupoId, usuarioId, partidoId) {
+    const todas = await obtenerTodasPrediccionesGrupo()
+    return todas.find(
+        (p) => p.grupoId === grupoId && p.usuarioId === usuarioId && p.partidoId === partidoId
+    ) ?? null
 }
 
-export function getPredicionesPorGrupoPartido(grupoId, partidoId) {
-    const todos = getTodos()
-    return Object.entries(todos)
-        .filter(([k]) => k.startsWith(`${grupoId}_`) && k.endsWith(`_${partidoId}`))
-        .map(([, v]) => v)
+export async function getPredicionesPorGrupoPartido(grupoId, partidoId) {
+    const todas = await obtenerTodasPrediccionesGrupo()
+    return todas.filter((p) => p.grupoId === grupoId && p.partidoId === partidoId)
 }
 
-export function getPredicionesPorGrupoUsuario(grupoId, usuarioId) {
-    const todos = getTodos()
-    return Object.entries(todos)
-        .filter(([k]) => k.startsWith(`${grupoId}_${usuarioId}_`))
-        .map(([, v]) => v)
+export async function getPredicionesPorGrupoUsuario(grupoId, usuarioId) {
+    const todas = await obtenerTodasPrediccionesGrupo()
+    return todas.filter((p) => p.grupoId === grupoId && p.usuarioId === usuarioId)
 }
 
-export function getPredicionesPorGrupo(grupoId) {
-    const todos = getTodos()
-    return Object.entries(todos)
-        .filter(([k]) => k.startsWith(`${grupoId}_`))
-        .map(([, v]) => v)
+export async function getPredicionesPorGrupo(grupoId) {
+    const todas = await obtenerTodasPrediccionesGrupo()
+    return todas.filter((p) => p.grupoId === grupoId)
 }
 
-export function guardarPrediccion(grupoId, usuarioId, partidoId, golesL, golesV, usaComodin = false) {
-    const todos = getTodos()
-    todos[buildKey(grupoId, usuarioId, partidoId)] = {
+export async function guardarPrediccion(grupoId, usuarioId, partidoId, golesL, golesV, usaComodin = false) {
+    const prediccion = {
         grupoId, usuarioId, partidoId,
         golesL, golesV, usaComodin,
         fecha: new Date().toISOString(),
         estado: 'PENDIENTE',
         pts: 0,
     }
-    saveTodos(todos)
+    await guardarPrediccionGrupo(prediccion)
+    return prediccion
 }
 
-// Llama esto cuando el admin registra resultado real
-export function resolverPredicciones(grupoId, partidoId, golesLReal, golesVReal) {
-    const todos = getTodos()
-    const resultadoL = golesLReal, resultadoV = golesVReal
-    const ganadorReal = resultadoL > resultadoV ? 'L' : resultadoL < resultadoV ? 'V' : 'E'
+export async function resolverPredicciones(grupoId, partidoId, golesLReal, golesVReal) {
+    const todas      = await obtenerTodasPrediccionesGrupo()
+    const ganadorReal = golesLReal > golesVReal ? 'L' : golesLReal < golesVReal ? 'V' : 'E'
 
-    Object.keys(todos).forEach((k) => {
-        if (!k.startsWith(`${grupoId}_`) || !k.endsWith(`_${partidoId}`)) return
-        const p = todos[k]
+    const actualizadas = todas.map((p) => {
+        if (p.grupoId !== grupoId || p.partidoId !== partidoId) return p
         const ganadorPred = p.golesL > p.golesV ? 'L' : p.golesL < p.golesV ? 'V' : 'E'
         let pts = 0, estado = 'FALLIDA'
-        if (p.golesL === resultadoL && p.golesV === resultadoV) {
-            estado = 'EXACTA'; pts = p.usaComodin ? 6 : 3
+        if (p.golesL === golesLReal && p.golesV === golesVReal) {
+            estado = 'EXACTA';   pts = p.usaComodin ? 6 : 3
         } else if (ganadorPred === ganadorReal) {
             estado = 'CORRECTA'; pts = p.usaComodin ? 2 : 1
         }
-        todos[k] = { ...p, estado, pts }
+        return { ...p, estado, pts }
     })
-    saveTodos(todos)
+
+    await guardarTodasPrediccionesGrupo(actualizadas)
 }
 
-// Verifica si el usuario ya usó su comodín en este grupo
-export function usaComodinDisponible(grupoId, usuarioId) {
-    return !getPredicionesPorGrupoUsuario(grupoId, usuarioId).some((p) => p.usaComodin)
+export async function usaComodinDisponible(grupoId, usuarioId) {
+    const preds = await getPredicionesPorGrupoUsuario(grupoId, usuarioId)
+    return !preds.some((p) => p.usaComodin)
 }
