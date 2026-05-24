@@ -1,20 +1,47 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { actualizarConfigGrupo } from '../../../core/storage/grupos.js'
+import { cargarDatosAPI } from '../../../core/api/footballDataApi.js'
 import { btnStyle } from '../../../shared/ui/index.jsx'
 
-function ConfigApuesta({ grupo, usuario, partidos = [], onActualizado }) {
+function ConfigApuesta({ grupo, usuario, onActualizado }) {
     const esCreador = grupo.creadoPor === usuario.id
     const [monto, setMonto] = useState(grupo.montoApuesta ?? 0)
     const [premiacion, setPremiacion] = useState(grupo.premiacion ?? 'TODO_AL_PRIMERO')
+    const [partidos, setPartidos] = useState([])
     const [seleccionados, setSeleccionados] = useState(
-        new Set(grupo.partidosSeleccionados ?? partidos.map((p) => p.id))
+        new Set(grupo.partidosSeleccionados ?? [])
     )
+    const [cargandoApi, setCargandoApi] = useState(false)
+    const [equipos, setEquipos] = useState([])
     const [msg, setMsg] = useState('')
     const [error, setError] = useState('')
 
+    // Cargar partidos automáticamente al abrir
+    useEffect(() => {
+        if (esCreador) cargarPartidos()
+    }, [])
+
+    const cargarPartidos = async () => {
+        setCargandoApi(true)
+        try {
+            const { equipos: eq, partidos: ps } = await cargarDatosAPI()
+            setEquipos(eq)
+            setPartidos(ps)
+            // Si el grupo ya tenía partidos seleccionados, mantenerlos
+            // Si no, no preseleccionar nada — el admin elige
+            if (grupo.partidosSeleccionados?.length > 0) {
+                setSeleccionados(new Set(grupo.partidosSeleccionados))
+            }
+        } catch (e) {
+            setError('No se pudo cargar la API. Verifica tu conexión.')
+        }
+        setCargandoApi(false)
+    }
+
+    // Vista para miembros (no creador)
     if (!esCreador) {
         const total = (grupo.montoApuesta ?? 0) * grupo.miembros.length
-        const numPartidos = grupo.partidosSeleccionados?.length ?? partidos.length
+        const numPartidos = grupo.partidosSeleccionados?.length ?? 0
         return (
             <div>
                 <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 14 }}>
@@ -23,9 +50,9 @@ function ConfigApuesta({ grupo, usuario, partidos = [], onActualizado }) {
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
                     {[
                         { label: 'APUESTA POR PERSONA', val: `$${(grupo.montoApuesta ?? 0).toLocaleString('es-CO')}`, color: '#ffd43b' },
-                        { label: 'CAJA TOTAL', val: `$${total.toLocaleString('es-CO')}`, color: '#69db7c' },
-                        { label: 'PREMIACIÓN', val: grupo.premiacion === 'TODO_AL_PRIMERO' ? '1er lugar' : 'Top 3', color: '#748ffc' },
-                        { label: 'PARTIDOS', val: numPartidos, color: '#a9e34b' },
+                        { label: 'CAJA TOTAL',          val: `$${total.toLocaleString('es-CO')}`,                      color: '#69db7c' },
+                        { label: 'PREMIACIÓN',          val: grupo.premiacion === 'TODO_AL_PRIMERO' ? '1er lugar' : 'Top 3', color: '#748ffc' },
+                        { label: 'PARTIDOS',            val: numPartidos,                                              color: '#a9e34b' },
                     ].map((s) => (
                         <div key={s.label} style={{ flex: 1, minWidth: 120, background: '#0d1628', border: `1px solid ${s.color}33`, borderRadius: 10, padding: '14px 16px' }}>
                             <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em' }}>{s.label}</div>
@@ -65,7 +92,9 @@ function ConfigApuesta({ grupo, usuario, partidos = [], onActualizado }) {
 
     const total = Number(monto) * grupo.miembros.length
 
-    // Agrupar partidos por fase
+    // Agrupar partidos por fase, con nombre del equipo en vez de ID
+    const nombreEquipo = (id) => equipos.find((e) => e.id === id)?.nombre ?? `Equipo ${id}`
+
     const porFase = partidos.reduce((acc, p) => {
         const fase = p.fase || 'Sin fase'
         if (!acc[fase]) acc[fase] = []
@@ -79,11 +108,8 @@ function ConfigApuesta({ grupo, usuario, partidos = [], onActualizado }) {
                 💰 CONFIGURAR APUESTA
             </div>
 
-            {/* Monto y premiación */}
-            <div style={{
-                background: '#0d1628', border: '1px solid #3b5bdb44',
-                borderRadius: 12, padding: '18px 20px', marginBottom: 16,
-            }}>
+            {/* Monto */}
+            <div style={{ background: '#0d1628', border: '1px solid #3b5bdb44', borderRadius: 12, padding: '18px 20px', marginBottom: 16 }}>
                 <div style={{ marginBottom: 14 }}>
                     <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 6 }}>
                         MONTO POR PERSONA (COP)
@@ -98,16 +124,24 @@ function ConfigApuesta({ grupo, usuario, partidos = [], onActualizado }) {
                     )}
                 </div>
 
+                {/* Premiación */}
                 <div>
                     <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 8 }}>
                         DISTRIBUCIÓN DEL PREMIO
                     </label>
                     {[
                         { val: 'TODO_AL_PRIMERO', label: '🥇 Todo al 1er lugar', desc: `$${total.toLocaleString('es-CO')}` },
-                        { val: 'TOP_3', label: '🏆 Top 3', desc: '60% / 30% / 10%' },
+                        { val: 'TOP_3',           label: '🏆 Top 3',             desc: '60% / 30% / 10%' },
                     ].map((op) => (
-                        <label key={op.val} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 10, background: premiacion === op.val ? '#0f1e3a' : 'transparent', border: `1px solid ${premiacion === op.val ? '#3b5bdb' : '#1e2a45'}`, borderRadius: 8, padding: '10px 14px' }}>
-                            <input type="radio" name="premiacion" value={op.val} checked={premiacion === op.val} onChange={(e) => setPremiacion(e.target.value)} />
+                        <label key={op.val} style={{
+                            display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 10,
+                            background: premiacion === op.val ? '#0f1e3a' : 'transparent',
+                            border: `1px solid ${premiacion === op.val ? '#3b5bdb' : '#1e2a45'}`,
+                            borderRadius: 8, padding: '10px 14px',
+                        }}>
+                            <input type="radio" name="premiacion" value={op.val}
+                                checked={premiacion === op.val}
+                                onChange={(e) => setPremiacion(e.target.value)} />
                             <div>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0' }}>{op.label}</div>
                                 <div style={{ fontSize: 10, color: '#4a6fa5' }}>{op.desc}</div>
@@ -118,23 +152,32 @@ function ConfigApuesta({ grupo, usuario, partidos = [], onActualizado }) {
             </div>
 
             {/* Selección de partidos */}
-            <div style={{
-                background: '#0d1628', border: '1px solid #2f9e4444',
-                borderRadius: 12, padding: '18px 20px', marginBottom: 16,
-            }}>
+            <div style={{ background: '#0d1628', border: '1px solid #2f9e4444', borderRadius: 12, padding: '18px 20px', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em' }}>
                         ⚽ PARTIDOS DEL GRUPO ({seleccionados.size}/{partidos.length})
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={seleccionarTodos} style={{ ...btnStyle('#2f9e44'), fontSize: 9, padding: '3px 8px' }}>Todos</button>
-                        <button onClick={deseleccionarTodos} style={{ ...btnStyle('#c92a2a'), fontSize: 9, padding: '3px 8px' }}>Ninguno</button>
+                        <button onClick={cargarPartidos} disabled={cargandoApi}
+                            style={{ ...btnStyle('#748ffc'), fontSize: 9, padding: '3px 8px', opacity: cargandoApi ? 0.5 : 1 }}>
+                            {cargandoApi ? '⏳' : '🔄'}
+                        </button>
+                        <button onClick={seleccionarTodos}
+                            style={{ ...btnStyle('#2f9e44'), fontSize: 9, padding: '3px 8px' }}>Todos</button>
+                        <button onClick={deseleccionarTodos}
+                            style={{ ...btnStyle('#c92a2a'), fontSize: 9, padding: '3px 8px' }}>Ninguno</button>
                     </div>
                 </div>
 
-                {partidos.length === 0 && (
-                    <div style={{ fontSize: 12, color: '#4a6fa5' }}>
-                        No hay partidos cargados. Sincroniza con la API primero.
+                {cargandoApi && (
+                    <div style={{ fontSize: 12, color: '#748ffc', padding: '12px 0' }}>
+                        ⏳ Cargando partidos de la API…
+                    </div>
+                )}
+
+                {!cargandoApi && partidos.length === 0 && (
+                    <div style={{ fontSize: 12, color: '#ff8787' }}>
+                        No se pudieron cargar los partidos. Haz clic en 🔄 para reintentar.
                     </div>
                 )}
 
@@ -158,7 +201,7 @@ function ConfigApuesta({ grupo, usuario, partidos = [], onActualizado }) {
                                             onChange={() => togglePartido(p.id)}
                                             style={{ accentColor: '#3b5bdb' }} />
                                         <span style={{ fontSize: 12, color: '#e2e8f0', flex: 1 }}>
-                                            {p.local} vs {p.visitante}
+                                            {nombreEquipo(p.local)} vs {nombreEquipo(p.visitante)}
                                         </span>
                                         <span style={{ fontSize: 10, color: '#4a6fa5' }}>{p.fecha}</span>
                                     </label>
