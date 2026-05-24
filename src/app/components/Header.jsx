@@ -2,7 +2,7 @@ import { useOnlineStatus } from '../../shared/hooks/useOnlineStatus.js'
 import { ConnectionToast } from '../../shared/ui/index.jsx'
 
 function Header({ tab, setTab, usuario, onLogout }) {
-    const tabs = ['Partidos', 'Gestionar Partidos', 'Ranking', 'Mis Predicciones']
+    const tabs = ['Partidos', 'Gestionar Partidos', 'Ranking', 'Mis Predicciones', 'Mis Grupos']
     const { online, toast, dismissToast } = useOnlineStatus()
 
     const rolIcon =

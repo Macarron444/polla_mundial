@@ -5,6 +5,7 @@ import TabPartidos from './components/TabPartidos.jsx'
 import TabGestionarPartidos from './components/TabGestionarPartidos.jsx'
 import TabRanking from './components/TabRanking.jsx'
 import TabPredicciones from './components/TabPredicciones.jsx'
+import TabGrupos from './components/TabGrupos.jsx'
 import { FOOTBALL_API_KEY } from '../core/config/footballData.js'
 import { cargarDatosAPI } from '../core/api/footballDataApi.js'
 import {
@@ -99,6 +100,7 @@ function App() {
             <TabRanking participantes={participantes} setParticipantes={setParticipantes} />
         ),
         'Mis Predicciones': <TabPredicciones usuario={usuario} partidos={partidos} equipos={equipos} />,
+        'Mis Grupos': <TabGrupos usuario={usuario} />,
     }
 
     return (

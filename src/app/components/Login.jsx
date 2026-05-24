@@ -1,19 +1,7 @@
 import { useState } from 'react'
+import { getUsuarios, saveUsuarios } from '../../core/storage/usuarios.js'
 
-const STORAGE_KEY = 'polla_mundial_usuarios'
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@(gmail|hotmail|outlook|yahoo|live|icloud)\.(com|es|co|net|org|com\.co)$/i
-
-function getUsuarios() {
-    try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-    } catch {
-        return []
-    }
-}
-
-function saveUsuarios(usuarios) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(usuarios))
-}
 
 function Login({ onLogin }) {
     const [modo, setModo] = useState('login') // 'login' | 'registro'
