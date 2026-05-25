@@ -65,3 +65,8 @@ export async function usaComodinDisponible(grupoId, usuarioId) {
     const preds = await getPredicionesPorGrupoUsuario(grupoId, usuarioId)
     return !preds.some((p) => p.usaComodin)
 }
+
+export async function getPredicionesPorUsuario(usuarioId) {
+    const todas = await get('/predicciones')
+    return todas.filter((p) => String(p.usuarioId) === String(usuarioId))
+}
