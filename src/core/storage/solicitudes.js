@@ -1,4 +1,4 @@
-import { get, put } from './api.js'
+import { get, put } from './httpClient.js'
 
 export async function getSolicitudesPorGrupo(grupoId) {
     const todas = await get('/solicitudes')
@@ -10,7 +10,7 @@ export async function getSolicitudDeUsuario(grupoId, usuarioId) {
     return todas.find((s) => s.grupoId === grupoId && s.usuarioId === usuarioId) ?? null
 }
 
-export async function crearSolicitud(grupoId, usuario, origen = 'PUBLICO') {
+export async function crearSolicitud(grupoId, usuario) {
     const todas    = await get('/solicitudes')
     const yaExiste = todas.find((s) => s.grupoId === grupoId && s.usuarioId === usuario.id && s.estado === 'PENDIENTE')
     if (yaExiste) throw new Error('Ya tienes una solicitud pendiente para este grupo')
@@ -21,7 +21,6 @@ export async function crearSolicitud(grupoId, usuario, origen = 'PUBLICO') {
         nombre: usuario.nombre,
         email: usuario.email,
         estado: 'PENDIENTE',
-        origen,
         fecha: new Date().toISOString(),
     }
     await put(`/solicitudes/${nueva.id}`, nueva)

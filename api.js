@@ -1,90 +1,143 @@
-import express from 'express'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
-import { dirname, join } from 'path'
+import { Router } from 'express'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const DB_DIR = join(__dirname, 'data')
-const DB_PATH = join(DB_DIR, 'db.json')
+const router    = Router()
 
-// ── Base de datos en memoria (persiste mientras el proceso viva) ──────────────
-let db = { usuarios: [], grupos: [], solicitudes: [], predicciones: [], ranking: {}, comentarios: {} }
+const DATA_FILE = join(__dirname, 'polla-data.json')
 
-// Intenta cargar del disco al arrancar
-try {
-    if (!existsSync(DB_DIR)) mkdirSync(DB_DIR, { recursive: true })
-    if (existsSync(DB_PATH)) db = { ...db, ...JSON.parse(readFileSync(DB_PATH, 'utf8')) }
-    console.log('✅ DB cargada del disco')
-} catch (e) { console.warn('⚠️ No se pudo cargar DB del disco:', e.message) }
-
-// Intenta guardar al disco (no bloquea si falla)
-function saveDb() {
-    try { writeFileSync(DB_PATH, JSON.stringify(db, null, 2)) }
-    catch (e) { console.warn('⚠️ No se pudo guardar DB al disco:', e.message) }
+function leerDatos() {
+    if (!existsSync(DATA_FILE)) return {}
+    try { return JSON.parse(readFileSync(DATA_FILE, 'utf8')) } catch { return {} }
 }
 
-function upsert(items, id, value) {
-    const idx = items.findIndex((i) => String(i.id ?? i.key) === String(id))
-    if (idx >= 0) items[idx] = value
-    else items.push(value)
-    return value
+function guardarDatos(datos) {
+    writeFileSync(DATA_FILE, JSON.stringify(datos, null, 2), 'utf8')
 }
 
-const router = express.Router()
+function getColeccion(nombre) {
+    return leerDatos()[nombre] ?? []
+}
 
-router.get('/comentarios/:grupoId/:partidoId', (req, res) => {
-    const key = `${req.params.grupoId}_${req.params.partidoId}`
-    res.json(db.comentarios[key] ?? [])
+function setColeccion(nombre, valor) {
+    const datos = leerDatos()
+    datos[nombre] = valor
+    guardarDatos(datos)
+}
+
+router.get('/usuarios/todos', (req, res) => {
+    res.json(getColeccion('usuarios'))
 })
 
-router.get('/ranking/:grupoId', (req, res) => {
-    res.json(db.ranking[req.params.grupoId] ?? [])
+router.post('/usuarios', (req, res) => {
+    const usuarios = getColeccion('usuarios')
+    const nuevo    = req.body
+    const idx      = usuarios.findIndex((u) => String(u.id) === String(nuevo.id))
+    if (idx >= 0) usuarios[idx] = nuevo
+    else          usuarios.push(nuevo)
+    setColeccion('usuarios', usuarios)
+    res.json(nuevo)
 })
 
-router.get('/:collection', (req, res) => {
-    res.json(db[req.params.collection] ?? [])
+router.post('/usuarios/login', (req, res) => {
+    const { email, password } = req.body
+    const usuarios = getColeccion('usuarios')
+    const usuario  = usuarios.find(
+        (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    )
+    if (!usuario) return res.status(401).json({ error: 'Correo o contraseña incorrectos' })
+    const { password: _pwd, ...usuarioSeguro } = usuario
+    res.json({ usuario: usuarioSeguro })
 })
 
-router.put('/comentarios/:grupoId/:partidoId', (req, res) => {
-    const key = `${req.params.grupoId}_${req.params.partidoId}`
-    db.comentarios[key] = req.body
-    saveDb()
-    res.json(req.body)
+router.get('/grupos', (req, res) => {
+    res.json(getColeccion('grupos'))
 })
 
-router.put('/:collection/:id', (req, res) => {
-    if (!Array.isArray(db[req.params.collection])) db[req.params.collection] = []
-    const item = upsert(db[req.params.collection], req.params.id, req.body)
-    saveDb()
-    res.json(item)
+router.put('/grupos/:id', (req, res) => {
+    const grupos = getColeccion('grupos')
+    const grupo  = { ...req.body, miembros: req.body.miembros ?? [] }
+    const idx    = grupos.findIndex((g) => String(g.id) === String(req.params.id))
+    if (idx >= 0) grupos[idx] = grupo
+    else          grupos.push(grupo)
+    setColeccion('grupos', grupos)
+    res.json(grupo)
+})
+
+router.delete('/grupos/:id', (req, res) => {
+    const grupos = getColeccion('grupos').filter((g) => String(g.id) !== String(req.params.id))
+    setColeccion('grupos', grupos)
+    res.json({ ok: true })
+})
+
+router.get('/predicciones', (req, res) => {
+    res.json(getColeccion('predicciones'))
+})
+
+router.put('/predicciones/:key', (req, res) => {
+    const preds = getColeccion('predicciones')
+    const pred  = req.body
+    const idx   = preds.findIndex((p) => p.key === req.params.key)
+    if (idx >= 0) preds[idx] = pred
+    else          preds.push(pred)
+    setColeccion('predicciones', preds)
+    res.json(pred)
 })
 
 router.post('/predicciones/bulk', (req, res) => {
-    req.body.forEach((p) => upsert(db.predicciones, p.key ?? p.id, p))
-    saveDb()
-    res.json(db.predicciones)
+    const actualizadas = req.body   // array de predicciones
+    const preds        = getColeccion('predicciones')
+    actualizadas.forEach((p) => {
+        const idx = preds.findIndex((x) => x.key === p.key)
+        if (idx >= 0) preds[idx] = p
+        else          preds.push(p)
+    })
+    setColeccion('predicciones', preds)
+    res.json({ ok: true })
+})
+
+router.get('/comentarios/:grupoId/:partidoId', (req, res) => {
+    const key  = `${req.params.grupoId}_${req.params.partidoId}`
+    const mapa = leerDatos().comentarios ?? {}
+    res.json(mapa[key] ?? [])
+})
+
+router.put('/comentarios/:grupoId/:partidoId', (req, res) => {
+    const key   = `${req.params.grupoId}_${req.params.partidoId}`
+    const datos = leerDatos()
+    if (!datos.comentarios) datos.comentarios = {}
+    datos.comentarios[key] = req.body
+    guardarDatos(datos)
+    res.json({ ok: true })
+})
+
+router.get('/solicitudes', (req, res) => {
+    res.json(getColeccion('solicitudes'))
+})
+
+router.put('/solicitudes/:id', (req, res) => {
+    const solicitudes = getColeccion('solicitudes')
+    const sol         = req.body
+    const idx         = solicitudes.findIndex((s) => String(s.id) === String(req.params.id))
+    if (idx >= 0) solicitudes[idx] = sol
+    else          solicitudes.push(sol)
+    setColeccion('solicitudes', solicitudes)
+    res.json(sol)
+})
+
+router.get('/ranking/:grupoId', (req, res) => {
+    const datos = leerDatos().rankingHistorial ?? {}
+    res.json(datos[req.params.grupoId] ?? [])
 })
 
 router.post('/ranking/:grupoId', (req, res) => {
-    db.ranking[req.params.grupoId] = [...(db.ranking[req.params.grupoId] ?? []), req.body]
-    saveDb()
-    res.json(db.ranking[req.params.grupoId])
-})
-
-router.post('/:collection', (req, res) => {
-    if (!Array.isArray(db[req.params.collection])) db[req.params.collection] = []
-    db[req.params.collection].push(req.body)
-    saveDb()
-    res.json(req.body)
-})
-
-router.delete('/:collection/:id', (req, res) => {
-    if (Array.isArray(db[req.params.collection])) {
-        db[req.params.collection] = db[req.params.collection].filter(
-            (i) => String(i.id ?? i.key) !== String(req.params.id)
-        )
-        saveDb()
-    }
+    const datos = leerDatos()
+    if (!datos.rankingHistorial) datos.rankingHistorial = {}
+    if (!datos.rankingHistorial[req.params.grupoId]) datos.rankingHistorial[req.params.grupoId] = []
+    datos.rankingHistorial[req.params.grupoId].push(req.body)
+    guardarDatos(datos)
     res.json({ ok: true })
 })
 

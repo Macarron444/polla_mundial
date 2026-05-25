@@ -1,4 +1,4 @@
-import { get, post } from './api.js'
+import { get, post } from './httpClient.js'
 import { getPredicionesPorGrupo } from './prediccionesGrupo.js'
 
 export async function calcularRanking(grupo) {

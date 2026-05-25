@@ -1,4 +1,4 @@
-import { get, put, post } from './api.js'
+import { get, put, post } from './httpClient.js'
 
 function buildKey(grupoId, usuarioId, partidoId) {
     return `${grupoId}_${usuarioId}_${partidoId}`
@@ -24,11 +24,6 @@ export async function getPredicionesPorGrupoUsuario(grupoId, usuarioId) {
 export async function getPredicionesPorGrupo(grupoId) {
     const todas = await get('/predicciones')
     return todas.filter((p) => p.grupoId === grupoId)
-}
-
-export async function getPredicionesPorUsuario(usuarioId) {
-    const todas = await get('/predicciones')
-    return todas.filter((p) => p.usuarioId === usuarioId)
 }
 
 export async function guardarPrediccion(grupoId, usuarioId, partidoId, golesL, golesV, usaComodin = false) {

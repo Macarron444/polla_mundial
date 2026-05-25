@@ -1,13 +1,8 @@
 // ── CLIENTE HTTP HACIA EL BACKEND /db ─────────────────────────────────────────
-// Todos los módulos de storage importan de aquí en vez de fetch directo
-
 const BASE = '/db'
 
 async function http(method, path, body) {
-    const opts = {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-    }
+    const opts = { method, headers: { 'Content-Type': 'application/json' } }
     if (body !== undefined) opts.body = JSON.stringify(body)
     const res = await fetch(`${BASE}${path}`, opts)
     if (!res.ok) {
@@ -17,7 +12,7 @@ async function http(method, path, body) {
     return res.json()
 }
 
-export const get    = (path)        => http('GET',    path)
-export const post   = (path, body)  => http('POST',   path, body)
-export const put    = (path, body)  => http('PUT',    path, body)
-export const del    = (path)        => http('DELETE', path)
+export const get  = (path)       => http('GET',    path)
+export const post = (path, body) => http('POST',   path, body)
+export const put  = (path, body) => http('PUT',    path, body)
+export const del  = (path)       => http('DELETE', path)

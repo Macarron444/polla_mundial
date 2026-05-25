@@ -1,4 +1,4 @@
-import { get, put } from './api.js'
+import { get, put } from './httpClient.js'
 
 export async function getComentarios(grupoId, partidoId) {
     return get(`/comentarios/${grupoId}/${partidoId}`)
