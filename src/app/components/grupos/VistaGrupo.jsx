@@ -4,7 +4,6 @@ import TabPrediccionesGrupo from './TabPrediccionesGrupo.jsx'
 import TabRankingGrupo from './TabRankingGrupo.jsx'
 import TabHistorialGrupo from './TabHistorialGrupo.jsx'
 import TabEstadisticasGrupo from './TabEstadisticasGrupo.jsx'
-import ChatPartido from './ChatPartido.jsx'
 import PrediccionGlobalGrupo from './PrediccionGlobalGrupo.jsx'
 import ConfigApuesta from './ConfigApuesta.jsx'
 import SolicitudesIngreso from './SolicitudesIngreso.jsx'
@@ -13,27 +12,26 @@ import { btnStyle } from '../../../shared/ui/index.jsx'
 import {
     agregarMiembro, cambiarRol, eliminarMiembro, eliminarGrupo, getRolEnGrupo,
 } from '../../../core/storage/grupos.js'
-import { obtenerTodosUsuarios } from '../../../core/storage/indexedDb.js'
+import { obtenerTodosUsuarios } from '../../../core/storage/usuarios.js'
 import { getSolicitudesPorGrupo } from '../../../core/storage/solicitudes.js'
 
 const TABS_MIEMBRO = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', 'Global']
 const TABS_ADMIN   = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', 'Global', 'Miembros', 'Apuesta', 'Invitar']
 
 function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
-    const rolActual  = getRolEnGrupo(grupo, usuario.id) ?? null
-    const esAdmin    = rolActual === 'ADMIN'
-    const esCreador  = String(grupo.creadoPor) === String(usuario.id)
-    const tabs       = esAdmin ? TABS_ADMIN : TABS_MIEMBRO
+    const rolActual = getRolEnGrupo(grupo, usuario.id) ?? null
+    const esAdmin   = rolActual === 'ADMIN'
+    const esCreador = String(grupo.creadoPor) === String(usuario.id)
+    const tabs      = esAdmin ? TABS_ADMIN : TABS_MIEMBRO
 
-    const [tabActiva, setTabActiva]           = useState('Predicciones')
-    const [busqueda, setBusqueda]             = useState('')
-    const [error, setError]                   = useState('')
-    const [confirmarDel, setConfirmarDel]     = useState(null)
+    const [tabActiva, setTabActiva]                 = useState('Predicciones')
+    const [busqueda, setBusqueda]                   = useState('')
+    const [error, setError]                         = useState('')
+    const [confirmarDel, setConfirmarDel]           = useState(null)
     const [confirmarDelGrupo, setConfirmarDelGrupo] = useState(false)
     const [solicitudesPendientes, setSolicitudesPendientes] = useState(0)
     const [usuariosDisponibles, setUsuariosDisponibles]     = useState([])
 
-    // Cargar solicitudes y usuarios disponibles de forma async
     useEffect(() => {
         if (!esAdmin) return
         getSolicitudesPorGrupo(grupo.id)
@@ -45,7 +43,7 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
         if (!esAdmin) return
         obtenerTodosUsuarios()
             .then((us) => setUsuariosDisponibles(us.filter(
-                (u) => !grupo.miembros.some((m) => m.usuarioId === u.id)
+                (u) => !grupo.miembros.some((m) => String(m.usuarioId) === String(u.id))
             )))
             .catch(() => {})
     }, [grupo.miembros, esAdmin])
@@ -81,9 +79,9 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
 
     return (
         <div>
-            {/* ── Cabecera con botón Volver ── */}
+            {/* Cabecera con botón Volver */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-                <button onClick={onVolver} style={btnStyle('#4a6fa5')}>← Volver</button>
+                <button onClick={() => onVolver()} style={btnStyle('#4a6fa5')}>← Volver</button>
                 <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 18, fontWeight: 800, color: '#e2e8f0' }}>
                         🏆 {grupo.nombre}
@@ -109,7 +107,7 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                 </div>
             )}
 
-            {/* ── Tabs ── */}
+            {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
                 {tabs.map((t) => (
                     <button key={t} onClick={() => setTabActiva(t)} style={{
@@ -132,16 +130,14 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                 ))}
             </div>
 
-            {/* ── Contenido de cada tab ── */}
+            {/* Contenido de cada tab */}
             {tabActiva === 'Predicciones' && (
                 <TabPrediccionesGrupo grupo={grupo} usuario={usuario} partidos={partidos} equipos={equipos} />
             )}
-            {tabActiva === 'Ranking' && <TabRankingGrupo grupo={grupo} usuario={usuario} />}
-            {tabActiva === 'Historial' && (
-                <TabHistorialGrupo grupo={grupo} usuario={usuario} partidos={partidos} equipos={equipos} />
-            )}
+            {tabActiva === 'Ranking'      && <TabRankingGrupo      grupo={grupo} usuario={usuario} />}
+            {tabActiva === 'Historial'    && <TabHistorialGrupo    grupo={grupo} usuario={usuario} partidos={partidos} equipos={equipos} />}
             {tabActiva === 'Estadísticas' && <TabEstadisticasGrupo grupo={grupo} usuario={usuario} />}
-            {tabActiva === 'Global' && <PrediccionGlobalGrupo grupo={grupo} usuario={usuario} equipos={equipos} />}
+            {tabActiva === 'Global'       && <PrediccionGlobalGrupo grupo={grupo} usuario={usuario} equipos={equipos} />}
 
             {tabActiva === 'Miembros' && esAdmin && (
                 <div>
@@ -151,7 +147,6 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                         </div>
                     )}
 
-                    {/* Buscar y agregar miembro */}
                     <div style={{ background: '#0d1628', border: '1px solid #1e2a45', borderRadius: 12, padding: '16px 18px', marginBottom: 20 }}>
                         <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 8 }}>AGREGAR MIEMBRO</div>
                         <input
@@ -175,14 +170,13 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                         ))}
                     </div>
 
-                    {/* Lista de miembros */}
                     <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 10 }}>
                         MIEMBROS ({grupo.miembros.length})
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {grupo.miembros.map((m) => {
-                            const esMiSelf   = m.usuarioId === usuario.id
-                            const esElCreador = m.usuarioId === grupo.creadoPor
+                            const esMiSelf    = String(m.usuarioId) === String(usuario.id)
+                            const esElCreador = String(m.usuarioId) === String(grupo.creadoPor)
                             return (
                                 <div key={m.usuarioId} style={{
                                     background: '#0d1628',
