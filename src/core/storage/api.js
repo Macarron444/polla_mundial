@@ -25,3 +25,7 @@ export function put(endpoint, body) {
 export function post(endpoint, body) {
     return request('POST', endpoint, body)
 }
+
+export function del(endpoint) {
+    return request('DELETE', endpoint)
+}
