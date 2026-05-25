@@ -8,33 +8,23 @@ import TabPredicciones from './components/TabPredicciones.jsx'
 import TabGrupos from './components/TabGrupos.jsx'
 import { FOOTBALL_API_KEY } from '../core/config/footballData.js'
 import { cargarDatosAPI } from '../core/api/footballDataApi.js'
-import {
-    EQUIPOS_DEFAULT,
-    PARTIDOS_DEFAULT,
-    PARTICIPANTES_DEFAULT,
-} from '../core/data/defaults.js'
-import { guardarUsuario } from '../core/storage/indexedDb.js'
+import { EQUIPOS_DEFAULT } from '../core/data/defaults.js'
 
 function App() {
-    const [usuario, setUsuario] = useState(null)
-    const [tab, setTab] = useState('Partidos')
-    const [partidos, setPartidos] = useState([])
+    const [usuario, setUsuario]         = useState(null)
+    const [tab, setTab]                 = useState('Partidos')
+    const [partidos, setPartidos]       = useState([])
     const [participantes, setParticipantes] = useState([])
-    const [equipos, setEquipos] = useState(EQUIPOS_DEFAULT)
-    const [apiStatus, setApiStatus] = useState('idle')
-    const [apiMsg, setApiMsg] = useState('')
+    const [equipos, setEquipos]         = useState(EQUIPOS_DEFAULT)
+    const [apiStatus, setApiStatus]     = useState('idle')
+    const [apiMsg, setApiMsg]           = useState('')
 
     const handleLogin = (usuarioAutenticado) => {
         setUsuario(usuarioAutenticado)
-        guardarUsuario(usuarioAutenticado).catch((error) => {
-            console.warn('No se pudo guardar el usuario en IndexedDB:', error)
-        })
         if (FOOTBALL_API_KEY && FOOTBALL_API_KEY !== 'TU_API_KEY_AQUI') {
             sincronizarConAPI()
         }
     }
-
-    const showInitialApiLoading = usuario && apiStatus === 'loading' && partidos.length === 0
 
     const handleLogout = () => {
         setUsuario(null)
@@ -58,14 +48,13 @@ function App() {
 
     if (!usuario) return <Login onLogin={handleLogin} />
 
+    const showInitialApiLoading = apiStatus === 'loading' && partidos.length === 0
     if (showInitialApiLoading) {
         return (
             <div className="loading-page">
                 <div className="loading-card">
                     <div className="loading-spinner" aria-hidden="true">
-                        <span />
-                        <span />
-                        <span />
+                        <span /><span /><span />
                     </div>
                     <div className="loading-text">⏳ Conectando con la API…</div>
                     <div className="loading-subtext">
@@ -76,31 +65,17 @@ function App() {
         )
     }
 
-    const apiBtnColor =
-        apiStatus === 'ok' ? '#2f9e44' : apiStatus === 'error' ? '#c92a2a' : '#3b5bdb'
-    const apiBtnText =
-        apiStatus === 'loading'
-            ? '⏳ Sincronizando…'
-            : apiStatus === 'ok'
-                ? '🔄 Actualizar'
-                : '🌐 Sincronizar API'
+    const apiBtnColor = apiStatus === 'ok' ? '#2f9e44' : apiStatus === 'error' ? '#c92a2a' : '#3b5bdb'
+    const apiBtnText  = apiStatus === 'loading' ? '⏳ Sincronizando…'
+                      : apiStatus === 'ok'      ? '🔄 Actualizar'
+                      : '🌐 Sincronizar API'
 
     const tabContent = {
-        Partidos: (
-            <TabPartidos partidos={partidos} setPartidos={setPartidos} equipos={equipos} />
-        ),
-        'Gestionar Partidos': (
-            <TabGestionarPartidos
-                partidos={partidos}
-                setPartidos={setPartidos}
-                equipos={equipos}
-            />
-        ),
-        Ranking: (
-            <TabRanking usuario={usuario} />
-        ),
-        'Mis Predicciones': <TabPredicciones usuario={usuario} partidos={partidos} equipos={equipos} />,
-        'Mis Grupos': <TabGrupos usuario={usuario} partidos={partidos} equipos={equipos} />,
+        'Partidos':           <TabPartidos partidos={partidos} setPartidos={setPartidos} equipos={equipos} />,
+        'Gestionar Partidos': <TabGestionarPartidos partidos={partidos} setPartidos={setPartidos} equipos={equipos} />,
+        'Ranking':            <TabRanking usuario={usuario} />,
+        'Mis Predicciones':   <TabPredicciones usuario={usuario} partidos={partidos} equipos={equipos} />,
+        'Mis Grupos':         <TabGrupos usuario={usuario} partidos={partidos} equipos={equipos} />,
     }
 
     return (
@@ -112,22 +87,13 @@ function App() {
                     onClick={sincronizarConAPI}
                     disabled={apiStatus === 'loading'}
                     className="btn-api"
-                    style={{
-                        border: `1px solid ${apiBtnColor}`,
-                        color: apiBtnColor,
-                        opacity: apiStatus === 'loading' ? 0.6 : 1,
-                    }}
+                    style={{ border: `1px solid ${apiBtnColor}`, color: apiBtnColor, opacity: apiStatus === 'loading' ? 0.6 : 1 }}
                 >
                     {apiBtnText}
                 </button>
 
                 {apiMsg && (
-                    <span
-                        style={{
-                            fontSize: 10,
-                            color: apiStatus === 'ok' ? '#69db7c' : '#ff8787',
-                        }}
-                    >
+                    <span style={{ fontSize: 10, color: apiStatus === 'ok' ? '#69db7c' : '#ff8787' }}>
                         {apiMsg}
                     </span>
                 )}
