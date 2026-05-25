@@ -1,3 +1,4 @@
+// ── ROUTER EXPRESS — endpoints /db/* ─────────────────────────────────────────
 import { Router } from 'express'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
@@ -6,6 +7,7 @@ import { fileURLToPath } from 'url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const router    = Router()
 
+// ── PERSISTENCIA EN JSON ──────────────────────────────────────────────────────
 const DATA_FILE = join(__dirname, 'polla-data.json')
 
 function leerDatos() {
@@ -27,6 +29,9 @@ function setColeccion(nombre, valor) {
     guardarDatos(datos)
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// USUARIOS
+// ═══════════════════════════════════════════════════════════════════════════════
 router.get('/usuarios/todos', (req, res) => {
     res.json(getColeccion('usuarios'))
 })
@@ -52,6 +57,9 @@ router.post('/usuarios/login', (req, res) => {
     res.json({ usuario: usuarioSeguro })
 })
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// GRUPOS
+// ═══════════════════════════════════════════════════════════════════════════════
 router.get('/grupos', (req, res) => {
     res.json(getColeccion('grupos'))
 })
@@ -72,6 +80,9 @@ router.delete('/grupos/:id', (req, res) => {
     res.json({ ok: true })
 })
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PREDICCIONES
+// ═══════════════════════════════════════════════════════════════════════════════
 router.get('/predicciones', (req, res) => {
     res.json(getColeccion('predicciones'))
 })
@@ -98,6 +109,9 @@ router.post('/predicciones/bulk', (req, res) => {
     res.json({ ok: true })
 })
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMENTARIOS
+// ═══════════════════════════════════════════════════════════════════════════════
 router.get('/comentarios/:grupoId/:partidoId', (req, res) => {
     const key  = `${req.params.grupoId}_${req.params.partidoId}`
     const mapa = leerDatos().comentarios ?? {}
@@ -113,6 +127,9 @@ router.put('/comentarios/:grupoId/:partidoId', (req, res) => {
     res.json({ ok: true })
 })
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SOLICITUDES
+// ═══════════════════════════════════════════════════════════════════════════════
 router.get('/solicitudes', (req, res) => {
     res.json(getColeccion('solicitudes'))
 })
@@ -127,6 +144,9 @@ router.put('/solicitudes/:id', (req, res) => {
     res.json(sol)
 })
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// RANKING HISTORIAL
+// ═══════════════════════════════════════════════════════════════════════════════
 router.get('/ranking/:grupoId', (req, res) => {
     const datos = leerDatos().rankingHistorial ?? {}
     res.json(datos[req.params.grupoId] ?? [])
@@ -142,3 +162,20 @@ router.post('/ranking/:grupoId', (req, res) => {
 })
 
 export default router
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PREDICCIONES PERSONALES (TabPredicciones — independiente de grupos)
+// ═══════════════════════════════════════════════════════════════════════════════
+router.get('/predicciones-personales', (req, res) => {
+    res.json(getColeccion('prediccionesPersonales'))
+})
+
+router.put('/predicciones-personales/:key', (req, res) => {
+    const preds = getColeccion('prediccionesPersonales')
+    const pred  = req.body
+    const idx   = preds.findIndex((p) => p.key === req.params.key)
+    if (idx >= 0) preds[idx] = { ...pred, key: req.params.key }
+    else          preds.push({ ...pred, key: req.params.key })
+    setColeccion('prediccionesPersonales', preds)
+    res.json(pred)
+})
