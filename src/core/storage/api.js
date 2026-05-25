@@ -1,4 +1,4 @@
-const BASE_URL = '/api'
+const BASE_URL = '/db'
 
 async function request(method, endpoint, body) {
     const options = {

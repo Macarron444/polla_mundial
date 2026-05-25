@@ -1,23 +1,28 @@
-// ── CLIENTE HTTP HACIA EL BACKEND /db ─────────────────────────────────────────
-// Todos los módulos de storage importan de aquí en vez de fetch directo
+import { get, post } from './api.js'
 
-const BASE = '/db'
-
-async function http(method, path, body) {
-    const opts = {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-    }
-    if (body !== undefined) opts.body = JSON.stringify(body)
-    const res = await fetch(`${BASE}${path}`, opts)
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }))
-        throw new Error(err.error ?? `Error ${res.status}`)
-    }
-    return res.json()
+export async function loginUsuario(email, password) {
+    const usuarios = await get('/usuarios')
+    const usuario = usuarios.find(
+        (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    )
+    if (!usuario) throw new Error('Correo o contraseña incorrectos')
+    return { usuario }
 }
 
-export const get    = (path)        => http('GET',    path)
-export const post   = (path, body)  => http('POST',   path, body)
-export const put    = (path, body)  => http('PUT',    path, body)
-export const del    = (path)        => http('DELETE', path)
+export async function registrarUsuario(nuevoUsuario) {
+    const usuarios = await get('/usuarios')
+    const existe = usuarios.find(
+        (u) => u.email.toLowerCase() === nuevoUsuario.email.toLowerCase()
+    )
+    if (existe) throw new Error('Ya existe una cuenta con ese correo')
+    return post('/usuarios', nuevoUsuario)
+}
+
+export async function getUsuarios() {
+    return get('/usuarios')
+}
+
+export async function getUsuario(id) {
+    const usuarios = await get('/usuarios')
+    return usuarios.find((u) => String(u.id) === String(id)) ?? null
+}
