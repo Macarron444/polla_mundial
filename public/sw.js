@@ -40,10 +40,12 @@ self.addEventListener('fetch', (event) => {
 
   if (url.origin !== self.location.origin) return
 
-  if (url.pathname.startsWith('/api/')) {
+    if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirstAPI(event.request))
     return
   }
+
+  if (url.pathname.startsWith('/db/')) return
 
   event.respondWith(cacheFirstApp(event.request))
 })
