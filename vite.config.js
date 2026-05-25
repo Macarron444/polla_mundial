@@ -48,6 +48,10 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '/v4'),
         headers: { 'X-Auth-Token': '67655057f3934e9f8674d35dec465040' },
       },
+      '/db': {
+        target: 'http://127.0.0.1:3001',
+        changeOrigin: true,
+      },
     },
   },
 })

@@ -147,6 +147,7 @@ dist
 **/*.back.*
 
 node_modules
+data/db.json
 
 *.sublime*
 

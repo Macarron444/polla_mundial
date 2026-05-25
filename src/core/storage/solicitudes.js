@@ -10,7 +10,7 @@ export async function getSolicitudDeUsuario(grupoId, usuarioId) {
     return todas.find((s) => s.grupoId === grupoId && s.usuarioId === usuarioId) ?? null
 }
 
-export async function crearSolicitud(grupoId, usuario) {
+export async function crearSolicitud(grupoId, usuario, origen = 'PUBLICO') {
     const todas    = await get('/solicitudes')
     const yaExiste = todas.find((s) => s.grupoId === grupoId && s.usuarioId === usuario.id && s.estado === 'PENDIENTE')
     if (yaExiste) throw new Error('Ya tienes una solicitud pendiente para este grupo')
@@ -21,6 +21,7 @@ export async function crearSolicitud(grupoId, usuario) {
         nombre: usuario.nombre,
         email: usuario.email,
         estado: 'PENDIENTE',
+        origen,
         fecha: new Date().toISOString(),
     }
     await put(`/solicitudes/${nueva.id}`, nueva)

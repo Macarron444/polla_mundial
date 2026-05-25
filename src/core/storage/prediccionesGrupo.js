@@ -26,6 +26,11 @@ export async function getPredicionesPorGrupo(grupoId) {
     return todas.filter((p) => p.grupoId === grupoId)
 }
 
+export async function getPredicionesPorUsuario(usuarioId) {
+    const todas = await get('/predicciones')
+    return todas.filter((p) => p.usuarioId === usuarioId)
+}
+
 export async function guardarPrediccion(grupoId, usuarioId, partidoId, golesL, golesV, usaComodin = false) {
     const key = buildKey(grupoId, usuarioId, partidoId)
     const prediccion = {
