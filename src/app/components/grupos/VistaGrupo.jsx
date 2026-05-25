@@ -21,8 +21,8 @@ const TABS_ADMIN   = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', '
 
 function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
     const rolActual  = getRolEnGrupo(grupo, usuario.id) ?? null
-    const esAdmin = rolActual === 'ADMIN' || String(grupo.creadoPor) === String(usuario.id)
-    const esCreador  = grupo.creadoPor === usuario.id
+    const esAdmin    = rolActual === 'ADMIN'
+    const esCreador  = String(grupo.creadoPor) === String(usuario.id)
     const tabs       = esAdmin ? TABS_ADMIN : TABS_MIEMBRO
 
     const [tabActiva, setTabActiva]           = useState('Predicciones')
