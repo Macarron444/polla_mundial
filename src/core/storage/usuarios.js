@@ -1,44 +1,23 @@
-import {
-    guardarUsuario,
-    obtenerTodosUsuarios,
-    guardarTodosUsuarios,
-} from './indexedDb.js'
+// ── CLIENTE HTTP HACIA EL BACKEND /db ─────────────────────────────────────────
+// Todos los módulos de storage importan de aquí en vez de fetch directo
 
-// ── HELPERS INTERNOS ──────────────────────────────────────────────────────────
-async function getUsuarios() {
-    return obtenerTodosUsuarios()
+const BASE = '/db'
+
+async function http(method, path, body) {
+    const opts = {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+    }
+    if (body !== undefined) opts.body = JSON.stringify(body)
+    const res = await fetch(`${BASE}${path}`, opts)
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }))
+        throw new Error(err.error ?? `Error ${res.status}`)
+    }
+    return res.json()
 }
 
-async function saveUsuarios(usuarios) {
-    return guardarTodosUsuarios(usuarios)
-}
-
-// ── API PÚBLICA ───────────────────────────────────────────────────────────────
-export async function getUsuarioPorEmail(email) {
-    const usuarios = await getUsuarios()
-    return usuarios.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null
-}
-
-export async function getUsuarioPorId(id) {
-    const usuarios = await getUsuarios()
-    return usuarios.find((u) => u.id === id) ?? null
-}
-
-export async function registrarUsuario(nuevoUsuario) {
-    const usuarios = await getUsuarios()
-    const existe = usuarios.some((u) => u.email.toLowerCase() === nuevoUsuario.email.toLowerCase())
-    if (existe) throw new Error('Ya existe un usuario con ese email')
-    const conFecha = { ...nuevoUsuario, creadoEn: new Date().toISOString() }
-    await saveUsuarios([...usuarios, conFecha])
-    return conFecha
-}
-
-export async function actualizarUsuario(usuarioActualizado) {
-    const usuarios = await getUsuarios()
-    const nuevos = usuarios.map((u) =>
-        u.id === usuarioActualizado.id ? { ...u, ...usuarioActualizado } : u
-    )
-    await saveUsuarios(nuevos)
-    await guardarUsuario(usuarioActualizado)
-    return usuarioActualizado
-}
+export const get    = (path)        => http('GET',    path)
+export const post   = (path, body)  => http('POST',   path, body)
+export const put    = (path, body)  => http('PUT',    path, body)
+export const del    = (path)        => http('DELETE', path)

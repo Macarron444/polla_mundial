@@ -1,20 +1,13 @@
-import {
-    obtenerTodosGrupos,
-    guardarGrupo,
-    guardarTodosGrupos,
-    eliminarGrupoDb,
-} from './indexedDb.js'
+import { get, put, del } from './api.js'
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
 async function getGrupos() {
-    return obtenerTodosGrupos()
+    return get('/grupos')
 }
 
-async function saveGrupos(grupos) {
-    return guardarTodosGrupos(grupos)
+async function saveGrupo(grupo) {
+    return put(`/grupos/${grupo.id}`, { ...grupo, actualizadoEn: new Date().toISOString() })
 }
 
-// ── API PÚBLICA ───────────────────────────────────────────────────────────────
 export async function crearGrupo(nombre, descripcion, usuarioCreador, opciones = {}) {
     const grupos = await getGrupos()
     const nuevo = {
@@ -27,7 +20,6 @@ export async function crearGrupo(nombre, descripcion, usuarioCreador, opciones =
         montoApuesta: opciones.montoApuesta ?? 0,
         premiacion: opciones.premiacion ?? 'TODO_AL_PRIMERO',
         token: Math.random().toString(36).slice(2, 10).toUpperCase(),
-        prediccionGlobal: { campeon: null, goleador: null },
         prediccionesGlobales: {},
         miembros: [{
             usuarioId: usuarioCreador.id,
@@ -36,7 +28,7 @@ export async function crearGrupo(nombre, descripcion, usuarioCreador, opciones =
             rol: 'ADMIN',
         }],
     }
-    await guardarGrupo(nuevo)
+    await saveGrupo(nuevo)
     return nuevo
 }
 
@@ -47,13 +39,13 @@ export async function agregarMiembro(grupoId, usuario, rol = 'PARTICIPANTE') {
     if (grupo.miembros.some((m) => m.usuarioId === usuario.id))
         throw new Error('El usuario ya es miembro del grupo')
     grupo.miembros.push({ usuarioId: usuario.id, nombre: usuario.nombre, email: usuario.email, rol })
-    await guardarGrupo(grupo)
+    await saveGrupo(grupo)
     return grupo
 }
 
 export async function cambiarRol(grupoId, usuarioId, nuevoRol) {
-    const grupos = await getGrupos()
-    const grupo  = grupos.find((g) => g.id === grupoId)
+    const grupos  = await getGrupos()
+    const grupo   = grupos.find((g) => g.id === grupoId)
     if (!grupo) throw new Error('Grupo no encontrado')
     const admins  = grupo.miembros.filter((m) => m.rol === 'ADMIN')
     const miembro = grupo.miembros.find((m) => m.usuarioId === usuarioId)
@@ -61,20 +53,20 @@ export async function cambiarRol(grupoId, usuarioId, nuevoRol) {
     if (miembro.rol === 'ADMIN' && admins.length === 1 && nuevoRol !== 'ADMIN')
         throw new Error('El grupo debe tener al menos un administrador')
     miembro.rol = nuevoRol
-    await guardarGrupo(grupo)
+    await saveGrupo(grupo)
     return grupo
 }
 
 export async function eliminarMiembro(grupoId, usuarioId) {
-    const grupos = await getGrupos()
-    const grupo  = grupos.find((g) => g.id === grupoId)
+    const grupos  = await getGrupos()
+    const grupo   = grupos.find((g) => g.id === grupoId)
     if (!grupo) throw new Error('Grupo no encontrado')
     const admins  = grupo.miembros.filter((m) => m.rol === 'ADMIN')
     const miembro = grupo.miembros.find((m) => m.usuarioId === usuarioId)
     if (miembro?.rol === 'ADMIN' && admins.length === 1)
         throw new Error('No puedes eliminar al único administrador')
     grupo.miembros = grupo.miembros.filter((m) => m.usuarioId !== usuarioId)
-    await guardarGrupo(grupo)
+    await saveGrupo(grupo)
     return grupo
 }
 
@@ -83,7 +75,7 @@ export async function eliminarGrupo(grupoId, usuarioId) {
     const grupo  = grupos.find((g) => g.id === grupoId)
     if (!grupo) throw new Error('Grupo no encontrado')
     if (grupo.creadoPor !== usuarioId) throw new Error('Solo el creador puede eliminar el grupo')
-    await eliminarGrupoDb(grupoId)
+    await del(`/grupos/${grupoId}`)
 }
 
 export async function actualizarConfigGrupo(grupoId, usuarioId, cambios) {
@@ -92,7 +84,7 @@ export async function actualizarConfigGrupo(grupoId, usuarioId, cambios) {
     if (!grupo) throw new Error('Grupo no encontrado')
     if (grupo.creadoPor !== usuarioId) throw new Error('Solo el creador puede editar la configuración')
     Object.assign(grupo, cambios)
-    await guardarGrupo(grupo)
+    await saveGrupo(grupo)
     return grupo
 }
 
@@ -112,7 +104,8 @@ export async function getGrupoPorToken(token) {
 }
 
 export function getRolEnGrupo(grupo, usuarioId) {
-    return (grupo?.miembros ?? []).find((m) => String(m.usuarioId) === String(usuarioId))?.rol ?? null
+    return grupo.miembros.find((m) => m.usuarioId === usuarioId)?.rol ?? null
+}
 
 export async function guardarPrediccionGlobalGrupo(grupoId, usuarioId, campeon, goleador) {
     const grupos = await getGrupos()
@@ -120,7 +113,7 @@ export async function guardarPrediccionGlobalGrupo(grupoId, usuarioId, campeon, 
     if (!grupo) throw new Error('Grupo no encontrado')
     if (!grupo.prediccionesGlobales) grupo.prediccionesGlobales = {}
     grupo.prediccionesGlobales[usuarioId] = { campeon, goleador, fecha: new Date().toISOString() }
-    await guardarGrupo(grupo)
+    await saveGrupo(grupo)
 }
 
 export async function getPrediccionGlobal(grupoId, usuarioId) {
