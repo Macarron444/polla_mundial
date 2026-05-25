@@ -22,7 +22,7 @@ const TABS_ADMIN   = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', '
 function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
     const rolActual  = getRolEnGrupo(grupo, usuario.id) ?? null
     const esAdmin    = rolActual === 'ADMIN'
-    const esCreador  = grupo.creadoPor === usuario.id
+    const esCreador  = String(grupo.creadoPor) === String(usuario.id)
     const tabs       = esAdmin ? TABS_ADMIN : TABS_MIEMBRO
 
     const [tabActiva, setTabActiva]           = useState('Predicciones')
@@ -241,7 +241,7 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
             )}
 
             {tabActiva === 'Apuesta' && esAdmin && (
-                <ConfigApuesta grupo={grupo} usuario={usuario} partidos={partidos} onActualizado={onCambio} />
+                <ConfigApuesta grupo={grupo} usuario={usuario} partidos={partidos} equipos={equipos} onActualizado={onCambio} />
             )}
             {tabActiva === 'Invitar' && esAdmin && <InvitacionLink grupo={grupo} />}
         </div>

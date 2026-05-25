@@ -3,23 +3,32 @@ import { actualizarConfigGrupo } from '../../../core/storage/grupos.js'
 import { cargarDatosAPI } from '../../../core/api/footballDataApi.js'
 import { btnStyle } from '../../../shared/ui/index.jsx'
 
-function ConfigApuesta({ grupo, usuario, onActualizado }) {
+function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: equiposProp = [], onActualizado }) {
     const esCreador = grupo.creadoPor === usuario.id
     const [monto, setMonto] = useState(grupo.montoApuesta ?? 0)
     const [premiacion, setPremiacion] = useState(grupo.premiacion ?? 'TODO_AL_PRIMERO')
-    const [partidos, setPartidos] = useState([])
-    const [seleccionados, setSeleccionados] = useState(
-        new Set(grupo.partidosSeleccionados ?? [])
-    )
+    const [partidos, setPartidos] = useState(partidosProp)
+    const [seleccionados, setSeleccionados] = useState(new Set(grupo.partidosSeleccionados ?? []))
     const [cargandoApi, setCargandoApi] = useState(false)
-    const [equipos, setEquipos] = useState([])
+    const [equipos, setEquipos] = useState(equiposProp.length > 0 ? equiposProp : [])
     const [msg, setMsg] = useState('')
     const [error, setError] = useState('')
 
     // Cargar partidos automáticamente al abrir
     useEffect(() => {
-        if (esCreador) cargarPartidos()
+    if (!esCreador) return
+    if (partidosProp.length > 0) {
+        setPartidos(partidosProp)
+        if (equiposProp.length > 0) setEquipos(equiposProp)
+    } else {
+        cargarPartidos()
+    }
     }, [])
+
+    useEffect(() => {
+        if (partidosProp.length > 0) setPartidos(partidosProp)
+        if (equiposProp.length > 0) setEquipos(equiposProp)
+    }, [partidosProp, equiposProp])
 
     const cargarPartidos = async () => {
         setCargandoApi(true)

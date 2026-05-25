@@ -1,119 +1,125 @@
-// ── NOMBRES DE CACHÉ ──────────────────────────────────────────────────────────
-const CACHE_APP = 'polla-mundial-app-v1';   // HTML, JS, CSS (estáticos)
-const CACHE_API = 'polla-mundial-api-v1';   // Respuestas del proxy /api/*
+// ── VERSIÓN AUTOGENERADA POR VITE EN CADA BUILD ───────────────────────────────
+// El hash cambia con cada deploy → el SW se actualiza automáticamente
+const CACHE_VERSION = '__VITE_BUILD_HASH__'
+const CACHE_APP     = `polla-mundial-app-${CACHE_VERSION}`
+const CACHE_API     = 'polla-mundial-api-v1'
 
-// ── ARCHIVOS ESTÁTICOS A PRE-CACHEAR ──────────────────────────────────────────
-const ASSETS_TO_CACHE = [
+const ASSETS_PRECACHE = [
   '/',
   '/index.html',
-  '/sw.js',
-  '/src/app/main.jsx',
-  '/src/app/App.jsx',
-  '/src/shared/styles/styles.css',
-];
+  '/manifest.webmanifest',
+  '/favicon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
+]
 
-// ── INSTALL: pre-cachea los archivos estáticos ────────────────────────────────
+// ── INSTALL: precachear assets esenciales ─────────────────────────────────────
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  self.skipWaiting()   // activar inmediatamente sin esperar a que se cierren pestañas
   event.waitUntil(
-    caches.open(CACHE_APP).then((cache) => cache.addAll(ASSETS_TO_CACHE))
-  );
-});
+    caches.open(CACHE_APP).then((cache) => cache.addAll(ASSETS_PRECACHE))
+  )
+})
 
-// ── ACTIVATE: limpia cachés viejas ────────────────────────────────────────────
+// ── ACTIVATE: borrar cachés viejos ────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
-  const cachesActuales = [CACHE_APP, CACHE_API];
+  const cachesValidos = [CACHE_APP, CACHE_API]
   event.waitUntil(
     caches.keys().then((nombres) =>
       Promise.all(
-        nombres.map((nombre) => {
-          if (!cachesActuales.includes(nombre)) {
-            console.log('[SW] 🗑️ Eliminando caché vieja:', nombre);
-            return caches.delete(nombre);
-          }
-        })
+        nombres
+          .filter((n) => !cachesValidos.includes(n))
+          .map((n) => caches.delete(n))
       )
-    )
-  );
-  self.clients.claim();
-});
+    ).then(() => self.clients.claim())
+  )
+})
 
-// ── FETCH: estrategia por tipo de petición ────────────────────────────────────
+// ── FETCH: estrategias por tipo de recurso ────────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+  if (event.request.method !== 'GET') return
 
-  const url = new URL(event.request.url);
+  const url = new URL(event.request.url)
+  if (url.origin !== self.location.origin) return
 
-  // Solo interceptar peticiones del mismo origen
-  if (url.origin !== self.location.origin) return;
-
-  // ── /api/* → Network First con caché de respaldo ──────────────────────────
+  // API de football-data → network-first con fallback a caché
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirstAPI(event.request));
-    return;
+    event.respondWith(networkFirstAPI(event.request))
+    return
   }
 
-  // ── Archivos estáticos → Cache First ──────────────────────────────────────
-  event.respondWith(cacheFirstApp(event.request));
-});
+  // Assets de Vite con hash en el nombre (/_assets/xxx.abc123.js)
+  // → cache-first porque el hash garantiza que son inmutables
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(cacheFirstInmutable(event.request))
+    return
+  }
 
-// ── ESTRATEGIA: Network First para la API ────────────────────────────────────
-async function networkFirstAPI(request) {
-  const cache = await caches.open(CACHE_API);
+  // Todo lo demás (index.html, sw.js, manifest, etc.)
+  // → network-first: intenta la red, cae a caché si está offline
+  event.respondWith(networkFirstApp(event.request))
+})
 
+// ── ESTRATEGIA: network-first para el APP ─────────────────────────────────────
+// Siempre intenta la red → el usuario siempre ve la versión más reciente
+// Solo usa caché si está offline
+async function networkFirstApp(request) {
+  const cache = await caches.open(CACHE_APP)
   try {
-    const networkResponse = await fetch(request);
-
+    const networkResponse = await fetch(request)
     if (networkResponse.ok) {
-      const responseToCache = networkResponse.clone();
-      const headers = new Headers(responseToCache.headers);
-      headers.append('sw-cached-at', Date.now().toString());
-
-      const body = await responseToCache.arrayBuffer();
-      const cachedResponse = new Response(body, {
-        status: responseToCache.status,
-        statusText: responseToCache.statusText,
-        headers,
-      });
-
-      cache.put(request, cachedResponse);
-      console.log('[SW] ✅ API cacheada:', request.url);
+      cache.put(request, networkResponse.clone())
     }
-
-    return networkResponse;
-
-  } catch (error) {
-    console.log('[SW] 📦 Sin red, usando caché para:', request.url);
-    const cached = await cache.match(request);
-
-    if (cached) {
-      const cachedAt = cached.headers.get('sw-cached-at');
-      const age = cachedAt ? Math.round((Date.now() - parseInt(cachedAt)) / 60000) : '?';
-      console.log(`[SW] ⏱️ Datos del caché (hace ${age} min)`);
-      return cached;
-    }
-
-    return new Response(
-      JSON.stringify({ error: 'Sin conexión y sin datos en caché', offline: true }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
+    return networkResponse
+  } catch {
+    const cached = await cache.match(request)
+    if (cached) return cached
+    // SPA fallback
+    const fallback = await cache.match('/index.html')
+    return fallback || new Response('Sin conexión', { status: 503 })
   }
 }
 
-// ── ESTRATEGIA: Cache First para archivos estáticos ──────────────────────────
-async function cacheFirstApp(request) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
+// ── ESTRATEGIA: cache-first para assets inmutables ────────────────────────────
+// Los archivos de /assets/ tienen hash → nunca cambian → siempre de caché
+async function cacheFirstInmutable(request) {
+  const cached = await caches.match(request)
+  if (cached) return cached
 
+  const cache = await caches.open(CACHE_APP)
   try {
-    const networkResponse = await fetch(request);
+    const networkResponse = await fetch(request)
     if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_APP);
-      cache.put(request, networkResponse.clone());
+      cache.put(request, networkResponse.clone())
     }
-    return networkResponse;
-  } catch (error) {
-    const fallback = await caches.match('/index.html');
-    return fallback || new Response('Sin conexión', { status: 503 });
+    return networkResponse
+  } catch {
+    return new Response('Recurso no disponible offline', { status: 503 })
+  }
+}
+
+// ── ESTRATEGIA: network-first para API ───────────────────────────────────────
+async function networkFirstAPI(request) {
+  const cache = await caches.open(CACHE_API)
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse.ok) {
+      const headers = new Headers(networkResponse.headers)
+      headers.set('sw-cached-at', Date.now().toString())
+      const body = await networkResponse.clone().arrayBuffer()
+      cache.put(request, new Response(body, {
+        status: networkResponse.status,
+        statusText: networkResponse.statusText,
+        headers,
+      }))
+    }
+    return networkResponse
+  } catch {
+    const cached = await cache.match(request)
+    if (cached) return cached
+    return new Response(
+      JSON.stringify({ error: 'Sin conexión y sin datos en caché', offline: true }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
+    )
   }
 }
