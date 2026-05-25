@@ -1,50 +1,58 @@
-import {
-    obtenerTodasPrediccionesGrupo,
-    guardarPrediccionGrupo,
-    guardarTodasPrediccionesGrupo,
-} from './indexedDb.js'
+import { get, put, post } from './api.js'
 
-// ── API PÚBLICA ───────────────────────────────────────────────────────────────
+function buildKey(grupoId, usuarioId, partidoId) {
+    return `${grupoId}_${usuarioId}_${partidoId}`
+}
+
 export async function getPredicion(grupoId, usuarioId, partidoId) {
-    const todas = await obtenerTodasPrediccionesGrupo()
+    const todas = await get('/predicciones')
     return todas.find(
         (p) => p.grupoId === grupoId && p.usuarioId === usuarioId && p.partidoId === partidoId
     ) ?? null
 }
 
 export async function getPredicionesPorGrupoPartido(grupoId, partidoId) {
-    const todas = await obtenerTodasPrediccionesGrupo()
+    const todas = await get('/predicciones')
     return todas.filter((p) => p.grupoId === grupoId && p.partidoId === partidoId)
 }
 
 export async function getPredicionesPorGrupoUsuario(grupoId, usuarioId) {
-    const todas = await obtenerTodasPrediccionesGrupo()
+    const todas = await get('/predicciones')
     return todas.filter((p) => p.grupoId === grupoId && p.usuarioId === usuarioId)
 }
 
 export async function getPredicionesPorGrupo(grupoId) {
-    const todas = await obtenerTodasPrediccionesGrupo()
+    const todas = await get('/predicciones')
     return todas.filter((p) => p.grupoId === grupoId)
 }
 
+export async function getPredicionesPorUsuario(usuarioId) {
+    const todas = await get('/predicciones')
+    return todas.filter((p) => p.usuarioId === usuarioId)
+}
+
 export async function guardarPrediccion(grupoId, usuarioId, partidoId, golesL, golesV, usaComodin = false) {
+    const key = buildKey(grupoId, usuarioId, partidoId)
     const prediccion = {
-        grupoId, usuarioId, partidoId,
+        key, grupoId, usuarioId, partidoId,
         golesL, golesV, usaComodin,
         fecha: new Date().toISOString(),
         estado: 'PENDIENTE',
         pts: 0,
     }
-    await guardarPrediccionGrupo(prediccion)
+    await put(`/predicciones/${key}`, prediccion)
     return prediccion
 }
 
 export async function resolverPredicciones(grupoId, partidoId, golesLReal, golesVReal) {
-    const todas      = await obtenerTodasPrediccionesGrupo()
+    const todas       = await get('/predicciones')
     const ganadorReal = golesLReal > golesVReal ? 'L' : golesLReal < golesVReal ? 'V' : 'E'
 
-    const actualizadas = todas.map((p) => {
-        if (p.grupoId !== grupoId || p.partidoId !== partidoId) return p
+    const delGrupoPartido = todas.filter(
+        (p) => p.grupoId === grupoId && p.partidoId === partidoId
+    )
+
+    const actualizadas = delGrupoPartido.map((p) => {
         const ganadorPred = p.golesL > p.golesV ? 'L' : p.golesL < p.golesV ? 'V' : 'E'
         let pts = 0, estado = 'FALLIDA'
         if (p.golesL === golesLReal && p.golesV === golesVReal) {
@@ -55,15 +63,10 @@ export async function resolverPredicciones(grupoId, partidoId, golesLReal, goles
         return { ...p, estado, pts }
     })
 
-    await guardarTodasPrediccionesGrupo(actualizadas)
+    await post('/predicciones/bulk', actualizadas)
 }
 
 export async function usaComodinDisponible(grupoId, usuarioId) {
     const preds = await getPredicionesPorGrupoUsuario(grupoId, usuarioId)
     return !preds.some((p) => p.usaComodin)
-}
-// Todas las predicciones de un usuario en TODOS los grupos (para ranking global)
-export async function getPredicionesPorUsuario(usuarioId) {
-    const todas = await obtenerTodasPrediccionesGrupo()
-    return todas.filter((p) => p.usuarioId === usuarioId)
 }

@@ -1,23 +1,18 @@
-import {
-    obtenerTodasSolicitudes,
-    guardarSolicitud,
-    actualizarSolicitud,
-    guardarTodasSolicitudes,
-} from './indexedDb.js'
+import { get, put } from './api.js'
 
 export async function getSolicitudesPorGrupo(grupoId) {
-    const todas = await obtenerTodasSolicitudes()
+    const todas = await get('/solicitudes')
     return todas.filter((s) => s.grupoId === grupoId && s.estado === 'PENDIENTE')
 }
 
 export async function getSolicitudDeUsuario(grupoId, usuarioId) {
-    const todas = await obtenerTodasSolicitudes()
+    const todas = await get('/solicitudes')
     return todas.find((s) => s.grupoId === grupoId && s.usuarioId === usuarioId) ?? null
 }
 
-export async function crearSolicitud(grupoId, usuario) {
-    const todas    = await obtenerTodasSolicitudes()
-    const yaExiste = todas.find((s) => s.grupoId === grupoId && s.usuarioId === usuario.id)
+export async function crearSolicitud(grupoId, usuario, origen = 'PUBLICO') {
+    const todas    = await get('/solicitudes')
+    const yaExiste = todas.find((s) => s.grupoId === grupoId && s.usuarioId === usuario.id && s.estado === 'PENDIENTE')
     if (yaExiste) throw new Error('Ya tienes una solicitud pendiente para este grupo')
     const nueva = {
         id: Date.now(),
@@ -26,17 +21,18 @@ export async function crearSolicitud(grupoId, usuario) {
         nombre: usuario.nombre,
         email: usuario.email,
         estado: 'PENDIENTE',
+        origen,
         fecha: new Date().toISOString(),
     }
-    await guardarSolicitud(nueva)
+    await put(`/solicitudes/${nueva.id}`, nueva)
     return nueva
 }
 
 export async function resolverSolicitud(solicitudId, decision) {
-    const todas = await obtenerTodasSolicitudes()
+    const todas = await get('/solicitudes')
     const s     = todas.find((x) => x.id === solicitudId)
     if (!s) throw new Error('Solicitud no encontrada')
-    s.estado = decision   // 'APROBADA' | 'RECHAZADA'
-    await actualizarSolicitud(s)
+    s.estado = decision
+    await put(`/solicitudes/${solicitudId}`, s)
     return s
 }

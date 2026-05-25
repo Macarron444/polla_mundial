@@ -1,7 +1,6 @@
+import { get, post } from './api.js'
 import { getPredicionesPorGrupo } from './prediccionesGrupo.js'
-import { obtenerHistorialRankingGrupo, guardarSnapshotRanking } from './indexedDb.js'
 
-// Calcula el ranking completo de un grupo
 export async function calcularRanking(grupo) {
     const preds = await getPredicionesPorGrupo(grupo.id)
     const mapa  = {}
@@ -16,7 +15,7 @@ export async function calcularRanking(grupo) {
 
     preds.forEach((p) => {
         if (!mapa[p.usuarioId]) return
-        mapa[p.usuarioId].pts += p.pts
+        mapa[p.usuarioId].pts += p.pts ?? 0
         if      (p.estado === 'EXACTA')    mapa[p.usuarioId].exactas++
         else if (p.estado === 'CORRECTA')  mapa[p.usuarioId].correctas++
         else if (p.estado === 'FALLIDA')   mapa[p.usuarioId].fallidas++
@@ -28,9 +27,9 @@ export async function calcularRanking(grupo) {
 
 export async function guardarSnapshot(grupoId, ranking) {
     const snapshot = { fecha: new Date().toISOString(), ranking: ranking.map((r) => ({ ...r })) }
-    await guardarSnapshotRanking(grupoId, snapshot)
+    await post(`/ranking/${grupoId}`, snapshot)
 }
 
 export async function getHistorialRanking(grupoId) {
-    return obtenerHistorialRankingGrupo(grupoId)
+    return get(`/ranking/${grupoId}`)
 }

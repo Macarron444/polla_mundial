@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { loginUsuario, registrarUsuario } from '../../core/storage/usuarios.js'
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@(gmail|hotmail|outlook|yahoo|live|icloud)\.(com|es|co|net|org|com\.co)$/i
 
@@ -17,22 +18,18 @@ function Login({ onLogin }) {
         setConfirmar(''); setError(''); setExito('')
     }
 
-    const cambiarModo = (m) => { setModo(m); resetForm() }
+    const cambiarModo = (nuevoModo) => { setModo(nuevoModo); resetForm() }
 
     /* ── LOGIN ── */
     const handleLogin = async () => {
         if (!email.trim() || !password.trim()) { setError('Ingresa tu correo y contraseña'); return }
         setLoading(true); setError('')
         try {
-            const res = await fetch('/db/usuarios/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
-            })
-            const data = await res.json()
-            if (!res.ok) { setError(data.error ?? 'Credenciales incorrectas'); setLoading(false); return }
-            onLogin(data.usuario)
-        } catch { setError('Error de conexión con el servidor') }
+            const { usuario } = await loginUsuario(email.trim(), password)
+            onLogin(usuario)
+        } catch (e) {
+            setError(e.message)
+        }
         setLoading(false)
     }
 
@@ -50,29 +47,20 @@ function Login({ onLogin }) {
 
         setLoading(true)
         try {
-            const todos = await fetch('/db/usuarios/todos').then(r => r.json())
-            const existe = todos.find(u => u.email.toLowerCase() === email.toLowerCase().trim())
-            if (existe) { setError('Este correo ya está registrado'); setLoading(false); return }
-
             const nuevoUsuario = {
                 id: Date.now(),
                 nombre: nombre.trim(),
                 email: email.toLowerCase().trim(),
                 password,
-                rol: todos.length === 0 ? 'CREADOR' : 'PARTICIPANTE',
+                rol: 'PARTICIPANTE',
                 fechaRegistro: new Date().toISOString(),
             }
-
-            const res = await fetch('/db/usuarios', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevoUsuario),
-            })
-            if (!res.ok) { const d = await res.json(); setError(d.error); setLoading(false); return }
-
+            await registrarUsuario(nuevoUsuario)
             setExito(`✅ ¡Listo, ${nuevoUsuario.nombre}! Ya puedes iniciar sesión.`)
             setTimeout(() => { cambiarModo('login'); setEmail(nuevoUsuario.email) }, 1800)
-        } catch { setError('Error de conexión con el servidor') }
+        } catch (e) {
+            setError(e.message)
+        }
         setLoading(false)
     }
 
@@ -119,17 +107,20 @@ function Login({ onLogin }) {
                         <div className="login-field">
                             <label className="login-label">NOMBRE COMPLETO</label>
                             <input type="text" className="login-input" placeholder="Juan Pérez"
-                                value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="name" />
+                                value={nombre} onChange={(e) => setNombre(e.target.value)}
+                                autoComplete="name" />
                         </div>
                         <div className="login-field">
                             <label className="login-label">CORREO ELECTRÓNICO</label>
                             <input type="email" className="login-input" placeholder="tu@gmail.com"
-                                value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+                                value={email} onChange={(e) => setEmail(e.target.value)}
+                                autoComplete="email" />
                         </div>
                         <div className="login-field">
                             <label className="login-label">CONTRASEÑA</label>
                             <input type="password" className="login-input" placeholder="Mínimo 6 caracteres"
-                                value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+                                value={password} onChange={(e) => setPassword(e.target.value)}
+                                autoComplete="new-password" />
                         </div>
                         <div className="login-field">
                             <label className="login-label">CONFIRMAR CONTRASEÑA</label>

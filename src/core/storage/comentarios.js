@@ -1,12 +1,12 @@
-import { obtenerComentarios, guardarComentarios } from './indexedDb.js'
+import { get, put } from './api.js'
 
 export async function getComentarios(grupoId, partidoId) {
-    return obtenerComentarios(grupoId, partidoId)
+    return get(`/comentarios/${grupoId}/${partidoId}`)
 }
 
 export async function agregarComentario(grupoId, partidoId, usuario, texto) {
     if (!texto.trim()) return
-    const comentarios = await obtenerComentarios(grupoId, partidoId)
+    const comentarios = await getComentarios(grupoId, partidoId)
     comentarios.push({
         id: Date.now(),
         usuarioId: usuario.id,
@@ -14,13 +14,13 @@ export async function agregarComentario(grupoId, partidoId, usuario, texto) {
         texto: texto.trim(),
         fecha: new Date().toISOString(),
     })
-    await guardarComentarios(grupoId, partidoId, comentarios)
+    await put(`/comentarios/${grupoId}/${partidoId}`, comentarios)
 }
 
 export async function eliminarComentario(grupoId, partidoId, comentarioId, usuarioId) {
-    const comentarios = await obtenerComentarios(grupoId, partidoId)
+    const comentarios = await getComentarios(grupoId, partidoId)
     const filtrados   = comentarios.filter(
         (c) => !(c.id === comentarioId && c.usuarioId === usuarioId)
     )
-    await guardarComentarios(grupoId, partidoId, filtrados)
+    await put(`/comentarios/${grupoId}/${partidoId}`, filtrados)
 }
