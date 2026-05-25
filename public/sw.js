@@ -1,104 +1,125 @@
-const CACHE_APP = 'polla-mundial-app-v2'
-const CACHE_API = 'polla-mundial-api-v1'
+// ── VERSIÓN AUTOGENERADA POR VITE EN CADA BUILD ───────────────────────────────
+// El hash cambia con cada deploy → el SW se actualiza automáticamente
+const CACHE_VERSION = '__VITE_BUILD_HASH__'
+const CACHE_APP     = `polla-mundial-app-${CACHE_VERSION}`
+const CACHE_API     = 'polla-mundial-api-v1'
 
-const ASSETS_TO_CACHE = [
+const ASSETS_PRECACHE = [
   '/',
   '/index.html',
-  '/sw.js',
   '/manifest.webmanifest',
   '/favicon.svg',
   '/icon-192.png',
   '/icon-512.png',
 ]
 
+// ── INSTALL: precachear assets esenciales ─────────────────────────────────────
 self.addEventListener('install', (event) => {
-  self.skipWaiting()
-  event.waitUntil(caches.open(CACHE_APP).then((cache) => cache.addAll(ASSETS_TO_CACHE)))
+  self.skipWaiting()   // activar inmediatamente sin esperar a que se cierren pestañas
+  event.waitUntil(
+    caches.open(CACHE_APP).then((cache) => cache.addAll(ASSETS_PRECACHE))
+  )
 })
 
+// ── ACTIVATE: borrar cachés viejos ────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
-  const cachesActuales = [CACHE_APP, CACHE_API]
+  const cachesValidos = [CACHE_APP, CACHE_API]
   event.waitUntil(
     caches.keys().then((nombres) =>
       Promise.all(
-        nombres.map((nombre) => {
-          if (!cachesActuales.includes(nombre)) {
-            return caches.delete(nombre)
-          }
-          return undefined
-        })
+        nombres
+          .filter((n) => !cachesValidos.includes(n))
+          .map((n) => caches.delete(n))
       )
-    )
+    ).then(() => self.clients.claim())
   )
-  self.clients.claim()
 })
 
+// ── FETCH: estrategias por tipo de recurso ────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
   const url = new URL(event.request.url)
-
   if (url.origin !== self.location.origin) return
 
-    if (url.pathname.startsWith('/api/')) {
+  // API de football-data → network-first con fallback a caché
+  if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirstAPI(event.request))
     return
   }
 
-  if (url.pathname.startsWith('/db/')) return
+  // Assets de Vite con hash en el nombre (/_assets/xxx.abc123.js)
+  // → cache-first porque el hash garantiza que son inmutables
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(cacheFirstInmutable(event.request))
+    return
+  }
 
-  event.respondWith(cacheFirstApp(event.request))
+  // Todo lo demás (index.html, sw.js, manifest, etc.)
+  // → network-first: intenta la red, cae a caché si está offline
+  event.respondWith(networkFirstApp(event.request))
 })
 
-async function networkFirstAPI(request) {
-  const cache = await caches.open(CACHE_API)
-
-  try {
-    const networkResponse = await fetch(request)
-
-    if (networkResponse.ok) {
-      const responseToCache = networkResponse.clone()
-      const headers = new Headers(responseToCache.headers)
-      headers.append('sw-cached-at', Date.now().toString())
-
-      const body = await responseToCache.arrayBuffer()
-      const cachedResponse = new Response(body, {
-        status: responseToCache.status,
-        statusText: responseToCache.statusText,
-        headers,
-      })
-
-      cache.put(request, cachedResponse)
-    }
-
-    return networkResponse
-  } catch (error) {
-    const cached = await cache.match(request)
-
-    if (cached) {
-      return cached
-    }
-
-    return new Response(
-      JSON.stringify({ error: 'Sin conexion y sin datos en cache', offline: true }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    )
-  }
-}
-
-async function cacheFirstApp(request) {
-  const cached = await caches.match(request)
-  if (cached) return cached
-
+// ── ESTRATEGIA: network-first para el APP ─────────────────────────────────────
+// Siempre intenta la red → el usuario siempre ve la versión más reciente
+// Solo usa caché si está offline
+async function networkFirstApp(request) {
+  const cache = await caches.open(CACHE_APP)
   try {
     const networkResponse = await fetch(request)
     if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_APP)
       cache.put(request, networkResponse.clone())
     }
     return networkResponse
-  } catch (error) {
-    const fallback = await caches.match('/index.html')
-    return fallback || new Response('Sin conexion', { status: 503 })
+  } catch {
+    const cached = await cache.match(request)
+    if (cached) return cached
+    // SPA fallback
+    const fallback = await cache.match('/index.html')
+    return fallback || new Response('Sin conexión', { status: 503 })
+  }
+}
+
+// ── ESTRATEGIA: cache-first para assets inmutables ────────────────────────────
+// Los archivos de /assets/ tienen hash → nunca cambian → siempre de caché
+async function cacheFirstInmutable(request) {
+  const cached = await caches.match(request)
+  if (cached) return cached
+
+  const cache = await caches.open(CACHE_APP)
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse.ok) {
+      cache.put(request, networkResponse.clone())
+    }
+    return networkResponse
+  } catch {
+    return new Response('Recurso no disponible offline', { status: 503 })
+  }
+}
+
+// ── ESTRATEGIA: network-first para API ───────────────────────────────────────
+async function networkFirstAPI(request) {
+  const cache = await caches.open(CACHE_API)
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse.ok) {
+      const headers = new Headers(networkResponse.headers)
+      headers.set('sw-cached-at', Date.now().toString())
+      const body = await networkResponse.clone().arrayBuffer()
+      cache.put(request, new Response(body, {
+        status: networkResponse.status,
+        statusText: networkResponse.statusText,
+        headers,
+      }))
+    }
+    return networkResponse
+  } catch {
+    const cached = await cache.match(request)
+    if (cached) return cached
+    return new Response(
+      JSON.stringify({ error: 'Sin conexión y sin datos en caché', offline: true }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
+    )
   }
 }

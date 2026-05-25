@@ -1,23 +1,33 @@
-// ── CLIENTE HTTP HACIA EL BACKEND /db ─────────────────────────────────────────
-// Todos los módulos de storage importan de aquí en vez de fetch directo
+import { get, post } from './httpClient.js'
 
-const BASE = '/db'
-
-async function http(method, path, body) {
-    const opts = {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-    }
-    if (body !== undefined) opts.body = JSON.stringify(body)
-    const res = await fetch(`${BASE}${path}`, opts)
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }))
-        throw new Error(err.error ?? `Error ${res.status}`)
-    }
-    return res.json()
+export async function getUsuarioPorEmail(email) {
+    const todos = await get('/usuarios/todos')
+    return todos.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null
 }
 
-export const get    = (path)        => http('GET',    path)
-export const post   = (path, body)  => http('POST',   path, body)
-export const put    = (path, body)  => http('PUT',    path, body)
-export const del    = (path)        => http('DELETE', path)
+export async function getUsuarioPorId(id) {
+    const todos = await get('/usuarios/todos')
+    return todos.find((u) => String(u.id) === String(id)) ?? null
+}
+
+export async function obtenerTodosUsuarios() {
+    return get('/usuarios/todos')
+}
+
+export async function registrarUsuario(nuevoUsuario) {
+    const todos  = await get('/usuarios/todos')
+    const existe = todos.some((u) => u.email.toLowerCase() === nuevoUsuario.email.toLowerCase())
+    if (existe) throw new Error('Ya existe un usuario con ese email')
+    const conFecha = { ...nuevoUsuario, creadoEn: new Date().toISOString() }
+    await post('/usuarios', conFecha)
+    return conFecha
+}
+
+export async function actualizarUsuario(usuario) {
+    await post('/usuarios', usuario)
+    return usuario
+}
+
+export async function loginUsuario(email, password) {
+    return post('/usuarios/login', { email, password })
+}
