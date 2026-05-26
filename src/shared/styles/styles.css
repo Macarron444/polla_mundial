@@ -178,14 +178,57 @@ button:hover { opacity: 0.85; }
 
 /* ── MAIN CONTAINER ─────────────────────────────────────────────────────────── */
 .main-container {
-    max-width: 760px;
+    width: 100%;
+    max-width: 1180px;
     margin: 0 auto;
-    padding: 24px 16px;
+    padding: 24px 24px;
     animation: fadeIn 0.3s ease;
 }
 
 /* ── TAB SECTION ─────────────────────────────────────────────────────────────── */
-.tab-section { animation: fadeIn 0.25s ease; }
+.tab-section {
+    width: 100%;
+    animation: fadeIn 0.25s ease;
+}
+
+.apuesta-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.apuesta-panel {
+    background: #0d1628;
+    border: 1px solid #3b5bdb44;
+    border-radius: 12px;
+    padding: 18px 20px;
+}
+
+.apuesta-panel--partidos {
+    border-color: #2f9e4444;
+}
+
+.apuesta-select {
+    width: 100%;
+    background: #060c18;
+    border: 1px solid #3b5bdb55;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 12px;
+}
+
+.partidos-lista-compacta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 420px;
+    overflow: auto;
+    padding-right: 2px;
+}
 
 /* ── STAT CARDS ─────────────────────────────────────────────────────────────── */
 .stat-cards {
@@ -421,4 +464,8 @@ button:hover { opacity: 0.85; }
     .header { padding: 0 14px; }
     .nav-tabs { padding: 8px 14px 0; }
     .api-banner { padding: 6px 14px; }
+}
+
+@media (max-width: 820px) {
+    .apuesta-grid { grid-template-columns: 1fr; }
 }
