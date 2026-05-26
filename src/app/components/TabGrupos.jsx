@@ -41,8 +41,8 @@ function TabGrupos({ usuario, partidos, equipos }) {
 
     const handleCreado = async (grupo) => {
         setCreando(false)
-        await recargar()
         setVistaDetalle(grupo)
+        recargar()
     }
 
     const handleUnirseToken = async () => {
@@ -61,7 +61,6 @@ function TabGrupos({ usuario, partidos, equipos }) {
         } catch (e) { setTokenError(e.message) }
     }
 
-    // Usar String() para evitar el bug de Number vs String en IDs
     const gruposComoAdmin        = grupos.filter((g) => g.miembros.some((m) => String(m.usuarioId) === String(usuario.id) && m.rol === 'ADMIN'))
     const gruposComoParticipante = grupos.filter((g) => g.miembros.some((m) => String(m.usuarioId) === String(usuario.id) && m.rol !== 'ADMIN'))
 
@@ -94,7 +93,6 @@ function TabGrupos({ usuario, partidos, equipos }) {
                 <StatCard label="SOY PARTICIPANTE"  value={gruposComoParticipante.length} accent="#69db7c" />
             </div>
 
-            {/* Botones de acción */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
                 <button onClick={() => setCreando(true)} style={btnStyle('#3b5bdb')}>+ Crear grupo</button>
                 <button onClick={() => { setVerToken(!verToken); setTokenMsg(''); setTokenError('') }}
@@ -107,7 +105,6 @@ function TabGrupos({ usuario, partidos, equipos }) {
                 </button>
             </div>
 
-            {/* Formulario unirse por token */}
             {verToken && (
                 <div style={{ background: '#0d1628', border: '1px solid #3b5bdb44', borderRadius: 12, padding: '16px 18px', marginBottom: 20 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#748ffc', marginBottom: 12, letterSpacing: '0.05em' }}>
@@ -145,14 +142,12 @@ function TabGrupos({ usuario, partidos, equipos }) {
                 <div style={{ fontSize: 11, color: '#69db7c', marginBottom: 14 }}>{tokenMsg}</div>
             )}
 
-            {/* Grupos públicos */}
             {verPublicos && (
                 <div style={{ marginBottom: 24 }}>
                     <GruposPublicos usuario={usuario} onCambio={recargar} />
                 </div>
             )}
 
-            {/* Estado vacío */}
             {!cargando && grupos.length === 0 && !verPublicos && !verToken && (
                 <div style={{ background: '#0d1628', border: '1px solid #1e2a45', borderRadius: 12, padding: '36px 24px', textAlign: 'center' }}>
                     <div style={{ fontSize: 36, marginBottom: 12 }}>🏆</div>
