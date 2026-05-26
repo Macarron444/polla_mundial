@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { getPredicionesPorGrupo } from '../../../core/storage/prediccionesGrupo.js'
 
 function BarraProgreso({ valor, total, color }) {
@@ -13,16 +14,59 @@ function BarraProgreso({ valor, total, color }) {
 }
 
 function TabEstadisticasGrupo({ grupo, usuario }) {
-    const preds = getPredicionesPorGrupo(grupo.id)
-    const resueltas = preds.filter((p) => p.estado !== 'PENDIENTE')
+    const [preds, setPreds] = useState([])
+    const [cargando, setCargando] = useState(true)
+    const [error, setError] = useState('')
 
-    const statsPorUsuario = grupo.miembros.map((m) => {
-        const mias = preds.filter((p) => p.usuarioId === m.usuarioId)
+    useEffect(() => {
+        let activo = true
+
+        const cargar = async () => {
+            setCargando(true)
+            setError('')
+            try {
+                const datos = await getPredicionesPorGrupo(grupo.id)
+                if (activo) setPreds(Array.isArray(datos) ? datos : [])
+            } catch (e) {
+                if (activo) {
+                    setPreds([])
+                    setError(e.message)
+                }
+            } finally {
+                if (activo) setCargando(false)
+            }
+        }
+
+        cargar()
+        return () => { activo = false }
+    }, [grupo.id])
+
+    if (cargando) {
+        return (
+            <div style={{ padding: '30px 0', textAlign: 'center', color: '#4a6fa5', fontSize: 13 }}>
+                Cargando estadisticas del grupo...
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div style={{ background: '#2a0d0d', border: '1px solid #c92a2a44', color: '#ff8787', fontSize: 11, padding: '10px 14px', borderRadius: 8 }}>
+                No se pudieron cargar las estadisticas: {error}
+            </div>
+        )
+    }
+
+    const resueltas = preds.filter((p) => p.estado !== 'PENDIENTE')
+    const miembros = Array.isArray(grupo.miembros) ? grupo.miembros : []
+
+    const statsPorUsuario = miembros.map((m) => {
+        const mias = preds.filter((p) => String(p.usuarioId) === String(m.usuarioId))
         const exactas = mias.filter((p) => p.estado === 'EXACTA').length
         const correctas = mias.filter((p) => p.estado === 'CORRECTA').length
         const fallidas = mias.filter((p) => p.estado === 'FALLIDA').length
         const pendientes = mias.filter((p) => p.estado === 'PENDIENTE').length
-        const pts = mias.reduce((s, p) => s + p.pts, 0)
+        const pts = mias.reduce((s, p) => s + (p.pts ?? 0), 0)
         const total = exactas + correctas + fallidas
         const efectividad = total > 0 ? Math.round(((exactas + correctas) / total) * 100) : 0
         const usaComodin = mias.some((p) => p.usaComodin)
@@ -76,7 +120,7 @@ function TabEstadisticasGrupo({ grupo, usuario }) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {statsPorUsuario.map((s) => {
-                    const esMio = s.usuarioId === usuario.id
+                    const esMio = String(s.usuarioId) === String(usuario.id)
                     return (
                         <div key={s.usuarioId} style={{
                             background: esMio ? '#0f1e3a' : '#0d1628',
