@@ -18,6 +18,7 @@ export async function crearGrupo(nombre, descripcion, usuarioCreador, opciones =
         esPublico: opciones.esPublico ?? false,
         montoApuesta: opciones.montoApuesta ?? 0,
         premiacion: opciones.premiacion ?? 'TODO_AL_PRIMERO',
+        partidosSeleccionados: opciones.partidosSeleccionados ?? [],
         token: Math.random().toString(36).slice(2, 10).toUpperCase(),
         prediccionesGlobales: {},
         miembros: [{
@@ -81,7 +82,10 @@ export async function actualizarConfigGrupo(grupoId, usuarioId, cambios) {
     const grupos = await getGrupos()
     const grupo  = grupos.find((g) => g.id === grupoId)
     if (!grupo) throw new Error('Grupo no encontrado')
-    if (grupo.creadoPor !== usuarioId) throw new Error('Solo el creador puede editar la configuración')
+    const esAdmin = grupo.miembros.some((m) => String(m.usuarioId) === String(usuarioId) && m.rol === 'ADMIN')
+    if (!esAdmin && String(grupo.creadoPor) !== String(usuarioId)) {
+        throw new Error('Solo un administrador puede editar la configuración')
+    }
     Object.assign(grupo, cambios)
     await saveGrupo(grupo)
     return grupo

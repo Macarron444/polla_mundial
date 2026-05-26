@@ -4,7 +4,8 @@ import { cargarDatosAPI } from '../../../core/api/footballDataApi.js'
 import { btnStyle } from '../../../shared/ui/index.jsx'
 
 function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: equiposProp = [], onActualizado }) {
-    const esCreador = grupo.creadoPor === usuario.id
+    const esAdmin = grupo.miembros.some((m) => String(m.usuarioId) === String(usuario.id) && m.rol === 'ADMIN')
+        || String(grupo.creadoPor) === String(usuario.id)
     const [monto, setMonto] = useState(grupo.montoApuesta ?? 0)
     const [premiacion, setPremiacion] = useState(grupo.premiacion ?? 'TODO_AL_PRIMERO')
     const [partidos, setPartidos] = useState(partidosProp)
@@ -16,13 +17,13 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
 
     // Cargar partidos automáticamente al abrir
     useEffect(() => {
-    if (!esCreador) return
-    if (partidosProp.length > 0) {
-        setPartidos(partidosProp)
-        if (equiposProp.length > 0) setEquipos(equiposProp)
-    } else {
-        cargarPartidos()
-    }
+        if (!esAdmin) return
+        if (partidosProp.length > 0) {
+            setPartidos(partidosProp)
+            if (equiposProp.length > 0) setEquipos(equiposProp)
+        } else {
+            cargarPartidos()
+        }
     }, [])
 
     useEffect(() => {
@@ -47,8 +48,8 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
         setCargandoApi(false)
     }
 
-    // Vista para miembros (no creador)
-    if (!esCreador) {
+    // Vista para miembros (no admin)
+    if (!esAdmin) {
         const total = (grupo.montoApuesta ?? 0) * grupo.miembros.length
         const numPartidos = grupo.partidosSeleccionados?.length ?? 0
         return (

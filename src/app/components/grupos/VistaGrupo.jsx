@@ -20,11 +20,14 @@ const TABS_ADMIN   = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', '
 
 function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
     const rolActual = getRolEnGrupo(grupo, usuario.id) ?? null
-    const esAdmin   = rolActual === 'ADMIN'
     const esCreador = String(grupo.creadoPor) === String(usuario.id)
+    const esAdmin   = rolActual === 'ADMIN' || esCreador
+    const requiereSeleccionPartidos = esAdmin
+        && Array.isArray(grupo.partidosSeleccionados)
+        && grupo.partidosSeleccionados.length === 0
     const tabs      = esAdmin ? TABS_ADMIN : TABS_MIEMBRO
 
-    const [tabActiva, setTabActiva]                 = useState('Predicciones')
+    const [tabActiva, setTabActiva]                 = useState(requiereSeleccionPartidos ? 'Apuesta' : 'Predicciones')
     const [busqueda, setBusqueda]                   = useState('')
     const [error, setError]                         = useState('')
     const [confirmarDel, setConfirmarDel]           = useState(null)
