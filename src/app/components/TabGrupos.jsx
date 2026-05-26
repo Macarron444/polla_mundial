@@ -17,12 +17,12 @@ function TabGrupos({ usuario, partidos, equipos }) {
     const [tokenError, setTokenError]     = useState('')
     const [verToken, setVerToken]         = useState(false)
 
-    const recargar = useCallback(async () => {
+    const recargar = useCallback(async ({ mantenerDetalle = true } = {}) => {
         setCargando(true)
         try {
             const actualizados = await getGruposDeUsuario(usuario.id)
             setGrupos(actualizados)
-            if (vistaDetalle) {
+            if (mantenerDetalle && vistaDetalle) {
                 const actualizado = actualizados.find((g) => String(g.id) === String(vistaDetalle.id))
                 setVistaDetalle(actualizado ?? null)
             }
@@ -43,6 +43,11 @@ function TabGrupos({ usuario, partidos, equipos }) {
         setCreando(false)
         setVistaDetalle(grupo)
         await recargar()
+    }
+
+    const handleVolverALista = async () => {
+        setVistaDetalle(null)
+        await recargar({ mantenerDetalle: false })
     }
 
     const handleUnirseToken = async () => {
@@ -70,7 +75,7 @@ function TabGrupos({ usuario, partidos, equipos }) {
                 <VistaGrupo
                     grupo={vistaDetalle} usuario={usuario}
                     partidos={partidos} equipos={equipos}
-                    onVolver={() => { setVistaDetalle(null); recargar() }}
+                    onVolver={handleVolverALista}
                     onCambio={recargar}
                 />
             </div>
