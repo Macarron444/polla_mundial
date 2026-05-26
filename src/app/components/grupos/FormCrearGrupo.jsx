@@ -8,18 +8,23 @@ function FormCrearGrupo({ usuario, onCreado, onCancelar }) {
     const [esPublico, setEsPublico] = useState(false)
     const [monto, setMonto] = useState('')
     const [error, setError] = useState('')
+    const [cargando, setCargando] = useState(false)
 
-    const handleCrear = () => {
+    const handleCrear = async () => {
         setError('')
         if (!nombre.trim()) { setError('El nombre del grupo es obligatorio'); return }
         if (nombre.trim().length < 3) { setError('El nombre debe tener al menos 3 caracteres'); return }
+        setCargando(true)
         try {
-            const grupo = crearGrupo(nombre, descripcion, usuario, {
+            const grupo = await crearGrupo(nombre, descripcion, usuario, {
                 esPublico,
                 montoApuesta: monto ? Number(monto) : 0,
             })
             onCreado(grupo)
-        } catch (e) { setError(e.message) }
+        } catch (e) {
+            setError(e.message)
+            setCargando(false)
+        }
     }
 
     return (
@@ -62,8 +67,10 @@ function FormCrearGrupo({ usuario, onCreado, onCancelar }) {
             {error && <div style={{ background: '#2a0d0d', border: '1px solid #c92a2a44', color: '#ff8787', fontSize: 11, padding: '8px 12px', borderRadius: 6, marginBottom: 14 }}>⚠️ {error}</div>}
 
             <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={handleCrear} style={btnStyle('#3b5bdb')}>✓ Crear grupo</button>
-                <button onClick={onCancelar} style={btnStyle('#555')}>Cancelar</button>
+                <button onClick={handleCrear} disabled={cargando} style={btnStyle(cargando ? '#2a3a5a' : '#3b5bdb')}>
+                    {cargando ? '⏳ Creando...' : '✓ Crear grupo'}
+                </button>
+                <button onClick={onCancelar} disabled={cargando} style={btnStyle('#555')}>Cancelar</button>
             </div>
         </div>
     )

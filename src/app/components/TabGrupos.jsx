@@ -42,7 +42,7 @@ function TabGrupos({ usuario, partidos, equipos }) {
     const handleCreado = async (grupo) => {
         setCreando(false)
         setVistaDetalle(grupo)
-        recargar()
+        await recargar()
     }
 
     const handleUnirseToken = async () => {

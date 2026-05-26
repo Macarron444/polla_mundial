@@ -9,7 +9,6 @@ async function saveGrupo(grupo) {
 }
 
 export async function crearGrupo(nombre, descripcion, usuarioCreador, opciones = {}) {
-    const grupos = await getGrupos()
     const nuevo = {
         id: Date.now(),
         nombre: nombre.trim(),
@@ -36,7 +35,7 @@ export async function agregarMiembro(grupoId, usuario, rol = 'PARTICIPANTE') {
     const grupos = await getGrupos()
     const grupo  = grupos.find((g) => g.id === grupoId)
     if (!grupo) throw new Error('Grupo no encontrado')
-    if (grupo.miembros.some((m) => m.usuarioId === usuario.id))
+    if (grupo.miembros.some((m) => String(m.usuarioId) === String(usuario.id)))
         throw new Error('El usuario ya es miembro del grupo')
     grupo.miembros.push({ usuarioId: usuario.id, nombre: usuario.nombre, email: usuario.email, rol })
     await saveGrupo(grupo)
@@ -74,7 +73,7 @@ export async function eliminarGrupo(grupoId, usuarioId) {
     const grupos = await getGrupos()
     const grupo  = grupos.find((g) => g.id === grupoId)
     if (!grupo) throw new Error('Grupo no encontrado')
-    if (grupo.creadoPor !== usuarioId) throw new Error('Solo el creador puede eliminar el grupo')
+    if (String(grupo.creadoPor) !== String(usuarioId)) throw new Error('Solo el creador puede eliminar el grupo')
     await del(`/grupos/${grupoId}`)
 }
 
