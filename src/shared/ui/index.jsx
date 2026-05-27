@@ -46,9 +46,9 @@ export function Dot({ color }) {
 
 export function StatCard({ label, value, sub, accent }) {
     return (
-        <div className="stat-card" style={{ border: `1px solid ${accent}33` }}>
+        <div className="stat-card" style={{ borderTopColor: accent }}>
             <div className="stat-card__label">{label}</div>
-            <div className="stat-card__value" style={{ color: accent }}>
+            <div className="stat-card__value">
                 {value}
             </div>
             {sub && <div className="stat-card__sub">{sub}</div>}

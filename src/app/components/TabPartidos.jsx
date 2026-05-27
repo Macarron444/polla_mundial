@@ -88,7 +88,7 @@ function TabPartidos({ partidos, setPartidos, equipos }) {
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 100 }}>
                                     <span style={{ fontSize: 20 }}>{loc.flag}</span>
-                                    <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{loc.nombre}</span>
+                                    <span style={{ fontSize: 13, fontWeight: 600, color: '#748ffc' }}>{loc.nombre}</span>
                                 </div>
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -134,7 +134,7 @@ function TabPartidos({ partidos, setPartidos, equipos }) {
                                         justifyContent: 'flex-end',
                                     }}
                                 >
-                                    <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{vis.nombre}</span>
+                                    <span style={{ fontSize: 13, fontWeight: 600, color: '#748ffc' }}>{vis.nombre}</span>
                                     <span style={{ fontSize: 20 }}>{vis.flag}</span>
                                 </div>
 

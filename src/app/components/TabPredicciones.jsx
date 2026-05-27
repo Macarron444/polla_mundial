@@ -81,7 +81,7 @@ function TabPredicciones({ usuario, partidos, equipos }) {
 
     const scoreInputStyle = {
         width: 32, textAlign: 'center', background: '#1e2a45',
-        border: '1px solid #3b5bdb', color: '#e2e8f0', borderRadius: 5,
+        border: '1px solid #3b5bdb', color: '#748ffc', borderRadius: 5,
         padding: '3px', fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
     }
 
@@ -190,9 +190,9 @@ function TabPredicciones({ usuario, partidos, equipos }) {
                                 </span>
                                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <span style={{ fontSize: 16 }}>{loc.flag}</span>
-                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{loc.nombre}</span>
+                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#748ffc' }}>{loc.nombre}</span>
                                     <span style={{ color: '#4a6fa5', fontSize: 12 }}>vs</span>
-                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{vis.nombre}</span>
+                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#748ffc' }}>{vis.nombre}</span>
                                     <span style={{ fontSize: 16 }}>{vis.flag}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -218,7 +218,7 @@ function TabPredicciones({ usuario, partidos, equipos }) {
                                 {partido.golesL !== null && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                         <span style={{ fontSize: 11, color: '#4a6fa5' }}>Real:</span>
-                                        <span style={{ fontSize: 16, fontWeight: 800, color: '#e2e8f0', letterSpacing: 3 }}>{partido.golesL} – {partido.golesV}</span>
+                                        <span style={{ fontSize: 16, fontWeight: 800, color: '#748ffc', letterSpacing: 3 }}>{partido.golesL} – {partido.golesV}</span>
                                     </div>
                                 )}
                                 <span style={{ fontSize: 18, fontWeight: 800, color: pts > 0 ? '#ffd43b' : '#4a6fa5', minWidth: 40, textAlign: 'right' }}>+{pts}pts</span>
