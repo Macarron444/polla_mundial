@@ -132,7 +132,8 @@ button:hover { opacity: 0.88; }
 }
 
 /* ── NAV TABS — AZUL WC ───────────────────────────────────────────────────────── */
-.nav-tabs {
+.nav-tabs,
+.header__nav {
     display: flex;
     gap: 2px;
     overflow-x: auto;
@@ -142,7 +143,8 @@ button:hover { opacity: 0.88; }
     border-bottom: 1px solid var(--wc-blue-dk);
 }
 
-.nav-tabs::-webkit-scrollbar { display: none; }
+.nav-tabs::-webkit-scrollbar,
+.header__nav::-webkit-scrollbar { display: none; }
 
 .nav-tab {
     background: transparent;
