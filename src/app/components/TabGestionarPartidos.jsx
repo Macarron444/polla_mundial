@@ -205,7 +205,7 @@ function TabGestionarPartidos({ partidos, setPartidos, equipos }) {
                                     </span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 100 }}>
                                         <span style={{ fontSize: 18 }}>{loc.flag}</span>
-                                        <span style={{ fontSize: 12, fontWeight: 600, color: '#748ffc' }}>{loc.nombre}</span>
+                                        <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{loc.nombre}</span>
                                     </div>
                                     <span
                                         style={{
@@ -229,7 +229,7 @@ function TabGestionarPartidos({ partidos, setPartidos, equipos }) {
                                             justifyContent: 'flex-end',
                                         }}
                                     >
-                                        <span style={{ fontSize: 12, fontWeight: 600, color: '#748ffc' }}>{vis.nombre}</span>
+                                        <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{vis.nombre}</span>
                                         <span style={{ fontSize: 18 }}>{vis.flag}</span>
                                     </div>
                                     <BadgeEstado estado={p.estado} />
