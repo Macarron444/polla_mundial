@@ -521,15 +521,131 @@ button:hover { opacity: 0.88; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--wc-blue); }
 
-/* ── RESPONSIVE ──────────────────────────────────────────────────────────────── */
-@media (max-width: 600px) {
-    .main-container { padding: 16px 12px; }
-    .login-card { padding: 28px 20px; }
-    .header { padding: 0 14px; }
-    .nav-tabs { padding: 0 14px; }
-    .api-banner { padding: 6px 14px; }
+/* ══════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE — Mobile-first, 4 breakpoints
+   xs  < 360px  │  sm < 480px  │  md < 768px  │  lg < 1024px
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── TIPOGRAFÍA FLUIDA (escala suave entre pantallas) ────────────────────────── */
+:root {
+    --fs-xs:    clamp(8px,  1.8vw, 9px);
+    --fs-sm:    clamp(10px, 2.2vw, 11px);
+    --fs-base:  clamp(11px, 2.5vw, 13px);
+    --fs-md:    clamp(12px, 2.8vw, 14px);
+    --fs-lg:    clamp(14px, 3.2vw, 16px);
+    --fs-xl:    clamp(18px, 4vw,   24px);
+    --fs-2xl:   clamp(20px, 5vw,   32px);
 }
 
+/* ── TABLET GRANDE / LAPTOP PEQUEÑO  (< 1024px) ─────────────────────────────── */
+@media (max-width: 1024px) {
+    .main-container      { padding: 20px 20px; }
+    .stat-card__value    { font-size: clamp(18px, 3.5vw, 24px); }
+}
+
+/* ── TABLET PORTRAIT  (< 820px) ─────────────────────────────────────────────── */
 @media (max-width: 820px) {
-    .apuesta-grid { grid-template-columns: 1fr; }
+    /* Layout principal a columna única */
+    .apuesta-grid        { grid-template-columns: 1fr; }
+
+    /* Stat cards: 2 columnas */
+    .stat-cards          { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .main-container      { padding: 18px 16px; }
+    .header              { padding: 0 18px; }
+    .nav-tabs            { padding: 0 18px; }
+    .api-banner          { padding: 6px 18px; gap: 10px; }
+}
+
+/* ── MÓVIL GRANDE  (< 600px) ─────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+    /* Header más compacto */
+    .header              { padding: 0 14px; }
+    .header__inner       { height: 50px; }
+    .header__logo        { font-size: 18px; }
+    .header__title       { font-size: var(--fs-sm); }
+    .header__subtitle    { font-size: var(--fs-xs); letter-spacing: 0.06em; }
+
+    /* Nav tabs: padding reducido */
+    .nav-tabs            { padding: 0 10px; }
+    .nav-tab             { font-size: var(--fs-xs); padding: 9px 10px; letter-spacing: 0.03em; }
+
+    /* Main */
+    .main-container      { padding: 14px 12px; }
+
+    /* Stat cards: 2 columnas compactas */
+    .stat-cards          { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-card           { padding: 12px 12px; }
+    .stat-card__label    { font-size: var(--fs-xs); }
+    .stat-card__value    { font-size: clamp(18px, 5vw, 22px); }
+    .stat-card__sub      { font-size: var(--fs-xs); }
+
+    /* Panels */
+    .apuesta-panel       { padding: 14px 14px; }
+    .apuesta-select      { font-size: var(--fs-sm); padding: 7px 10px; }
+
+    /* Partido card */
+    .partido-card        { padding: 11px 13px; margin-bottom: 7px; }
+
+    /* API banner */
+    .api-banner          { padding: 5px 12px; gap: 8px; }
+    .btn-api             { font-size: var(--fs-xs); padding: 4px 10px; }
+
+    /* Login */
+    .login-card          { padding: 28px 20px; border-radius: 12px; }
+    .login-logo__icon    { font-size: 34px; }
+    .login-logo__title   { font-size: var(--fs-md); }
+    .login-logo__subtitle{ font-size: var(--fs-xs); }
+    .login-input         { font-size: var(--fs-base); padding: 10px 12px; }
+    .login-btn           { font-size: var(--fs-base); padding: 12px; }
+    .login-label         { font-size: var(--fs-xs); }
+    .login-hint,
+    .login-note          { font-size: var(--fs-xs); }
+
+    /* Loading */
+    .loading-text        { font-size: var(--fs-md); }
+    .loading-subtext     { font-size: var(--fs-sm); }
+}
+
+/* ── MÓVIL PEQUEÑO  (< 480px) ───────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    /* Ocultar subtítulo del header — muy poco espacio */
+    .header__subtitle    { display: none; }
+
+    /* Nav: texto más corto, solo icon + palabra clave */
+    .nav-tab             { padding: 9px 8px; font-size: 9px; }
+
+    /* Stat cards siguen en 2 cols pero más compactas */
+    .stat-cards          { gap: 6px; }
+    .stat-card           { padding: 10px 10px; border-radius: 8px; }
+    .stat-card__value    { font-size: clamp(16px, 5.5vw, 20px); }
+
+    /* Login page: sin márgenes laterales */
+    .login-page          { padding: 16px; }
+    .login-card          { padding: 24px 16px; }
+
+    /* Partidos lista: altura máxima menor */
+    .partidos-lista-compacta { max-height: 320px; }
+}
+
+/* ── MÓVIL EXTRA PEQUEÑO  (< 360px) ─────────────────────────────────────────── */
+@media (max-width: 360px) {
+    .header__logo        { font-size: 16px; }
+    .header__title       { font-size: 10px; letter-spacing: 0.02em; }
+    .header__inner       { height: 46px; }
+
+    /* Status badge: solo el punto, sin texto */
+    .status-text         { display: none; }
+    .status-badge        { padding: 4px 8px; }
+
+    .nav-tab             { padding: 8px 7px; font-size: 8.5px; }
+
+    .stat-cards          { grid-template-columns: 1fr 1fr; gap: 5px; }
+    .stat-card__value    { font-size: 16px; }
+    .stat-card__label    { font-size: 8px; }
+
+    .main-container      { padding: 12px 10px; }
+    .apuesta-panel       { padding: 12px 12px; }
+    .login-page          { padding: 12px; }
+    .login-card          { padding: 20px 14px; }
 }
