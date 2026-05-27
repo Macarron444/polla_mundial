@@ -12,7 +12,6 @@ function Header({ tab, setTab, usuario, onLogout }) {
         <>
             <header className="header">
                 <div className="header__inner">
-                    <div className="header__top-row">
                     <div className="header__brand">
                         <span className="header__logo">⚽</span>
                         <div>
@@ -59,7 +58,6 @@ function Header({ tab, setTab, usuario, onLogout }) {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    </div>{/* /header__top-row */}
                         <nav className="header__nav">
                             {tabs.map((t) => (
                                 <button
