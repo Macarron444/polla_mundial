@@ -1,181 +1,224 @@
-// ── ROUTER EXPRESS — endpoints /db/* ─────────────────────────────────────────
+// ── ROUTER EXPRESS – endpoints /db/* ──────────────────────────────────────────
 import { Router } from 'express'
-import { readFileSync, writeFileSync, existsSync } from 'fs'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const router    = Router()
+const router = Router()
 
-// ── PERSISTENCIA EN JSON ──────────────────────────────────────────────────────
-const DATA_FILE = join(__dirname, 'polla-data.json')
-
-function leerDatos() {
-    if (!existsSync(DATA_FILE)) return {}
-    try { return JSON.parse(readFileSync(DATA_FILE, 'utf8')) } catch { return {} }
+// ── PERSISTENCIA EN JSONBIN.IO ─────────────────────────────────────────────────
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${process.env.JSONBIN_BIN_ID}`
+const HEADERS = {
+    'Content-Type': 'application/json',
+    'X-Master-Key': process.env.JSONBIN_API_KEY,
+    'X-Bin-Versioning': 'false',   // siempre sobreescribe, no acumula versiones
 }
 
-function guardarDatos(datos) {
-    writeFileSync(DATA_FILE, JSON.stringify(datos, null, 2), 'utf8')
+async function leerDatos() {
+    const res = await fetch(`${JSONBIN_URL}/latest`, { headers: HEADERS })
+    if (!res.ok) throw new Error(`JSONBin read error: ${res.status}`)
+    const json = await res.json()
+    return json.record ?? {}
 }
 
-function getColeccion(nombre) {
-    return leerDatos()[nombre] ?? []
-}
-
-function setColeccion(nombre, valor) {
-    const datos = leerDatos()
-    datos[nombre] = valor
-    guardarDatos(datos)
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// USUARIOS
-// ═══════════════════════════════════════════════════════════════════════════════
-router.get('/usuarios/todos', (req, res) => {
-    res.json(getColeccion('usuarios'))
-})
-
-router.post('/usuarios', (req, res) => {
-    const usuarios = getColeccion('usuarios')
-    const nuevo    = req.body
-    const idx      = usuarios.findIndex((u) => String(u.id) === String(nuevo.id))
-    if (idx >= 0) usuarios[idx] = nuevo
-    else          usuarios.push(nuevo)
-    setColeccion('usuarios', usuarios)
-    res.json(nuevo)
-})
-
-router.post('/usuarios/login', (req, res) => {
-    const { email, password } = req.body
-    const usuarios = getColeccion('usuarios')
-    const usuario  = usuarios.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    )
-    if (!usuario) return res.status(401).json({ error: 'Correo o contraseña incorrectos' })
-    const { password: _pwd, ...usuarioSeguro } = usuario
-    res.json({ usuario: usuarioSeguro })
-})
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// GRUPOS
-// ═══════════════════════════════════════════════════════════════════════════════
-router.get('/grupos', (req, res) => {
-    res.json(getColeccion('grupos'))
-})
-
-router.put('/grupos/:id', (req, res) => {
-    const grupos = getColeccion('grupos')
-    const grupo  = { ...req.body, miembros: req.body.miembros ?? [] }
-    const idx    = grupos.findIndex((g) => String(g.id) === String(req.params.id))
-    if (idx >= 0) grupos[idx] = grupo
-    else          grupos.push(grupo)
-    setColeccion('grupos', grupos)
-    res.json(grupo)
-})
-
-router.delete('/grupos/:id', (req, res) => {
-    const grupos = getColeccion('grupos').filter((g) => String(g.id) !== String(req.params.id))
-    setColeccion('grupos', grupos)
-    res.json({ ok: true })
-})
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// PREDICCIONES
-// ═══════════════════════════════════════════════════════════════════════════════
-router.get('/predicciones', (req, res) => {
-    res.json(getColeccion('predicciones'))
-})
-
-router.put('/predicciones/:key', (req, res) => {
-    const preds = getColeccion('predicciones')
-    const pred  = req.body
-    const idx   = preds.findIndex((p) => p.key === req.params.key)
-    if (idx >= 0) preds[idx] = pred
-    else          preds.push(pred)
-    setColeccion('predicciones', preds)
-    res.json(pred)
-})
-
-router.post('/predicciones/bulk', (req, res) => {
-    const actualizadas = req.body   // array de predicciones
-    const preds        = getColeccion('predicciones')
-    actualizadas.forEach((p) => {
-        const idx = preds.findIndex((x) => x.key === p.key)
-        if (idx >= 0) preds[idx] = p
-        else          preds.push(p)
+async function guardarDatos(datos) {
+    const res = await fetch(JSONBIN_URL, {
+        method: 'PUT',
+        headers: HEADERS,
+        body: JSON.stringify(datos),
     })
-    setColeccion('predicciones', preds)
-    res.json({ ok: true })
+    if (!res.ok) throw new Error(`JSONBin write error: ${res.status}`)
+}
+
+async function getColeccion(nombre) {
+    const datos = await leerDatos()
+    return datos[nombre] ?? []
+}
+
+async function setColeccion(nombre, valor) {
+    const datos = await leerDatos()
+    datos[nombre] = valor
+    await guardarDatos(datos)
+}
+
+// ── helper para manejo de errores ─────────────────────────────────────────────
+function catchErr(res, e) {
+    console.error(e)
+    res.status(500).json({ error: e.message })
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  USUARIOS
+// ══════════════════════════════════════════════════════════════════════════════
+router.get('/usuarios/todos', async (req, res) => {
+    try {
+        const usuarios = await getColeccion('usuarios')
+        res.json(usuarios.map(({ password, ...u }) => u))
+    } catch (e) { catchErr(res, e) }
 })
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// COMENTARIOS
-// ═══════════════════════════════════════════════════════════════════════════════
-router.get('/comentarios/:grupoId/:partidoId', (req, res) => {
-    const key  = `${req.params.grupoId}_${req.params.partidoId}`
-    const mapa = leerDatos().comentarios ?? {}
-    res.json(mapa[key] ?? [])
+router.post('/usuarios', async (req, res) => {
+    try {
+        const usuarios = await getColeccion('usuarios')
+        const nuevo = req.body
+        if (usuarios.find((u) => u.email === nuevo.email))
+            return res.status(409).json({ error: 'El correo ya está registrado' })
+        usuarios.push(nuevo)
+        await setColeccion('usuarios', usuarios)
+        const { password, ...sinPass } = nuevo
+        res.status(201).json(sinPass)
+    } catch (e) { catchErr(res, e) }
 })
 
-router.put('/comentarios/:grupoId/:partidoId', (req, res) => {
-    const key   = `${req.params.grupoId}_${req.params.partidoId}`
-    const datos = leerDatos()
-    if (!datos.comentarios) datos.comentarios = {}
-    datos.comentarios[key] = req.body
-    guardarDatos(datos)
-    res.json({ ok: true })
+router.post('/usuarios/login', async (req, res) => {
+    try {
+        const { email, password } = req.body
+        const usuarios = await getColeccion('usuarios')
+        const usuario = usuarios.find(
+            (u) => u.email === email && u.password === password
+        )
+        if (!usuario) return res.status(401).json({ error: 'Credenciales incorrectas' })
+        const { password: _, ...sinPass } = usuario
+        res.json({ usuario: sinPass })
+    } catch (e) { catchErr(res, e) }
 })
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SOLICITUDES
-// ═══════════════════════════════════════════════════════════════════════════════
-router.get('/solicitudes', (req, res) => {
-    res.json(getColeccion('solicitudes'))
+// ══════════════════════════════════════════════════════════════════════════════
+//  GRUPOS
+// ══════════════════════════════════════════════════════════════════════════════
+router.get('/grupos', async (req, res) => {
+    try {
+        res.json(await getColeccion('grupos'))
+    } catch (e) { catchErr(res, e) }
 })
 
-router.put('/solicitudes/:id', (req, res) => {
-    const solicitudes = getColeccion('solicitudes')
-    const sol         = req.body
-    const idx         = solicitudes.findIndex((s) => String(s.id) === String(req.params.id))
-    if (idx >= 0) solicitudes[idx] = sol
-    else          solicitudes.push(sol)
-    setColeccion('solicitudes', solicitudes)
-    res.json(sol)
+router.put('/grupos/:id', async (req, res) => {
+    try {
+        const grupos = await getColeccion('grupos')
+        const idx = grupos.findIndex((g) => String(g.id) === req.params.id)
+        if (idx === -1) grupos.push(req.body)
+        else grupos[idx] = req.body
+        await setColeccion('grupos', grupos)
+        res.json(req.body)
+    } catch (e) { catchErr(res, e) }
 })
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// RANKING HISTORIAL
-// ═══════════════════════════════════════════════════════════════════════════════
-router.get('/ranking/:grupoId', (req, res) => {
-    const datos = leerDatos().rankingHistorial ?? {}
-    res.json(datos[req.params.grupoId] ?? [])
+router.delete('/grupos/:id', async (req, res) => {
+    try {
+        const grupos = await getColeccion('grupos')
+        await setColeccion('grupos', grupos.filter((g) => String(g.id) !== req.params.id))
+        res.json({ ok: true })
+    } catch (e) { catchErr(res, e) }
 })
 
-router.post('/ranking/:grupoId', (req, res) => {
-    const datos = leerDatos()
-    if (!datos.rankingHistorial) datos.rankingHistorial = {}
-    if (!datos.rankingHistorial[req.params.grupoId]) datos.rankingHistorial[req.params.grupoId] = []
-    datos.rankingHistorial[req.params.grupoId].push(req.body)
-    guardarDatos(datos)
-    res.json({ ok: true })
+// ══════════════════════════════════════════════════════════════════════════════
+//  PREDICCIONES GLOBALES
+// ══════════════════════════════════════════════════════════════════════════════
+router.get('/predicciones', async (req, res) => {
+    try {
+        res.json(await getColeccion('predicciones'))
+    } catch (e) { catchErr(res, e) }
+})
+
+router.put('/predicciones/:key', async (req, res) => {
+    try {
+        const preds = await getColeccion('predicciones')
+        const idx = preds.findIndex((p) => p._key === req.params.key)
+        const item = { ...req.body, _key: req.params.key }
+        if (idx === -1) preds.push(item)
+        else preds[idx] = item
+        await setColeccion('predicciones', preds)
+        res.json(item)
+    } catch (e) { catchErr(res, e) }
+})
+
+router.post('/predicciones/bulk', async (req, res) => {
+    try {
+        await setColeccion('predicciones', req.body)
+        res.json({ ok: true })
+    } catch (e) { catchErr(res, e) }
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  PREDICCIONES PERSONALES
+// ══════════════════════════════════════════════════════════════════════════════
+router.get('/predicciones-personales', async (req, res) => {
+    try {
+        res.json(await getColeccion('predicciones-personales'))
+    } catch (e) { catchErr(res, e) }
+})
+
+router.put('/predicciones-personales/:key', async (req, res) => {
+    try {
+        const preds = await getColeccion('predicciones-personales')
+        const idx = preds.findIndex((p) => p._key === req.params.key)
+        const item = { ...req.body, _key: req.params.key }
+        if (idx === -1) preds.push(item)
+        else preds[idx] = item
+        await setColeccion('predicciones-personales', preds)
+        res.json(item)
+    } catch (e) { catchErr(res, e) }
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  COMENTARIOS
+// ══════════════════════════════════════════════════════════════════════════════
+router.get('/comentarios/:grupoId/:partidoId', async (req, res) => {
+    try {
+        const datos = await leerDatos()
+        const comentarios = datos.comentarios ?? {}
+        const key = `${req.params.grupoId}_${req.params.partidoId}`
+        res.json(comentarios[key] ?? [])
+    } catch (e) { catchErr(res, e) }
+})
+
+router.put('/comentarios/:grupoId/:partidoId', async (req, res) => {
+    try {
+        const datos = await leerDatos()
+        if (!datos.comentarios) datos.comentarios = {}
+        const key = `${req.params.grupoId}_${req.params.partidoId}`
+        datos.comentarios[key] = req.body
+        await guardarDatos(datos)
+        res.json(req.body)
+    } catch (e) { catchErr(res, e) }
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SOLICITUDES
+// ══════════════════════════════════════════════════════════════════════════════
+router.get('/solicitudes', async (req, res) => {
+    try {
+        res.json(await getColeccion('solicitudes'))
+    } catch (e) { catchErr(res, e) }
+})
+
+router.put('/solicitudes/:id', async (req, res) => {
+    try {
+        const solicitudes = await getColeccion('solicitudes')
+        const idx = solicitudes.findIndex((s) => String(s.id) === req.params.id)
+        if (idx === -1) solicitudes.push(req.body)
+        else solicitudes[idx] = req.body
+        await setColeccion('solicitudes', solicitudes)
+        res.json(req.body)
+    } catch (e) { catchErr(res, e) }
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  RANKING
+// ══════════════════════════════════════════════════════════════════════════════
+router.get('/ranking/:grupoId', async (req, res) => {
+    try {
+        const datos = await leerDatos()
+        const ranking = datos.ranking ?? {}
+        res.json(ranking[req.params.grupoId] ?? [])
+    } catch (e) { catchErr(res, e) }
+})
+
+router.post('/ranking/:grupoId', async (req, res) => {
+    try {
+        const datos = await leerDatos()
+        if (!datos.ranking) datos.ranking = {}
+        datos.ranking[req.params.grupoId] = req.body
+        await guardarDatos(datos)
+        res.json(req.body)
+    } catch (e) { catchErr(res, e) }
 })
 
 export default router
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// PREDICCIONES PERSONALES (TabPredicciones — independiente de grupos)
-// ═══════════════════════════════════════════════════════════════════════════════
-router.get('/predicciones-personales', (req, res) => {
-    res.json(getColeccion('prediccionesPersonales'))
-})
-
-router.put('/predicciones-personales/:key', (req, res) => {
-    const preds = getColeccion('prediccionesPersonales')
-    const pred  = req.body
-    const idx   = preds.findIndex((p) => p.key === req.params.key)
-    if (idx >= 0) preds[idx] = { ...pred, key: req.params.key }
-    else          preds.push({ ...pred, key: req.params.key })
-    setColeccion('prediccionesPersonales', preds)
-    res.json(pred)
-})
