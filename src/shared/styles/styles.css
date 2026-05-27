@@ -69,17 +69,8 @@ button:hover { opacity: 0.88; }
 
 .header__inner {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-}
-
-
-/* ── HEADER TOP ROW (brand + usuario) ──────────────────────────────────────── */
-.header__top-row {
-    display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
     height: 56px;
 }
 
@@ -141,8 +132,7 @@ button:hover { opacity: 0.88; }
 }
 
 /* ── NAV TABS — AZUL WC ───────────────────────────────────────────────────────── */
-.nav-tabs,
-.header__nav {
+.nav-tabs {
     display: flex;
     gap: 2px;
     overflow-x: auto;
@@ -150,7 +140,6 @@ button:hover { opacity: 0.88; }
     scrollbar-width: none;
     background: var(--wc-blue);
     border-bottom: 1px solid var(--wc-blue-dk);
-    flex-wrap: nowrap;
 }
 
 .nav-tabs::-webkit-scrollbar { display: none; }
@@ -285,10 +274,10 @@ button:hover { opacity: 0.88; }
 .stat-card {
     flex: 1;
     min-width: 100px;
-    background: linear-gradient(160deg, #E8112D 0%, #B5001F 38%, #0033A0 100%);
+    background: var(--bg-card);
     border-radius: 10px;
     padding: 14px 16px;
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid var(--border);
     border-top: 4px solid var(--wc-blue);
     transition: box-shadow 0.2s, transform 0.15s;
 }
@@ -307,7 +296,7 @@ button:hover { opacity: 0.88; }
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.65);
+    color: var(--text-dim);
     margin-bottom: 6px;
     text-transform: uppercase;
 }
@@ -316,12 +305,12 @@ button:hover { opacity: 0.88; }
     font-size: 24px;
     font-weight: 800;
     line-height: 1;
-    color: #ffffff;
+    color: var(--text);
 }
 
 .stat-card__sub {
     font-size: 10px;
-    color: rgba(255,255,255,0.5);
+    color: var(--text-dim);
     margin-top: 2px;
 }
 
@@ -509,19 +498,11 @@ button:hover { opacity: 0.88; }
 
 .loading-subtext { font-size: 11px; color: var(--text-dim); }
 
-
-/* ── NOMBRE SELECCIÓN ────────────────────────────────────────────────────────── */
-.team-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: #748ffc;
-}
-
 /* ── PARTIDO CARD ────────────────────────────────────────────────────────────── */
 .partido-card {
-    background: linear-gradient(160deg, #E8112D 0%, #B5001F 38%, #0033A0 100%);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-left: 4px solid var(--wc-gold);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--wc-blue);
     border-radius: 10px;
     padding: 14px 16px;
     margin-bottom: 8px;
@@ -529,8 +510,8 @@ button:hover { opacity: 0.88; }
 }
 
 .partido-card:hover {
-    border-left-color: var(--wc-gold);
-    box-shadow: 0 4px 20px rgba(232, 17, 45, 0.25);
+    border-left-color: var(--wc-red);
+    box-shadow: 0 4px 16px rgba(0, 51, 160, 0.1);
     transform: translateX(2px);
 }
 
@@ -651,10 +632,7 @@ button:hover { opacity: 0.88; }
 @media (max-width: 360px) {
     .header__logo        { font-size: 16px; }
     .header__title       { font-size: 10px; letter-spacing: 0.02em; }
-    .header__inner       { height: 46px; flex-wrap: wrap; height: auto; padding: 8px 0; }
-    .header__brand       { width: 100%; justify-content: space-between; padding: 0 12px; }
-    .header__inner > div:last-child { width: 100%; }
-    .header__inner > div:last-child nav { width: 100%; }
+    .header__inner       { height: 46px; }
 
     /* Status badge: solo el punto, sin texto */
     .status-text         { display: none; }
