@@ -4,20 +4,24 @@ import { Router } from 'express'
 const router = Router()
 
 // ── PERSISTENCIA EN SUPABASE ───────────────────────────────────────────────────
-const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_KEY = process.env.SUPABASE_KEY
-const API_URL      = `${SUPABASE_URL}/rest/v1/colecciones`
+// Las variables se leen en cada llamada para asegurar que estén disponibles
+function getHeaders() {
+    const key = process.env.SUPABASE_KEY
+    return {
+        'Content-Type': 'application/json',
+        'apikey':        key,
+        'Authorization': `Bearer ${key}`,
+        'Prefer':        'return=representation',
+    }
+}
 
-const HEADERS = {
-    'Content-Type': 'application/json',
-    'apikey':        SUPABASE_KEY,
-    'Authorization': `Bearer ${SUPABASE_KEY}`,
-    'Prefer':        'return=representation',
+function getApiUrl() {
+    return `${process.env.SUPABASE_URL}/rest/v1/colecciones`
 }
 
 async function getColeccion(nombre) {
-    const res = await fetch(`${API_URL}?nombre=eq.${encodeURIComponent(nombre)}&select=datos`, {
-        headers: HEADERS,
+    const res = await fetch(`${getApiUrl()}?nombre=eq.${encodeURIComponent(nombre)}&select=datos`, {
+        headers: getHeaders(),
     })
     if (!res.ok) throw new Error(`Supabase read error ${res.status}: ${await res.text()}`)
     const rows = await res.json()
@@ -25,9 +29,9 @@ async function getColeccion(nombre) {
 }
 
 async function setColeccion(nombre, valor) {
-    const res = await fetch(`${API_URL}?nombre=eq.${encodeURIComponent(nombre)}`, {
+    const res = await fetch(`${getApiUrl()}?nombre=eq.${encodeURIComponent(nombre)}`, {
         method:  'PATCH',
-        headers: HEADERS,
+        headers: getHeaders(),
         body:    JSON.stringify({ datos: valor }),
     })
     if (!res.ok) throw new Error(`Supabase write error ${res.status}: ${await res.text()}`)
