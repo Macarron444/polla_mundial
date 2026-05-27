@@ -1,41 +1,45 @@
 /* ── RESET ─────────────────────────────────────────────────────────────────── */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ── COLORES MUNDIAL 2026 ────────────────────────────────────────────────────
-   Paleta oficial FIFA 2026: rojo #E8112D, azul #0033A0, blanco #FFFFFF,
-   dorado #FFB81C, negro profundo #080C14
+/* ── PALETA MUNDIAL 2026 ────────────────────────────────────────────────────
+   Rojo #E8112D · Azul #0033A0 · Dorado #FFB81C · Blanco #FFFFFF
    ──────────────────────────────────────────────────────────────────────────── */
 :root {
-    --wc-red:    #E8112D;
-    --wc-blue:   #0033A0;
-    --wc-gold:   #FFB81C;
-    --wc-green:  #1a5c2a;
-    --wc-white:  #F5F8FF;
-    --bg-dark:   #080C14;
-    --bg-card:   #0B1120;
-    --bg-card2:  #0F1828;
-    --border:    #0D1E40;
-    --border2:   #162d5e;
-    --text:      #E8EEF8;
-    --text-dim:  #3a5a9a;
-    --text-mid:  #6a8fcc;
+    --wc-red:      #E8112D;
+    --wc-red-dark: #B5001F;
+    --wc-red-soft: #FDEAED;
+    --wc-blue:     #0033A0;
+    --wc-blue-dk:  #001F6E;
+    --wc-blue-soft:#EBF0FF;
+    --wc-gold:     #FFB81C;
+    --wc-gold-soft:#FFF6DC;
+    --wc-green:    #1a5c2a;
+    --wc-white:    #FFFFFF;
 
-    /* Gradientes temáticos */
-    --grad-red:  linear-gradient(135deg, #E8112D, #A50020);
-    --grad-blue: linear-gradient(135deg, #0033A0, #001F6E);
-    --grad-gold: linear-gradient(135deg, #FFB81C, #E6970A);
-    --grad-hero: linear-gradient(135deg, #080C14 0%, #0A1230 40%, #0D0610 100%);
+    /* Superficies claras */
+    --bg-page:   #F4F6FA;
+    --bg-card:   #FFFFFF;
+    --bg-card2:  #F8F9FC;
+
+    /* Bordes */
+    --border:    #DDE2EE;
+    --border2:   #C5CCDE;
+
+    /* Texto */
+    --text:      #1A1F35;
+    --text-mid:  #4A5470;
+    --text-dim:  #8890A8;
 }
 
 /* ── BASE ───────────────────────────────────────────────────────────────────── */
 body {
-    background: var(--bg-dark);
+    background: var(--bg-page);
     color: var(--text);
     font-family: 'DM Mono', 'Fira Code', monospace;
 }
 
 input:focus { outline: none; }
-button:hover { opacity: 0.85; }
+button:hover { opacity: 0.88; }
 
 /* ── ANIMACIONES ─────────────────────────────────────────────────────────────── */
 @keyframes pulse {
@@ -51,23 +55,16 @@ button:hover { opacity: 0.85; }
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes shimmer {
-    0%   { background-position: -200% center; }
-    100% { background-position: 200% center; }
-}
 
-/* ── HEADER ──────────────────────────────────────────────────────────────────── */
+/* ── HEADER — ROJO WC ────────────────────────────────────────────────────────── */
 .header {
-    background: linear-gradient(135deg, #06091A 0%, #08102E 50%, #06091A 100%);
-    border-bottom: 2px solid var(--wc-red);
+    background: var(--wc-red);
+    border-bottom: 4px solid var(--wc-gold);
     padding: 0 24px;
     position: sticky;
     top: 0;
     z-index: 10;
-    box-shadow:
-        0 2px 0   var(--wc-red),
-        0 4px 30px rgba(232, 17, 45, 0.25),
-        0 1px 0   rgba(255, 184, 28, 0.15) inset;
+    box-shadow: 0 3px 16px rgba(232, 17, 45, 0.35);
 }
 
 .header__inner {
@@ -88,15 +85,15 @@ button:hover { opacity: 0.85; }
 .header__title {
     font-size: 13px;
     font-weight: 700;
-    color: var(--wc-white);
-    letter-spacing: 0.04em;
+    color: #FFFFFF;
+    letter-spacing: 0.05em;
 }
 
 .header__subtitle {
     font-size: 10px;
     color: var(--wc-gold);
     letter-spacing: 0.12em;
-    text-shadow: 0 0 8px rgba(255, 184, 28, 0.5);
+    font-weight: 700;
 }
 
 /* ── STATUS BADGE ─────────────────────────────────────────────────────────────── */
@@ -106,17 +103,16 @@ button:hover { opacity: 0.85; }
     gap: 5px;
     border-radius: 20px;
     padding: 3px 10px;
-    transition: all 0.4s ease;
+    transition: all 0.3s ease;
 }
 
 .status-badge--online  {
-    background: rgba(0, 80, 20, 0.25);
-    border: 1px solid #2f9e4466;
-    box-shadow: 0 0 10px rgba(47, 158, 68, 0.15);
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 .status-badge--offline {
-    background: rgba(232, 17, 45, 0.1);
-    border: 1px solid rgba(232, 17, 45, 0.5);
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .status-dot {
@@ -126,42 +122,24 @@ button:hover { opacity: 0.85; }
 }
 
 .status-badge--online  .status-dot { background: #69db7c; animation: pulse 2s infinite; }
-.status-badge--offline .status-dot { background: var(--wc-red); }
+.status-badge--offline .status-dot { background: #fff; }
 
 .status-text {
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.07em;
+    color: #FFFFFF;
 }
 
-.status-badge--online  .status-text { color: #69db7c; }
-.status-badge--offline .status-text { color: var(--wc-red); }
-
-/* ── NAV TABS ─────────────────────────────────────────────────────────────────── */
+/* ── NAV TABS — AZUL WC ───────────────────────────────────────────────────────── */
 .nav-tabs {
     display: flex;
     gap: 2px;
     overflow-x: auto;
-    padding: 8px 24px 0;
+    padding: 0 24px;
     scrollbar-width: none;
-    background: linear-gradient(180deg, #08102E 0%, #06091A 100%);
-    border-bottom: 1px solid var(--border);
-    position: relative;
-}
-
-/* Línea decorativa rojo-dorado debajo del nav */
-.nav-tabs::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg,
-        transparent 0%,
-        var(--wc-red) 25%,
-        var(--wc-gold) 50%,
-        var(--wc-blue) 75%,
-        transparent 100%);
-    opacity: 0.4;
+    background: var(--wc-blue);
+    border-bottom: 1px solid var(--wc-blue-dk);
 }
 
 .nav-tabs::-webkit-scrollbar { display: none; }
@@ -170,35 +148,34 @@ button:hover { opacity: 0.85; }
     background: transparent;
     border: none;
     border-bottom: 3px solid transparent;
-    color: var(--text-dim);
+    color: rgba(255, 255, 255, 0.65);
     cursor: pointer;
     font-family: inherit;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.06em;
-    padding: 8px 14px;
+    padding: 10px 16px;
     transition: all 0.2s;
     white-space: nowrap;
     flex-shrink: 0;
 }
 
 .nav-tab:hover {
-    color: var(--wc-white);
-    border-bottom-color: var(--wc-blue);
-    background: rgba(0, 51, 160, 0.1);
+    color: #FFFFFF;
+    border-bottom-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .nav-tab--active {
     color: var(--wc-gold);
-    border-bottom-color: var(--wc-red);
-    background: rgba(232, 17, 45, 0.08);
-    text-shadow: 0 0 12px rgba(255, 184, 28, 0.4);
+    border-bottom-color: var(--wc-gold);
+    background: rgba(0, 0, 0, 0.15);
 }
 
 /* ── API BANNER ─────────────────────────────────────────────────────────────── */
 .api-banner {
-    background: linear-gradient(90deg, #060912, #08102E, #060912);
-    border-bottom: 1px solid rgba(0, 51, 160, 0.3);
+    background: var(--wc-blue-soft);
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     gap: 14px;
@@ -216,7 +193,11 @@ button:hover { opacity: 0.85; }
     letter-spacing: 0.05em;
     padding: 4px 12px;
     transition: all 0.2s;
+    color: var(--wc-blue);
+    border: 1px solid var(--wc-blue);
 }
+
+.btn-api:hover { background: var(--wc-blue); color: #fff; }
 
 /* ── MAIN CONTAINER ─────────────────────────────────────────────────────────── */
 .main-container {
@@ -240,25 +221,29 @@ button:hover { opacity: 0.85; }
     align-items: start;
 }
 
+/* Panel general — borde azul */
 .apuesta-panel {
     background: var(--bg-card);
-    border: 1px solid rgba(0, 51, 160, 0.35);
+    border: 1.5px solid var(--wc-blue);
+    border-top: 4px solid var(--wc-blue);
     border-radius: 12px;
     padding: 18px 20px;
-    box-shadow: inset 0 1px 0 rgba(255, 184, 28, 0.05);
+    box-shadow: 0 2px 12px rgba(0, 51, 160, 0.08);
 }
 
+/* Panel partidos — borde rojo */
 .apuesta-panel--partidos {
-    border-color: rgba(232, 17, 45, 0.25);
-    box-shadow: inset 0 1px 0 rgba(232, 17, 45, 0.05);
+    border-color: var(--wc-red);
+    border-top-color: var(--wc-red);
+    box-shadow: 0 2px 12px rgba(232, 17, 45, 0.08);
 }
 
 .apuesta-select {
     width: 100%;
-    background: #060912;
-    border: 1px solid rgba(0, 51, 160, 0.4);
+    background: var(--bg-page);
+    border: 1.5px solid var(--border);
     border-radius: 8px;
-    color: #e2e8f0;
+    color: var(--text);
     font-family: inherit;
     font-size: 12px;
     font-weight: 700;
@@ -266,10 +251,7 @@ button:hover { opacity: 0.85; }
     transition: border-color 0.2s;
 }
 
-.apuesta-select:focus {
-    border-color: var(--wc-blue);
-    box-shadow: 0 0 0 2px rgba(0, 51, 160, 0.2);
-}
+.apuesta-select:focus { border-color: var(--wc-blue); }
 
 .partidos-lista-compacta {
     display: flex;
@@ -288,6 +270,7 @@ button:hover { opacity: 0.85; }
     flex-wrap: wrap;
 }
 
+/* Cada stat card tiene acento de color diferente rotando rojo/azul/dorado */
 .stat-card {
     flex: 1;
     min-width: 100px;
@@ -295,29 +278,19 @@ button:hover { opacity: 0.85; }
     border-radius: 10px;
     padding: 14px 16px;
     border: 1px solid var(--border);
-    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-    position: relative;
-    overflow: hidden;
+    border-top: 4px solid var(--wc-blue);
+    transition: box-shadow 0.2s, transform 0.15s;
 }
 
-/* Acento superior en las stat cards */
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--grad-blue);
-    opacity: 0;
-    transition: opacity 0.2s;
-}
+.stat-card:nth-child(1) { border-top-color: var(--wc-red);  }
+.stat-card:nth-child(2) { border-top-color: var(--wc-blue); }
+.stat-card:nth-child(3) { border-top-color: var(--wc-gold); }
+.stat-card:nth-child(4) { border-top-color: var(--wc-green);}
 
 .stat-card:hover {
-    border-color: var(--wc-blue);
-    box-shadow: 0 4px 20px rgba(0, 51, 160, 0.2);
-    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 51, 160, 0.12);
+    transform: translateY(-2px);
 }
-
-.stat-card:hover::before { opacity: 1; }
 
 .stat-card__label {
     font-size: 9px;
@@ -332,6 +305,7 @@ button:hover { opacity: 0.85; }
     font-size: 24px;
     font-weight: 800;
     line-height: 1;
+    color: var(--text);
 }
 
 .stat-card__sub {
@@ -347,34 +321,27 @@ button:hover { opacity: 0.85; }
     align-items: center;
     justify-content: center;
     background:
-        radial-gradient(ellipse at 20% 50%, rgba(232, 17, 45, 0.08) 0%, transparent 55%),
-        radial-gradient(ellipse at 80% 30%, rgba(0, 51, 160, 0.1) 0%, transparent 55%),
-        radial-gradient(ellipse at 50% 90%, rgba(255, 184, 28, 0.05) 0%, transparent 50%),
-        var(--bg-dark);
+        linear-gradient(160deg, var(--wc-red) 0%, var(--wc-red-dark) 38%, var(--wc-blue) 100%);
     padding: 20px;
 }
 
 .login-card {
-    background: var(--bg-card);
-    border: 1px solid rgba(0, 51, 160, 0.5);
+    background: #FFFFFF;
     border-radius: 16px;
     padding: 36px 32px;
     width: 100%;
     max-width: 400px;
-    box-shadow:
-        0 0 50px rgba(232, 17, 45, 0.12),
-        0 0 100px rgba(0, 51, 160, 0.15),
-        0 0 1px rgba(255, 184, 28, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
     position: relative;
     overflow: hidden;
 }
 
-/* Borde superior dorado */
+/* Franja dorada superior */
 .login-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 3px;
+    height: 5px;
     background: linear-gradient(90deg, var(--wc-red), var(--wc-gold), var(--wc-blue));
 }
 
@@ -388,17 +355,17 @@ button:hover { opacity: 0.85; }
 .login-logo__title {
     font-size: 16px;
     font-weight: 800;
-    color: var(--wc-white);
+    color: var(--wc-blue);
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
 .login-logo__subtitle {
     font-size: 9px;
-    color: var(--wc-gold);
+    color: var(--wc-red);
     letter-spacing: 0.18em;
     margin-top: 4px;
-    text-shadow: 0 0 10px rgba(255, 184, 28, 0.6);
+    font-weight: 700;
 }
 
 .login-field { margin-bottom: 16px; }
@@ -407,7 +374,7 @@ button:hover { opacity: 0.85; }
     display: block;
     font-size: 9px;
     font-weight: 700;
-    color: var(--text-dim);
+    color: var(--text-mid);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     margin-bottom: 6px;
@@ -415,8 +382,8 @@ button:hover { opacity: 0.85; }
 
 .login-input {
     width: 100%;
-    background: var(--bg-dark);
-    border: 1px solid var(--border2);
+    background: var(--bg-page);
+    border: 1.5px solid var(--border);
     border-radius: 8px;
     color: var(--text);
     font-family: inherit;
@@ -427,15 +394,15 @@ button:hover { opacity: 0.85; }
 
 .login-input:focus {
     border-color: var(--wc-blue);
-    box-shadow: 0 0 0 3px rgba(0, 51, 160, 0.2);
+    box-shadow: 0 0 0 3px rgba(0, 51, 160, 0.12);
 }
 
 .login-btn {
     width: 100%;
-    background: var(--grad-blue);
-    border: 1px solid rgba(0, 51, 160, 0.6);
+    background: var(--wc-blue);
+    border: none;
     border-radius: 10px;
-    color: var(--wc-white);
+    color: #FFFFFF;
     cursor: pointer;
     font-family: inherit;
     font-size: 13px;
@@ -443,47 +410,33 @@ button:hover { opacity: 0.85; }
     letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-top: 8px;
-    padding: 12px;
+    padding: 13px;
     transition: all 0.25s;
-    position: relative;
-    overflow: hidden;
-}
-
-.login-btn::after {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%; right: 0; bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
-    transition: left 0.4s;
 }
 
 .login-btn:hover {
-    background: var(--grad-red);
-    border-color: rgba(232, 17, 45, 0.6);
+    background: var(--wc-red);
     transform: translateY(-2px);
-    box-shadow:
-        0 6px 20px rgba(232, 17, 45, 0.35),
-        0 0 40px rgba(232, 17, 45, 0.15);
+    box-shadow: 0 6px 20px rgba(232, 17, 45, 0.3);
 }
 
-.login-btn:hover::after { left: 100%; }
 .login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
 .login-error {
-    background: rgba(232, 17, 45, 0.08);
-    border: 1px solid rgba(232, 17, 45, 0.4);
+    background: var(--wc-red-soft);
+    border: 1px solid rgba(232, 17, 45, 0.35);
     border-radius: 8px;
-    color: #ff6b7a;
+    color: var(--wc-red-dark);
     font-size: 11px;
     margin-top: 12px;
     padding: 8px 12px;
 }
 
 .login-success {
-    background: rgba(0, 120, 40, 0.1);
+    background: #edfbf0;
     border: 1px solid #2f9e44;
     border-radius: 8px;
-    color: #69db7c;
+    color: #1a6b2e;
     font-size: 11px;
     margin-top: 12px;
     padding: 8px 12px;
@@ -510,7 +463,7 @@ button:hover { opacity: 0.85; }
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-dark);
+    background: var(--bg-page);
 }
 
 .loading-card {
@@ -541,7 +494,6 @@ button:hover { opacity: 0.85; }
     font-weight: 700;
     color: var(--text);
     margin-bottom: 8px;
-    letter-spacing: 0.05em;
 }
 
 .loading-subtext { font-size: 11px; color: var(--text-dim); }
@@ -550,50 +502,31 @@ button:hover { opacity: 0.85; }
 .partido-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 18px;
-    margin-bottom: 10px;
-    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-    position: relative;
-    overflow: hidden;
-}
-
-/* Indicador lateral en los partidos */
-.partido-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 3px; height: 100%;
-    background: var(--grad-red);
-    opacity: 0;
-    transition: opacity 0.2s;
+    border-left: 4px solid var(--wc-blue);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    transition: box-shadow 0.2s, transform 0.15s, border-left-color 0.2s;
 }
 
 .partido-card:hover {
-    border-color: rgba(0, 51, 160, 0.5);
-    box-shadow:
-        0 4px 16px rgba(0, 51, 160, 0.15),
-        inset 0 0 40px rgba(0, 51, 160, 0.03);
+    border-left-color: var(--wc-red);
+    box-shadow: 0 4px 16px rgba(0, 51, 160, 0.1);
     transform: translateX(2px);
 }
 
-.partido-card:hover::before { opacity: 1; }
-
 /* ── SCROLLBAR ───────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-dark); }
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, var(--wc-red), var(--wc-blue));
-    border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover { background: var(--wc-gold); }
+::-webkit-scrollbar-track { background: var(--bg-page); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--wc-blue); }
 
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
     .main-container { padding: 16px 12px; }
     .login-card { padding: 28px 20px; }
     .header { padding: 0 14px; }
-    .nav-tabs { padding: 8px 14px 0; }
+    .nav-tabs { padding: 0 14px; }
     .api-banner { padding: 6px 14px; }
 }
 
