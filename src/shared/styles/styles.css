@@ -60,7 +60,6 @@ button:hover { opacity: 0.88; }
 .header {
     background: var(--wc-red);
     border-bottom: 4px solid var(--wc-gold);
-    padding: 0 24px;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -69,9 +68,16 @@ button:hover { opacity: 0.88; }
 
 .header__inner {
     display: flex;
+    flex-direction: column;
+}
+
+/* Fila 1: brand + usuario */
+.header__top {
+    display: flex;
     align-items: center;
     justify-content: space-between;
     height: 56px;
+    padding: 0 24px;
 }
 
 .header__brand {
@@ -137,10 +143,14 @@ button:hover { opacity: 0.88; }
     display: flex;
     gap: 2px;
     overflow-x: auto;
-    padding: 0 24px;
+    overflow-y: hidden;
+    padding: 0 12px;
     scrollbar-width: none;
     background: var(--wc-blue);
     border-bottom: 1px solid var(--wc-blue-dk);
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .nav-tabs::-webkit-scrollbar,
@@ -554,7 +564,7 @@ button:hover { opacity: 0.88; }
     .stat-cards          { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     .main-container      { padding: 18px 16px; }
-    .header              { padding: 0 18px; }
+    .header__top         { padding: 0 18px; }
     .nav-tabs            { padding: 0 18px; }
     .api-banner          { padding: 6px 18px; gap: 10px; }
 }
@@ -562,7 +572,7 @@ button:hover { opacity: 0.88; }
 /* ── MÓVIL GRANDE  (< 600px) ─────────────────────────────────────────────────── */
 @media (max-width: 600px) {
     /* Header más compacto */
-    .header              { padding: 0 14px; }
+    .header__top         { padding: 0 14px; }
     .header__inner       { height: 50px; }
     .header__logo        { font-size: 18px; }
     .header__title       { font-size: var(--fs-sm); }
