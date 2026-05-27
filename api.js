@@ -3,42 +3,36 @@ import { Router } from 'express'
 
 const router = Router()
 
-// ── PERSISTENCIA EN JSONBIN.IO ─────────────────────────────────────────────────
-const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${process.env.JSONBIN_BIN_ID}`
+// ── PERSISTENCIA EN SUPABASE ───────────────────────────────────────────────────
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SUPABASE_KEY = process.env.SUPABASE_KEY
+const API_URL      = `${SUPABASE_URL}/rest/v1/colecciones`
+
 const HEADERS = {
     'Content-Type': 'application/json',
-    'X-Master-Key': process.env.JSONBIN_API_KEY,
-    'X-Bin-Versioning': 'false',   // siempre sobreescribe, no acumula versiones
-}
-
-async function leerDatos() {
-    const res = await fetch(`${JSONBIN_URL}/latest`, { headers: HEADERS })
-    if (!res.ok) throw new Error(`JSONBin read error: ${res.status}`)
-    const json = await res.json()
-    return json.record ?? {}
-}
-
-async function guardarDatos(datos) {
-    const res = await fetch(JSONBIN_URL, {
-        method: 'PUT',
-        headers: HEADERS,
-        body: JSON.stringify(datos),
-    })
-    if (!res.ok) throw new Error(`JSONBin write error: ${res.status}`)
+    'apikey':        SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Prefer':        'return=representation',
 }
 
 async function getColeccion(nombre) {
-    const datos = await leerDatos()
-    return datos[nombre] ?? []
+    const res = await fetch(`${API_URL}?nombre=eq.${encodeURIComponent(nombre)}&select=datos`, {
+        headers: HEADERS,
+    })
+    if (!res.ok) throw new Error(`Supabase read error ${res.status}: ${await res.text()}`)
+    const rows = await res.json()
+    return rows[0]?.datos ?? []
 }
 
 async function setColeccion(nombre, valor) {
-    const datos = await leerDatos()
-    datos[nombre] = valor
-    await guardarDatos(datos)
+    const res = await fetch(`${API_URL}?nombre=eq.${encodeURIComponent(nombre)}`, {
+        method:  'PATCH',
+        headers: HEADERS,
+        body:    JSON.stringify({ datos: valor }),
+    })
+    if (!res.ok) throw new Error(`Supabase write error ${res.status}: ${await res.text()}`)
 }
 
-// ── helper para manejo de errores ─────────────────────────────────────────────
 function catchErr(res, e) {
     console.error(e)
     res.status(500).json({ error: e.message })
@@ -162,8 +156,7 @@ router.put('/predicciones-personales/:key', async (req, res) => {
 // ══════════════════════════════════════════════════════════════════════════════
 router.get('/comentarios/:grupoId/:partidoId', async (req, res) => {
     try {
-        const datos = await leerDatos()
-        const comentarios = datos.comentarios ?? {}
+        const comentarios = await getColeccion('comentarios')
         const key = `${req.params.grupoId}_${req.params.partidoId}`
         res.json(comentarios[key] ?? [])
     } catch (e) { catchErr(res, e) }
@@ -171,11 +164,10 @@ router.get('/comentarios/:grupoId/:partidoId', async (req, res) => {
 
 router.put('/comentarios/:grupoId/:partidoId', async (req, res) => {
     try {
-        const datos = await leerDatos()
-        if (!datos.comentarios) datos.comentarios = {}
+        const comentarios = await getColeccion('comentarios')
         const key = `${req.params.grupoId}_${req.params.partidoId}`
-        datos.comentarios[key] = req.body
-        await guardarDatos(datos)
+        comentarios[key] = req.body
+        await setColeccion('comentarios', comentarios)
         res.json(req.body)
     } catch (e) { catchErr(res, e) }
 })
@@ -205,18 +197,16 @@ router.put('/solicitudes/:id', async (req, res) => {
 // ══════════════════════════════════════════════════════════════════════════════
 router.get('/ranking/:grupoId', async (req, res) => {
     try {
-        const datos = await leerDatos()
-        const ranking = datos.ranking ?? {}
+        const ranking = await getColeccion('ranking')
         res.json(ranking[req.params.grupoId] ?? [])
     } catch (e) { catchErr(res, e) }
 })
 
 router.post('/ranking/:grupoId', async (req, res) => {
     try {
-        const datos = await leerDatos()
-        if (!datos.ranking) datos.ranking = {}
-        datos.ranking[req.params.grupoId] = req.body
-        await guardarDatos(datos)
+        const ranking = await getColeccion('ranking')
+        ranking[req.params.grupoId] = req.body
+        await setColeccion('ranking', ranking)
         res.json(req.body)
     } catch (e) { catchErr(res, e) }
 })
