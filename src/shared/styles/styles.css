@@ -77,7 +77,6 @@ button:hover { opacity: 0.88; }
 .header__brand {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 10px;
 }
 
@@ -560,21 +559,16 @@ button:hover { opacity: 0.88; }
 
 /* ── MÓVIL GRANDE  (< 600px) ─────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-    /* Header: 2 filas en móvil — brand arriba, nav abajo */
-    .header              { padding: 0; }
-    .header__inner       { height: auto; flex-direction: column; align-items: stretch; gap: 0; }
-    .header__brand       { padding: 0 14px; height: 48px; }
+    /* Header más compacto */
+    .header              { padding: 0 14px; }
+    .header__inner       { height: 50px; }
     .header__logo        { font-size: 18px; }
     .header__title       { font-size: var(--fs-sm); }
-    .header__subtitle    { display: none; }
+    .header__subtitle    { font-size: var(--fs-xs); letter-spacing: 0.06em; }
 
-    /* Nav ocupa todo el ancho, scroll horizontal sin scrollbar */
-    .nav-tabs            { padding: 0 8px; overflow-x: auto; scrollbar-width: none; }
-    .nav-tabs::-webkit-scrollbar { display: none; }
-    .nav-tab             { font-size: 9px; padding: 8px 10px; letter-spacing: 0.02em; flex-shrink: 0; }
-
-    /* Usuario + logout: compacto dentro del brand */
-    .header__inner > div:last-child { padding-right: 14px; }
+    /* Nav tabs: padding reducido */
+    .nav-tabs            { padding: 0 10px; }
+    .nav-tab             { font-size: var(--fs-xs); padding: 9px 10px; letter-spacing: 0.03em; }
 
     /* Main */
     .main-container      { padding: 14px 12px; }
@@ -638,8 +632,7 @@ button:hover { opacity: 0.88; }
 @media (max-width: 360px) {
     .header__logo        { font-size: 16px; }
     .header__title       { font-size: 10px; letter-spacing: 0.02em; }
-    .header__brand       { height: 42px; padding: 0 10px; }
-    .header__inner > div:last-child { padding-right: 10px; }
+    .header__inner       { height: 46px; }
 
     /* Status badge: solo el punto, sin texto */
     .status-text         { display: none; }
