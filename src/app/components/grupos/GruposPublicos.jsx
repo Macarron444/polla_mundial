@@ -55,24 +55,19 @@ function GruposPublicos({ usuario, onCambio }) {
 
     return (
         <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em', marginBottom: 12 }}>
+            <div className="g-label g-label--blue" style={{ marginBottom: 12 }}>
                 🌐 GRUPOS PÚBLICOS
             </div>
-            {error && <div style={{ fontSize: 11, color: '#dc2626', marginBottom: 10 }}>⚠️ {error}</div>}
+            {error && <div className="g-alert g-alert--error" style={{ marginBottom: 10 }}>⚠️ {error}</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {grupos.map((g) => {
                     const { yaEsMiembro, solicitud } = estados[g.id] ?? {}
                     return (
-                        <div key={g.id} style={{
-                            background: '#ffffff', border: '1px solid #e2e8f0',
-                            borderRadius: 12, padding: '14px 16px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14,
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                        }}>
+                        <div key={g.id} className="g-public-card">
                             <div>
-                                <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>🏆 {g.nombre}</div>
-                                {g.descripcion && <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{g.descripcion}</div>}
-                                <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>
+                                <div className="g-public-card__name">🏆 {g.nombre}</div>
+                                {g.descripcion && <div className="g-public-card__desc">{g.descripcion}</div>}
+                                <div className="g-public-card__meta">
                                     👥 {g.miembros.length} miembro{g.miembros.length !== 1 ? 's' : ''}
                                     {g.montoApuesta > 0 && ` · 💰 $${g.montoApuesta.toLocaleString('es-CO')}/persona`}
                                 </div>

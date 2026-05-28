@@ -49,19 +49,14 @@ function SolicitudesIngreso({ grupo, onCambio }) {
             <div style={{ fontSize: 9, fontWeight: 700, color: '#d97706', letterSpacing: '0.07em', marginBottom: 10 }}>
                 📬 SOLICITUDES PENDIENTES ({solicitudes.length})
             </div>
-            {error && <div style={{ fontSize: 11, color: '#dc2626', marginBottom: 10 }}>⚠️ {error}</div>}
+            {error && <div className="g-alert g-alert--error" style={{ marginBottom: 10 }}>⚠️ {error}</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {solicitudes.map((s) => (
-                    <div key={s.id} style={{
-                        background: '#fffbeb', border: '1px solid #fde68a',
-                        borderRadius: 10, padding: '12px 16px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                    }}>
+                    <div key={s.id} className="g-solicitud-row">
                         <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{s.nombre}</div>
-                            <div style={{ fontSize: 10, color: '#64748b' }}>{s.email}</div>
-                            <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>
+                            <div className="g-solicitud-row__name">{s.nombre}</div>
+                            <div className="g-solicitud-row__email">{s.email}</div>
+                            <div className="g-solicitud-row__date">
                                 {new Date(s.fecha).toLocaleDateString('es-CO')}
                             </div>
                         </div>

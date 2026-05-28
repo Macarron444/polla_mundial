@@ -8,18 +8,12 @@ import { useState } from 'react'
 function FilaPrediccion({ pred }) {
     const col = PRED_COLOR[pred.estado]
     return (
-        <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '8px 12px', borderBottom: '1px solid #f1f5f9',
-        }}>
+        <div className="g-pred-row">
             <span style={{ fontSize: 12, color: '#1e293b', flex: 1 }}>{pred.nombre ?? pred.usuarioId}</span>
             <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', width: 60, textAlign: 'center' }}>
                 {pred.golesL} – {pred.golesV} {pred.usaComodin ? '⚡' : ''}
             </span>
-            <span style={{
-                fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                background: col.bg, color: col.text, minWidth: 70, textAlign: 'center',
-            }}>
+            <span className="g-pred-badge" style={{ background: col.bg, color: col.text }}>
                 {pred.estado} {pred.pts > 0 ? `+${pred.pts}` : ''}
             </span>
         </div>
@@ -47,19 +41,15 @@ function CardPartidoHistorial({ partido, equipos, grupo, esAdmin, onResuelto }) 
     }
 
     return (
-        <div style={{
-            background: '#ffffff', border: '1px solid #e2e8f0',
-            borderRadius: 12, marginBottom: 12, overflow: 'hidden',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-        }}>
-            <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="g-partido-card">
+            <div className="g-partido-card__header">
                 <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4 }}>{partido.fecha} · {partido.fase}</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
+                    <div className="g-partido-card__fecha">{partido.fecha} · {partido.fase}</div>
+                    <div className="g-partido-card__titulo">
                         {local?.flag} {local?.nombre} vs {visitante?.flag} {visitante?.nombre}
                     </div>
                     {yaFinalizado && (
-                        <div style={{ fontSize: 16, fontWeight: 800, color: '#16a34a', marginTop: 4 }}>
+                        <div className="g-partido-card__resultado">
                             Resultado: {partido.golesL} – {partido.golesV}
                         </div>
                     )}
@@ -73,13 +63,11 @@ function CardPartidoHistorial({ partido, equipos, grupo, esAdmin, onResuelto }) 
             </div>
 
             {resolviendo && (
-                <div style={{ padding: '12px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 10, alignItems: 'center' }}>
+                <div className="g-partido-card__resolver">
                     <span style={{ fontSize: 12, color: '#475569' }}>{local?.nombre}</span>
-                    <input type="number" min="0" max="20" value={golesLR} onChange={(e) => setGolesLR(e.target.value)}
-                        style={{ width: 48, textAlign: 'center', background: '#ffffff', border: '1px solid #c7d2fe', color: '#1e293b', fontSize: 16, fontWeight: 800, borderRadius: 6, padding: '4px 0', fontFamily: 'inherit' }} />
+                    <input type="number" min="0" max="20" value={golesLR} onChange={(e) => setGolesLR(e.target.value)} className="g-score-input" style={{ fontSize: 16 }} />
                     <span style={{ color: '#475569', fontWeight: 700 }}>–</span>
-                    <input type="number" min="0" max="20" value={golesVR} onChange={(e) => setGolesVR(e.target.value)}
-                        style={{ width: 48, textAlign: 'center', background: '#ffffff', border: '1px solid #c7d2fe', color: '#1e293b', fontSize: 16, fontWeight: 800, borderRadius: 6, padding: '4px 0', fontFamily: 'inherit' }} />
+                    <input type="number" min="0" max="20" value={golesVR} onChange={(e) => setGolesVR(e.target.value)} className="g-score-input" style={{ fontSize: 16 }} />
                     <span style={{ fontSize: 12, color: '#475569' }}>{visitante?.nombre}</span>
                     <button onClick={handleResolver} style={btnStyle('#2f9e44')}>✓ Confirmar</button>
                     {msg && <span style={{ fontSize: 11, color: '#16a34a' }}>{msg}</span>}
@@ -87,10 +75,8 @@ function CardPartidoHistorial({ partido, equipos, grupo, esAdmin, onResuelto }) 
             )}
 
             {preds.length > 0 && (
-                <div style={{ borderTop: '1px solid #f1f5f9' }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em', padding: '8px 12px' }}>
-                        PREDICCIONES ({preds.length})
-                    </div>
+                <div className="g-partido-card__preds">
+                    <div className="g-partido-card__preds-label">PREDICCIONES ({preds.length})</div>
                     {preds.map((p) => <FilaPrediccion key={p.usuarioId} pred={p} />)}
                 </div>
             )}

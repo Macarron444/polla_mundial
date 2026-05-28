@@ -5,11 +5,11 @@ import { esSuperAdminPorEmail } from '../../../core/constants/superadmin.js'
 function BarraProgreso({ valor, total, color }) {
     const pct = total > 0 ? Math.round((valor / total) * 100) : 0
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ flex: 1, height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 3, transition: 'width 0.5s' }} />
+        <div className="g-progress">
+            <div className="g-progress__track">
+                <div className="g-progress__fill" style={{ width: `${pct}%`, background: color }} />
             </div>
-            <span style={{ fontSize: 10, color, fontWeight: 700, minWidth: 28, textAlign: 'right' }}>{pct}%</span>
+            <span className="g-progress__label" style={{ color }}>{pct}%</span>
         </div>
     )
 }
@@ -78,24 +78,20 @@ function TabEstadisticasGrupo({ grupo, usuario }) {
                     { label: 'RESUELTAS',    val: resueltas.length,                color: '#16a34a' },
                     { label: 'PENDIENTES',   val: preds.length - resueltas.length, color: '#d97706' },
                 ].map((s) => (
-                    <div key={s.label} style={{
-                        flex: 1, minWidth: 100, background: '#ffffff',
-                        border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 16px',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                    }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', letterSpacing: '0.07em' }}>{s.label}</div>
-                        <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.val}</div>
+                    <div key={s.label} className="g-stat-mini">
+                        <div className="g-stat-mini__label">{s.label}</div>
+                        <div className="g-stat-mini__value" style={{ color: s.color }}>{s.val}</div>
                     </div>
                 ))}
             </div>
 
             {mejorExacto?.exactas > 0 && (
-                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 11, color: '#166534' }}>
+                <div className="g-alert g-alert--success" style={{ borderRadius: 10, marginBottom: 16 }}>
                     🎯 Mejor marcador exacto: <strong>{mejorExacto.nombre}</strong> con {mejorExacto.exactas} exactas
                 </div>
             )}
             {peorFallido?.fallidas > 0 && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '10px 14px', marginBottom: 20, fontSize: 11, color: '#991b1b' }}>
+                <div className="g-alert g-alert--error" style={{ borderRadius: 10, marginBottom: 20 }}>
                     😬 Más predicciones fallidas: <strong>{peorFallido.nombre}</strong> con {peorFallido.fallidas} fallidas
                 </div>
             )}
@@ -108,12 +104,7 @@ function TabEstadisticasGrupo({ grupo, usuario }) {
                 {statsPorUsuario.map((s) => {
                     const esMio = String(s.usuarioId) === String(usuario.id)
                     return (
-                        <div key={s.usuarioId} style={{
-                            background: esMio ? '#eef2ff' : '#ffffff',
-                            border: `1px solid ${esMio ? '#c7d2fe' : '#e2e8f0'}`,
-                            borderRadius: 12, padding: '14px 16px',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                        }}>
+                        <div key={s.usuarioId} className={`g-card${esMio ? ' g-card--blue' : ''}`}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                                 <div>
                                     <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{s.nombre}</span>

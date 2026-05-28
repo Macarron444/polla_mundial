@@ -30,7 +30,7 @@ function FormCrearGrupo({ usuario, onCreado, onCancelar }) {
     const labelStyle = { display: 'block', fontSize: 9, fontWeight: 700, color: '#64748b', letterSpacing: '0.07em', marginBottom: 6 }
 
     return (
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '24px 22px', maxWidth: 480, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
+        <div className="g-card g-card--lg" style={{ borderRadius: 14, maxWidth: 480, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', marginBottom: 18 }}>
                 🏆 Crear nuevo grupo de apuestas
             </div>
@@ -71,11 +71,7 @@ function FormCrearGrupo({ usuario, onCreado, onCancelar }) {
                 💡 Quedarás como <strong style={{ color: '#3b5bdb' }}>Administrador</strong>. El grupo genera un código de invitación automáticamente.
             </div>
 
-            {error && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 11, padding: '8px 12px', borderRadius: 6, marginBottom: 14 }}>
-                    ⚠️ {error}
-                </div>
-            )}
+            {error && <div className="g-alert g-alert--error" style={{ borderRadius: 6, marginBottom: 14 }}>⚠️ {error}</div>}
 
             <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={handleCrear} disabled={cargando} style={btnStyle(cargando ? '#94a3b8' : '#3b5bdb')}>

@@ -660,4 +660,411 @@ button:hover { opacity: 0.88; }
     .apuesta-panel       { padding: 12px 12px; }
     .login-page          { padding: 12px; }
     .login-card          { padding: 20px 14px; }
+}}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SISTEMA DE DISEÑO — GRUPOS / COMPONENTES COMPARTIDOS
+   Clases reutilizables para CardGrupo, VistaGrupo, Tabs de grupo, etc.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── TARJETA BASE ─────────────────────────────────────────────────────────── */
+.g-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.g-card--lg    { padding: 18px 20px; }
+.g-card--sm    { padding: 10px 14px; }
+.g-card--blue  { border-color: #c7d2fe; background: #eef2ff; }
+.g-card--gold  { border-color: #fde68a; background: #fffbeb; }
+.g-card--green { border-color: #bbf7d0; background: #f0fdf4; }
+.g-card--red   { border-color: #fecaca; background: #fef2f2; }
+.g-card--muted { border-color: var(--border); background: var(--bg-card2); }
+
+.g-card--clickable {
+    cursor: pointer;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+.g-card--clickable:hover {
+    box-shadow: 0 4px 12px rgba(59,91,219,0.1);
+    border-color: #818cf8;
+}
+
+/* ── ETIQUETA DE SECCIÓN ──────────────────────────────────────────────────── */
+.g-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+.g-label--blue   { color: #3b5bdb; }
+.g-label--gold   { color: #d97706; }
+.g-label--gray   { color: #64748b; }
+.g-label--green  { color: #16a34a; }
+.g-label--red    { color: #dc2626; }
+.g-label--muted  { color: #94a3b8; }
+
+/* ── CAJA DE ALERTA ───────────────────────────────────────────────────────── */
+.g-alert {
+    font-size: 11px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+}
+.g-alert--error  { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+.g-alert--success{ background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+.g-alert--warn   { background: #fffbeb; border: 1px solid #fde68a; color: #d97706; }
+.g-alert--info   { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+
+/* ── STAT MINI (tarjeta de número pequeña dentro de grupos) ───────────────── */
+.g-stat-mini {
+    flex: 1;
+    min-width: 100px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.g-stat-mini__label {
+    font-size: 9px;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.g-stat-mini__value {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* ── FILA DE MIEMBRO ──────────────────────────────────────────────────────── */
+.g-member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.g-member-row--me { background: #eef2ff; border-color: #c7d2fe; }
+
+.g-member-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.g-member-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+}
+.g-member-email {
+    font-size: 10px;
+    color: #64748b;
+}
+.g-member-tag {
+    font-size: 10px;
+    color: #3b5bdb;
+    margin-left: 6px;
+}
+
+/* ── BARRA DE PROGRESO ────────────────────────────────────────────────────── */
+.g-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.g-progress__track {
+    flex: 1;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.g-progress__fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s;
+}
+.g-progress__label {
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 28px;
+    text-align: right;
+}
+
+/* ── INPUT DE MARCADOR ────────────────────────────────────────────────────── */
+.g-score-input {
+    width: 48px;
+    text-align: center;
+    background: var(--bg-card);
+    border: 1px solid #c7d2fe;
+    color: #1e293b;
+    font-size: 18px;
+    font-weight: 800;
+    border-radius: 8px;
+    padding: 6px 0;
+    font-family: inherit;
+}
+.g-score-input:disabled {
+    background: #f1f5f9;
+    border-color: var(--border);
+    opacity: 0.6;
+}
+.g-score-sep {
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+/* ── RANKING ROW ──────────────────────────────────────────────────────────── */
+.g-rank-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.g-rank-row--me     { background: #eef2ff; border-color: #c7d2fe; }
+.g-rank-row--leader { background: #fffbeb; border-color: #fde68a; }
+
+.g-rank-pos {
+    font-size: 20px;
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.g-rank-name  { font-size: 13px; font-weight: 700; color: #0f172a; }
+.g-rank-pts   { font-size: 24px; font-weight: 800; flex-shrink: 0; }
+.g-rank-pts--leader { color: #d97706; }
+.g-rank-pts--normal { color: #3b5bdb; }
+
+/* ── PARTIDO CARD (historial / predicciones grupo) ────────────────────────── */
+.g-partido-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.g-partido-card__header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.g-partido-card__fecha {
+    font-size: 10px;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+.g-partido-card__titulo {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+}
+.g-partido-card__resultado {
+    font-size: 16px;
+    font-weight: 800;
+    color: #16a34a;
+    margin-top: 4px;
+}
+.g-partido-card__resolver {
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.g-partido-card__preds {
+    border-top: 1px solid #f1f5f9;
+}
+.g-partido-card__preds-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: #3b5bdb;
+    letter-spacing: 0.07em;
+    padding: 8px 12px;
+}
+
+/* ── PREDICCION ROW ───────────────────────────────────────────────────────── */
+.g-pred-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.g-pred-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    min-width: 70px;
+    text-align: center;
+}
+
+/* ── CARD DE PREDICCIÓN (TabPrediccionesGrupo) ────────────────────────────── */
+.g-pred-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.g-pred-card--activa { border-color: #c7d2fe; }
+
+.g-pred-card__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.g-pred-card__fecha { font-size: 10px; color: #64748b; }
+
+.g-pred-card__equipos {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.g-pred-card__equipo {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+}
+.g-pred-card__equipo--right { text-align: left; }
+.g-pred-card__equipo--left  { text-align: right; }
+
+.g-pred-card__result {
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+/* ── GRUPOS PÚBLICOS — CARD ────────────────────────────────────────────────── */
+.g-public-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.g-public-card__name  { font-size: 13px; font-weight: 700; color: #0f172a; }
+.g-public-card__desc  { font-size: 10px; color: #64748b; margin-top: 2px; }
+.g-public-card__meta  { font-size: 10px; color: #94a3b8; margin-top: 4px; }
+
+/* ── INVITACIÓN ────────────────────────────────────────────────────────────── */
+.g-invite-code {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid #c7d2fe;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: #3b5bdb;
+    text-align: center;
+}
+.g-invite-link {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 10px;
+    color: #64748b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.g-invite-msg {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11px;
+    color: #475569;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+/* ── SOLICITUD ROW ─────────────────────────────────────────────────────────── */
+.g-solicitud-row {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.g-solicitud-row__name { font-size: 13px; font-weight: 700; color: #0f172a; }
+.g-solicitud-row__email{ font-size: 10px; color: #64748b; }
+.g-solicitud-row__date { font-size: 9px;  color: #94a3b8; margin-top: 2px; }
+
+/* ── SELECT OSCURO (formularios de grupo) ──────────────────────────────────── */
+.g-select {
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    color: #1e293b;
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* ── COMODÍN BADGE ─────────────────────────────────────────────────────────── */
+.g-comodin {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+.g-comodin--disponible { background: #fffbeb; border: 1px solid #fde68a; color: #d97706; }
+.g-comodin--usado      { background: #f1f5f9; border: 1px solid var(--border); color: #94a3b8; }
+
+/* ── RESPONSIVE GRUPOS (< 600px) ───────────────────────────────────────────── */
+@media (max-width: 600px) {
+    .g-card     { padding: 12px 14px; }
+    .g-card--lg { padding: 14px 16px; }
+    .g-stat-mini { min-width: 80px; padding: 10px 12px; }
+    .g-stat-mini__value { font-size: 20px; }
+    .g-rank-pts { font-size: 20px; }
+    .g-score-input { width: 40px; font-size: 16px; }
+    .g-member-row { flex-wrap: wrap; }
+    .g-pred-card__equipos { flex-wrap: wrap; gap: 6px; }
 }

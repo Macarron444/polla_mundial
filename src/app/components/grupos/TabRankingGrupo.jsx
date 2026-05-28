@@ -57,13 +57,7 @@ function TabRankingGrupo({ grupo, usuario }) {
                     const esMio    = r.usuarioId === usuario.id
                     const esLider  = i === 0
                     return (
-                        <div key={r.usuarioId} style={{
-                            background: esMio ? '#eef2ff' : esLider ? '#fffbeb' : '#ffffff',
-                            border: `1px solid ${esMio ? '#c7d2fe' : esLider ? '#fde68a' : '#e2e8f0'}`,
-                            borderRadius: 10, padding: '12px 16px',
-                            display: 'flex', alignItems: 'center', gap: 14,
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                        }}>
+                        <div key={r.usuarioId} className={`g-rank-row${esMio ? ' g-rank-row--me' : esLider ? ' g-rank-row--leader' : ''}`}>
                             <div style={{ fontSize: 20, width: 28, textAlign: 'center', flexShrink: 0 }}>
                                 {MEDALLAS[i] ?? <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 700 }}>#{i + 1}</span>}
                             </div>
@@ -84,7 +78,7 @@ function TabRankingGrupo({ grupo, usuario }) {
                                     ))}
                                 </div>
                             </div>
-                            <div style={{ fontSize: 24, fontWeight: 800, color: esLider ? '#d97706' : '#3b5bdb', flexShrink: 0 }}>
+                            <div className={`g-rank-pts ${esLider ? 'g-rank-pts--leader' : 'g-rank-pts--normal'}`} style={{ flexShrink: 0 }}>
                                 {r.pts}
                                 <span style={{ fontSize: 10, fontWeight: 400, color: '#94a3b8', marginLeft: 2 }}>pts</span>
                             </div>
@@ -100,11 +94,7 @@ function TabRankingGrupo({ grupo, usuario }) {
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {historial.slice(-5).reverse().map((snap, i) => (
-                            <div key={i} style={{
-                                background: '#ffffff', border: '1px solid #e2e8f0',
-                                borderRadius: 10, padding: '10px 14px',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                            }}>
+                            <div key={i} className="g-card g-card--sm">
                                 <div style={{ fontSize: 10, color: '#64748b', marginBottom: 6 }}>
                                     {new Date(snap.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                 </div>

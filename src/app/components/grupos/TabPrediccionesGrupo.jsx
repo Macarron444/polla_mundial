@@ -40,36 +40,25 @@ function CardPartidoPrediccion({ partido, equipos, grupo, usuario, onGuardado })
 
     const col = PRED_COLOR[pred?.estado ?? 'PENDIENTE']
 
-    const inputStyle = (disabled) => ({
-        width: 48, textAlign: 'center', background: disabled ? '#f1f5f9' : '#ffffff',
-        border: `1px solid ${disabled ? '#e2e8f0' : '#c7d2fe'}`, color: '#1e293b',
-        fontSize: 18, fontWeight: 800, borderRadius: 8, padding: '6px 0',
-        fontFamily: 'inherit', opacity: disabled ? 0.6 : 1,
-    })
+    const inputStyle = () => ({})
 
     return (
-        <div style={{
-            background: '#ffffff', border: `1px solid ${pred ? '#c7d2fe' : '#e2e8f0'}`,
-            borderRadius: 12, padding: '16px 18px', marginBottom: 10,
-            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ fontSize: 10, color: '#64748b' }}>{partido.fecha} · {partido.fase}</div>
+        <div className={`g-pred-card${pred ? ' g-pred-card--activa' : ''}`}>
+            <div className="g-pred-card__meta">
+                <div className="g-pred-card__fecha">{partido.fecha} · {partido.fase}</div>
                 <BadgeEstado estado={partido.estado} />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#0f172a', textAlign: 'right' }}>
+            <div className="g-pred-card__equipos">
+                <span className="g-pred-card__equipo g-pred-card__equipo--left">
                     {local?.flag} {local?.nombre}
                 </span>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <input type="number" min="0" max="20" value={golesL} disabled={bloqueado}
-                        onChange={(e) => setGolesL(e.target.value)} style={inputStyle(bloqueado)} />
+                    <input type="number" min="0" max="20" value={golesL} disabled={bloqueado} onChange={(e) => setGolesL(e.target.value)} className="g-score-input" />
                     <span style={{ color: '#94a3b8', fontWeight: 700 }}>–</span>
-                    <input type="number" min="0" max="20" value={golesV} disabled={bloqueado}
-                        onChange={(e) => setGolesV(e.target.value)} style={inputStyle(bloqueado)} />
+                    <input type="number" min="0" max="20" value={golesV} disabled={bloqueado} onChange={(e) => setGolesV(e.target.value)} className="g-score-input" />
                 </div>
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                <span className="g-pred-card__equipo g-pred-card__equipo--right">
                     {visitante?.flag} {visitante?.nombre}
                 </span>
             </div>
@@ -92,7 +81,7 @@ function CardPartidoPrediccion({ partido, equipos, grupo, usuario, onGuardado })
             )}
 
             {bloqueado && pred && (
-                <div style={{ fontSize: 11, color: col.text, background: col.bg, padding: '6px 10px', borderRadius: 6 }}>
+                <div className="g-pred-card__result" style={{ color: col.text, background: col.bg }}>
                     Tu predicción: <strong>{pred.golesL} – {pred.golesV}</strong>
                     {pred.usaComodin && ' ⚡'} · {pred.estado} · {pred.pts} pts
                 </div>
@@ -127,12 +116,7 @@ function TabPrediccionesGrupo({ grupo, usuario, partidos, equipos }) {
                         </span>
                     )}
                 </div>
-                <div style={{
-                    fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-                    background: comodinUsado ? '#f1f5f9' : '#fffbeb',
-                    border: `1px solid ${comodinUsado ? '#e2e8f0' : '#fde68a'}`,
-                    color: comodinUsado ? '#94a3b8' : '#d97706',
-                }}>
+                <div className={`g-comodin ${comodinUsado ? 'g-comodin--usado' : 'g-comodin--disponible'}`}>
                     ⚡ Comodín {comodinUsado ? 'usado' : 'disponible'}
                 </div>
             </div>

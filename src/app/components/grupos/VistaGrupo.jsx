@@ -108,11 +108,7 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                 )}
             </div>
 
-            {error && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 11, padding: '8px 14px', borderRadius: 8, marginBottom: 14 }}>
-                    ⚠️ {error}
-                </div>
-            )}
+            {error && <div className="g-alert g-alert--error" style={{ marginBottom: 14 }}>⚠️ {error}</div>}
 
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
                 {tabs.map((t) => (
@@ -154,7 +150,7 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                         </div>
                     )}
 
-                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 18px', marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+                    <div className="g-card" style={{ marginBottom: 20 }}>
                         <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em', marginBottom: 8 }}>AGREGAR MIEMBRO</div>
                         <input
                             className="login-input"
@@ -163,14 +159,10 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                             onChange={(e) => setBusqueda(e.target.value)}
                         />
                         {resultadosBusqueda.map((u) => (
-                            <div key={u.id} style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                background: '#f8fafc', border: '1px solid #e2e8f0',
-                                borderRadius: 8, padding: '8px 12px', marginTop: 6,
-                            }}>
+                            <div key={u.id} className="g-card g-card--sm g-card--muted" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
                                 <div>
-                                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{u.nombre}</div>
-                                    <div style={{ fontSize: 10, color: '#64748b' }}>{u.email}</div>
+                                    <div className="g-member-name" style={{ fontSize: 12 }}>{u.nombre}</div>
+                                    <div className="g-member-email">{u.email}</div>
                                 </div>
                                 <button onClick={() => handleAgregar(u)} style={btnStyle('#2f9e44')}>+ Agregar</button>
                             </div>
@@ -186,27 +178,16 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                             const esMiSelf    = String(m.usuarioId) === String(usuario.id)
                             const esElCreador = String(m.usuarioId) === String(grupo.creadoPor)
                             return (
-                                <div key={m.usuarioId} style={{
-                                    background: esMiSelf ? '#eef2ff' : '#ffffff',
-                                    border: `1px solid ${esMiSelf ? '#c7d2fe' : '#e2e8f0'}`,
-                                    borderRadius: 10, padding: '12px 16px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                                }}>
+                                <div key={m.usuarioId} className={`g-member-row${esMiSelf ? ' g-member-row--me' : ''}`}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                                        <div style={{
-                                            width: 36, height: 36, borderRadius: '50%',
-                                            background: '#f1f5f9', border: '1px solid #e2e8f0',
-                                            display: 'flex', alignItems: 'center',
-                                            justifyContent: 'center', fontSize: 16, flexShrink: 0,
-                                        }}>
+                                        <div className="g-member-avatar">
                                             {esElCreador ? '👑' : m.rol === 'ADMIN' ? '🛡️' : '👤'}
                                         </div>
                                         <div>
-                                            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                                            <div className="g-member-name">
                                                 {m.nombre} {esMiSelf && <span style={{ fontSize: 10, color: '#3b5bdb' }}>(tú)</span>}
                                             </div>
-                                            <div style={{ fontSize: 10, color: '#64748b' }}>{m.email}</div>
+                                            <div className="g-member-email">{m.email}</div>
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -215,12 +196,7 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                                             <select
                                                 value={m.rol}
                                                 onChange={(e) => handleCambiarRol(m.usuarioId, e.target.value)}
-                                                style={{
-                                                    background: '#f8fafc', border: '1px solid #e2e8f0',
-                                                    color: '#1e293b', fontSize: 10, fontWeight: 700,
-                                                    padding: '4px 8px', borderRadius: 6,
-                                                    fontFamily: 'inherit', cursor: 'pointer',
-                                                }}
+                                                className="g-select" style={{ fontSize: 10, fontWeight: 700 }}
                                             >
                                                 <option value="ADMIN">ADMIN</option>
                                                 <option value="PARTICIPANTE">PARTICIPANTE</option>
