@@ -1,5 +1,3 @@
-// ── VERSIÓN AUTOGENERADA POR VITE EN CADA BUILD ───────────────────────────────
-// El hash cambia con cada deploy → el SW se actualiza automáticamente
 const CACHE_VERSION = '__VITE_BUILD_HASH__'
 const CACHE_APP     = `polla-mundial-app-${CACHE_VERSION}`
 const CACHE_API     = 'polla-mundial-api-v1'
@@ -14,7 +12,6 @@ const ASSETS_PRECACHE = [
   '/icon-512.png',
 ]
 
-// ── INSTALL: precachear assets esenciales ─────────────────────────────────────
 self.addEventListener('install', (event) => {
   self.skipWaiting()   // activar inmediatamente sin esperar a que se cierren pestañas
   event.waitUntil(
@@ -22,7 +19,6 @@ self.addEventListener('install', (event) => {
   )
 })
 
-// ── ACTIVATE: borrar cachés viejos ────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
   const cachesValidos = [CACHE_APP, CACHE_API, CACHE_DB]
   event.waitUntil(
@@ -36,16 +32,12 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-// ── FETCH: estrategias por tipo de recurso ────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
   const url = new URL(event.request.url)
   if (url.origin !== self.location.origin) return
 
-  // Peticiones a /db/ → network-first con caché offline
-  // Para GET: guarda en caché y sirve si hay fallo de red
-  // Para PUT/POST/DELETE: invalida el caché de la colección afectada
   if (url.pathname.startsWith('/db/')) {
     if (event.request.method === 'GET') {
       event.respondWith(networkFirstDB(event.request))
@@ -55,27 +47,19 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // API de football-data → network-first con fallback a caché
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirstAPI(event.request))
     return
   }
 
-  // Assets de Vite con hash en el nombre (/_assets/xxx.abc123.js)
-  // → cache-first porque el hash garantiza que son inmutables
   if (url.pathname.startsWith('/assets/')) {
     event.respondWith(cacheFirstInmutable(event.request))
     return
   }
 
-  // Todo lo demás (index.html, sw.js, manifest, etc.)
-  // → network-first: intenta la red, cae a caché si está offline
   event.respondWith(networkFirstApp(event.request))
 })
 
-// ── ESTRATEGIA: network-first para el APP ─────────────────────────────────────
-// Siempre intenta la red → el usuario siempre ve la versión más reciente
-// Solo usa caché si está offline
 async function networkFirstApp(request) {
   const cache = await caches.open(CACHE_APP)
   try {
@@ -93,8 +77,6 @@ async function networkFirstApp(request) {
   }
 }
 
-// ── ESTRATEGIA: cache-first para assets inmutables ────────────────────────────
-// Los archivos de /assets/ tienen hash → nunca cambian → siempre de caché
 async function cacheFirstInmutable(request) {
   const cached = await caches.match(request)
   if (cached) return cached
@@ -111,7 +93,7 @@ async function cacheFirstInmutable(request) {
   }
 }
 
-// ── ESTRATEGIA: network-first para API ───────────────────────────────────────
+
 async function networkFirstAPI(request) {
   const cache = await caches.open(CACHE_API)
   try {
@@ -136,7 +118,7 @@ async function networkFirstAPI(request) {
     )
   }
 }
-// ── ESTRATEGIA: network-first para /db/ (datos propios) ──────────────────────
+
 async function networkFirstDB(request) {
   const cache = await caches.open(CACHE_DB)
   try {
@@ -163,12 +145,10 @@ async function networkFirstDB(request) {
   }
 }
 
-// ── ESTRATEGIA: mutación /db/ → intentar red, invalidar caché relacionado ─────
 async function mutateDB(request) {
   try {
     const networkResponse = await fetch(request)
     if (networkResponse.ok) {
-      // Invalidar todos los GET de /db/ relacionados con esta ruta
       const cache = await caches.open(CACHE_DB)
       const keys  = await cache.keys()
       const base  = new URL(request.url).pathname.split('/').slice(0, 3).join('/')

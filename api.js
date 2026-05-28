@@ -1,10 +1,7 @@
-// ── ROUTER EXPRESS – endpoints /db/* ──────────────────────────────────────────
 import { Router } from 'express'
 
 const router = Router()
 
-// ── PERSISTENCIA EN SUPABASE ───────────────────────────────────────────────────
-// Las variables se leen en cada llamada para asegurar que estén disponibles
 const _SUPA_URL = process.env.SUPABASE_URL || 'https://quwevyntzaodwvudlpic.supabase.co'
 const _SUPA_KEY = process.env.SUPABASE_KEY || 'sb_publishable_OAn6X6ll6cPn3tm_XmbSkw_wbChsxHy'
 
@@ -44,9 +41,6 @@ function catchErr(res, e) {
     res.status(500).json({ error: e.message })
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  USUARIOS
-// ══════════════════════════════════════════════════════════════════════════════
 router.get('/usuarios/todos', async (req, res) => {
     try {
         const usuarios = await getColeccion('usuarios')
@@ -80,9 +74,6 @@ router.post('/usuarios/login', async (req, res) => {
     } catch (e) { catchErr(res, e) }
 })
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  GRUPOS
-// ══════════════════════════════════════════════════════════════════════════════
 router.get('/grupos', async (req, res) => {
     try {
         res.json(await getColeccion('grupos'))
@@ -108,9 +99,6 @@ router.delete('/grupos/:id', async (req, res) => {
     } catch (e) { catchErr(res, e) }
 })
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  PREDICCIONES GLOBALES
-// ══════════════════════════════════════════════════════════════════════════════
 router.get('/predicciones', async (req, res) => {
     try {
         res.json(await getColeccion('predicciones'))
@@ -136,9 +124,6 @@ router.post('/predicciones/bulk', async (req, res) => {
     } catch (e) { catchErr(res, e) }
 })
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  PREDICCIONES PERSONALES
-// ══════════════════════════════════════════════════════════════════════════════
 router.get('/predicciones-personales', async (req, res) => {
     try {
         res.json(await getColeccion('predicciones-personales'))
@@ -157,9 +142,6 @@ router.put('/predicciones-personales/:key', async (req, res) => {
     } catch (e) { catchErr(res, e) }
 })
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  COMENTARIOS
-// ══════════════════════════════════════════════════════════════════════════════
 router.get('/comentarios/:grupoId/:partidoId', async (req, res) => {
     try {
         const comentarios = await getColeccion('comentarios')
@@ -178,9 +160,6 @@ router.put('/comentarios/:grupoId/:partidoId', async (req, res) => {
     } catch (e) { catchErr(res, e) }
 })
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  SOLICITUDES
-// ══════════════════════════════════════════════════════════════════════════════
 router.get('/solicitudes', async (req, res) => {
     try {
         res.json(await getColeccion('solicitudes'))
@@ -198,9 +177,6 @@ router.put('/solicitudes/:id', async (req, res) => {
     } catch (e) { catchErr(res, e) }
 })
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  RANKING
-// ══════════════════════════════════════════════════════════════════════════════
 router.get('/ranking/:grupoId', async (req, res) => {
     try {
         const ranking = await getColeccion('ranking')

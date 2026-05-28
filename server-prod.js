@@ -1,4 +1,3 @@
-// ── SERVIDOR DE PRODUCCIÓN ────────────────────────────────────────────────────
 import express    from 'express'
 import cors       from 'cors'
 import { join, dirname } from 'path'
@@ -15,10 +14,8 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-// ── API interna (SQLite) ──────────────────────────────────────────────────────
 app.use('/db', apiRouter)
 
-// ── Proxy football-data.org ───────────────────────────────────────────────────
 import https from 'https'
 
 app.use('/api', (req, res) => {
@@ -36,7 +33,6 @@ app.use('/api', (req, res) => {
   proxy.end()
 })
 
-// ── Servir frontend (dist de Vite) ────────────────────────────────────────────
 app.use(express.static(join(__dirname, 'dist')))
 app.get('*splat', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'))
