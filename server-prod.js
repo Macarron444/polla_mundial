@@ -4,6 +4,8 @@ import cors       from 'cors'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import apiRouter  from './api.js'
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL)
+console.log('SUPABASE_KEY:', process.env.SUPABASE_KEY ? 'OK' : 'UNDEFINED')
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PORT      = process.env.PORT ?? 3000
