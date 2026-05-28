@@ -2,7 +2,14 @@ import { useOnlineStatus } from '../../shared/hooks/useOnlineStatus.js'
 import { ConnectionToast } from '../../shared/ui/index.jsx'
 
 function Header({ tab, setTab, usuario, onLogout }) {
-    const tabs = ['Partidos', 'Gestionar Partidos', 'Ranking', 'Mis Predicciones', 'Mis Grupos']
+    const esAdmin = usuario?.rol === 'CREADOR' || usuario?.rol === 'ADMINISTRADOR'
+    const tabs = [
+        'Partidos',
+        ...(esAdmin ? ['Gestionar Partidos'] : []),
+        'Ranking',
+        'Mis Predicciones',
+        'Mis Grupos',
+    ]
     const { online, toast, dismissToast } = useOnlineStatus()
 
     const rolIcon =
@@ -12,51 +19,63 @@ function Header({ tab, setTab, usuario, onLogout }) {
         <>
             <header className="header">
                 <div className="header__inner">
-                    {/* Fila 1: brand + usuario */}
-                    <div className="header__top">
-                        <div className="header__brand">
-                            <span className="header__logo">⚽</span>
-                            <div>
-                                <div className="header__title">Polla Mundial 2026</div>
-                                <div className="header__subtitle">FIFA WORLD CUP · PWA</div>
-                            </div>
-                            <div
+                    <div className="header__brand">
+                        <span className="header__logo">⚽</span>
+                        <div>
+                            <div className="header__title">Polla Mundial 2026</div>
+                            <div className="header__subtitle">FIFA WORLD CUP · PWA</div>
+                        </div>
+
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                background: online ? '#0d2010' : '#1a0d0d',
+                                border: `1px solid ${online ? '#2f9e44' : '#c92a2a'}`,
+                                borderRadius: 20,
+                                padding: '4px 12px',
+                                transition: 'all 0.4s ease',
+                            }}
+                        >
+                            <span
                                 style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 6,
-                                    background: online ? '#0d2010' : '#1a0d0d',
-                                    border: `1px solid ${online ? '#2f9e44' : '#c92a2a'}`,
-                                    borderRadius: 20,
-                                    padding: '4px 12px',
-                                    transition: 'all 0.4s ease',
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    flexShrink: 0,
+                                    background: online ? '#69db7c' : '#ff6b6b',
+                                    boxShadow: `0 0 ${online ? '6px #69db7c' : '6px #ff6b6b'}`,
+                                    animation: online ? 'none' : 'pulse 1.2s infinite',
+                                    transition: 'background 0.4s, box-shadow 0.4s',
+                                }}
+                            />
+                            <span
+                                style={{
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    letterSpacing: '0.07em',
+                                    color: online ? '#69db7c' : '#ff6b6b',
+                                    transition: 'color 0.4s',
                                 }}
                             >
-                                <span
-                                    style={{
-                                        width: 8,
-                                        height: 8,
-                                        borderRadius: '50%',
-                                        flexShrink: 0,
-                                        background: online ? '#69db7c' : '#ff6b6b',
-                                        boxShadow: `0 0 ${online ? '6px #69db7c' : '6px #ff6b6b'}`,
-                                        animation: online ? 'none' : 'pulse 1.2s infinite',
-                                        transition: 'background 0.4s, box-shadow 0.4s',
-                                    }}
-                                />
-                                <span
-                                    style={{
-                                        fontSize: 10,
-                                        fontWeight: 700,
-                                        letterSpacing: '0.07em',
-                                        color: online ? '#69db7c' : '#ff6b6b',
-                                        transition: 'color 0.4s',
-                                    }}
-                                >
-                                    {online ? 'EN LINEA' : 'SIN CONEXION'}
-                                </span>
-                            </div>
+                                {online ? 'EN LINEA' : 'SIN CONEXION'}
+                            </span>
                         </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <nav className="header__nav">
+                            {tabs.map((t) => (
+                                <button
+                                    key={t}
+                                    onClick={() => setTab(t)}
+                                    className={`nav-tab nav-tab--${tab === t ? 'active' : 'inactive'}`}
+                                >
+                                    {t}
+                                </button>
+                            ))}
+                        </nav>
 
                         {usuario && (
                             <div
@@ -66,7 +85,6 @@ function Header({ tab, setTab, usuario, onLogout }) {
                                     gap: 8,
                                     borderLeft: '1px solid #1e2a45',
                                     paddingLeft: 12,
-                                    flexShrink: 0,
                                 }}
                             >
                                 <div style={{ textAlign: 'right' }}>
@@ -98,19 +116,6 @@ function Header({ tab, setTab, usuario, onLogout }) {
                             </div>
                         )}
                     </div>
-
-                    {/* Fila 2: nav con scroll horizontal */}
-                    <nav className="header__nav">
-                        {tabs.map((t) => (
-                            <button
-                                key={t}
-                                onClick={() => setTab(t)}
-                                className={`nav-tab nav-tab--${tab === t ? 'active' : 'inactive'}`}
-                            >
-                                {t}
-                            </button>
-                        ))}
-                    </nav>
                 </div>
 
                 {!online && (

@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { BadgeEstado, ESTADOS_COLOR, StatCard, btnStyle } from '../../shared/ui/index.jsx'
 import { getEquipo } from '../../core/utils/teams.js'
 
-function TabPartidos({ partidos, setPartidos, equipos }) {
+function TabPartidos({ partidos, setPartidos, equipos, usuario }) {
+    const esAdmin = usuario?.rol === 'CREADOR' || usuario?.rol === 'ADMINISTRADOR'
     const [editId, setEditId] = useState(null)
     const [gl, setGl] = useState('')
     const [gv, setGv] = useState('')
@@ -140,7 +141,7 @@ function TabPartidos({ partidos, setPartidos, equipos }) {
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                     <BadgeEstado estado={p.estado} />
-                                    {isEdit ? (
+                                    {esAdmin && isEdit ? (
                                         <>
                                             <button onClick={() => saveResult(p)} style={btnStyle('#2f9e44')}>
                                                 ✓ Guardar
@@ -149,7 +150,7 @@ function TabPartidos({ partidos, setPartidos, equipos }) {
                                                 ✕
                                             </button>
                                         </>
-                                    ) : (
+                                    ) : esAdmin ? (
                                         <>
                                             {p.estado !== 'FINALIZADO' && (
                                                 <button onClick={() => avanzarEstado(p)} style={btnStyle('#3b5bdb')}>
@@ -169,7 +170,7 @@ function TabPartidos({ partidos, setPartidos, equipos }) {
                                                 </button>
                                             )}
                                         </>
-                                    )}
+                                    ) : null}
                                 </div>
                             </div>
                             <div className="partido-card__fecha">{p.fecha} · RF-05 / RF-15</div>

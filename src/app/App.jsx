@@ -10,6 +10,8 @@ import { FOOTBALL_API_KEY } from '../core/config/footballData.js'
 import { cargarDatosAPI } from '../core/api/footballDataApi.js'
 import { EQUIPOS_DEFAULT } from '../core/data/defaults.js'
 
+const esAdmin = (u) => u?.rol === 'CREADOR' || u?.rol === 'ADMINISTRADOR'
+
 function App() {
     const [usuario, setUsuario]         = useState(null)
     const [tab, setTab]                 = useState('Partidos')
@@ -71,12 +73,17 @@ function App() {
                       : '🌐 Sincronizar API'
 
     const tabContent = {
-        'Partidos':           <TabPartidos partidos={partidos} setPartidos={setPartidos} equipos={equipos} />,
-        'Gestionar Partidos': <TabGestionarPartidos partidos={partidos} setPartidos={setPartidos} equipos={equipos} />,
+        'Partidos':           <TabPartidos partidos={partidos} setPartidos={setPartidos} equipos={equipos} usuario={usuario} />,
+        ...(esAdmin(usuario) && {
+            'Gestionar Partidos': <TabGestionarPartidos partidos={partidos} setPartidos={setPartidos} equipos={equipos} />,
+        }),
         'Ranking':            <TabRanking usuario={usuario} />,
         'Mis Predicciones':   <TabPredicciones usuario={usuario} partidos={partidos} equipos={equipos} />,
         'Mis Grupos':         <TabGrupos usuario={usuario} partidos={partidos} equipos={equipos} />,
     }
+
+    // Si el tab activo ya no está disponible (ej: perdió permisos), volver a Partidos
+    const tabSeguro = tabContent[tab] ? tab : 'Partidos'
 
     return (
         <div style={{ background: '#060c18', minHeight: '100vh' }}>
@@ -105,7 +112,7 @@ function App() {
                 )}
             </div>
 
-            <main className="main-container">{tabContent[tab]}</main>
+            <main className="main-container">{tabContent[tabSeguro]}</main>
         </div>
     )
 }
