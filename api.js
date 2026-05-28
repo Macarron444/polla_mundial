@@ -28,17 +28,13 @@ async function getColeccion(nombre) {
     return rows[0]?.datos ?? []
 }
 
-async function getColeccion(nombre) {
-    const url = `${getApiUrl()}?nombre=eq.${encodeURIComponent(nombre)}&select=datos`
-    console.log('Fetching:', url)
-    const res = await fetch(url, { headers: getHeaders() })
-    if (!res.ok) {
-        const text = await res.text()
-        console.log('Error response:', text.substring(0, 200))
-        throw new Error(`Supabase read error ${res.status}`)
-    }
-    const rows = await res.json()
-    return rows[0]?.datos ?? []
+async function setColeccion(nombre, valor) {
+    const res = await fetch(`${getApiUrl()}?nombre=eq.${encodeURIComponent(nombre)}`, {
+        method:  'PATCH',
+        headers: getHeaders(),
+        body:    JSON.stringify({ datos: valor }),
+    })
+    if (!res.ok) throw new Error(`Supabase write error ${res.status}: ${await res.text()}`)
 }
 
 function catchErr(res, e) {
