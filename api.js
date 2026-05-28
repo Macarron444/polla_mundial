@@ -5,18 +5,20 @@ const router = Router()
 
 // ── PERSISTENCIA EN SUPABASE ───────────────────────────────────────────────────
 // Las variables se leen en cada llamada para asegurar que estén disponibles
+const _SUPA_URL = process.env.SUPABASE_URL || 'https://quwevyntzaodwvudlpic.supabase.co'
+const _SUPA_KEY = process.env.SUPABASE_KEY || 'sb_publishable_OAn6X6ll6cPn3tm_XmbSkw_wbChsxHy'
+
 function getHeaders() {
-    const key = process.env.SUPABASE_KEY
     return {
         'Content-Type': 'application/json',
-        'apikey':        key,
-        'Authorization': `Bearer ${key}`,
+        'apikey':        _SUPA_KEY,
+        'Authorization': `Bearer ${_SUPA_KEY}`,
         'Prefer':        'return=representation',
     }
 }
 
 function getApiUrl() {
-    return `${process.env.SUPABASE_URL}/rest/v1/colecciones`
+    return `${_SUPA_URL}/rest/v1/colecciones`
 }
 
 async function getColeccion(nombre) {
