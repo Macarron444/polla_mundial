@@ -3,6 +3,7 @@
 const CACHE_VERSION = '__VITE_BUILD_HASH__'
 const CACHE_APP     = `polla-mundial-app-${CACHE_VERSION}`
 const CACHE_API     = 'polla-mundial-api-v1'
+const CACHE_DB      = 'polla-mundial-db-v1'
 
 const ASSETS_PRECACHE = [
   '/',
@@ -23,7 +24,7 @@ self.addEventListener('install', (event) => {
 
 // ── ACTIVATE: borrar cachés viejos ────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
-  const cachesValidos = [CACHE_APP, CACHE_API]
+  const cachesValidos = [CACHE_APP, CACHE_API, CACHE_DB]
   event.waitUntil(
     caches.keys().then((nombres) =>
       Promise.all(
@@ -41,6 +42,18 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url)
   if (url.origin !== self.location.origin) return
+
+  // Peticiones a /db/ → network-first con caché offline
+  // Para GET: guarda en caché y sirve si hay fallo de red
+  // Para PUT/POST/DELETE: invalida el caché de la colección afectada
+  if (url.pathname.startsWith('/db/')) {
+    if (event.request.method === 'GET') {
+      event.respondWith(networkFirstDB(event.request))
+    } else {
+      event.respondWith(mutateDB(event.request))
+    }
+    return
+  }
 
   // API de football-data → network-first con fallback a caché
   if (url.pathname.startsWith('/api/')) {
@@ -119,6 +132,56 @@ async function networkFirstAPI(request) {
     if (cached) return cached
     return new Response(
       JSON.stringify({ error: 'Sin conexión y sin datos en caché', offline: true }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
+}
+// ── ESTRATEGIA: network-first para /db/ (datos propios) ──────────────────────
+async function networkFirstDB(request) {
+  const cache = await caches.open(CACHE_DB)
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse.ok) {
+      cache.put(request, networkResponse.clone())
+    }
+    return networkResponse
+  } catch {
+    const cached = await cache.match(request)
+    if (cached) {
+      // Clonar con header que indica que viene del caché
+      const body = await cached.clone().arrayBuffer()
+      return new Response(body, {
+        status: cached.status,
+        statusText: cached.statusText,
+        headers: { ...Object.fromEntries(cached.headers), 'sw-from-cache': 'true' },
+      })
+    }
+    return new Response(
+      JSON.stringify({ error: 'Sin conexión y sin datos en caché', offline: true }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
+}
+
+// ── ESTRATEGIA: mutación /db/ → intentar red, invalidar caché relacionado ─────
+async function mutateDB(request) {
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse.ok) {
+      // Invalidar todos los GET de /db/ relacionados con esta ruta
+      const cache = await caches.open(CACHE_DB)
+      const keys  = await cache.keys()
+      const base  = new URL(request.url).pathname.split('/').slice(0, 3).join('/')
+      await Promise.all(
+        keys
+          .filter((k) => new URL(k.url).pathname.startsWith(base))
+          .map((k) => cache.delete(k))
+      )
+    }
+    return networkResponse
+  } catch {
+    return new Response(
+      JSON.stringify({ error: 'Sin conexión — cambio no guardado', offline: true }),
       { status: 503, headers: { 'Content-Type': 'application/json' } }
     )
   }
