@@ -14,6 +14,7 @@ import {
 } from '../../../core/storage/grupos.js'
 import { obtenerTodosUsuarios } from '../../../core/storage/usuarios.js'
 import { getSolicitudesPorGrupo } from '../../../core/storage/solicitudes.js'
+import { esSuperAdminPorEmail } from '../../../core/constants/superadmin.js'
 
 const TABS_MIEMBRO = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', 'Global']
 const TABS_ADMIN   = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', 'Global', 'Miembros', 'Apuesta', 'Invitar']
@@ -44,6 +45,7 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
 
     useEffect(() => {
         if (!esAdmin) return
+        // obtenerTodosUsuarios ya filtra el superadmin internamente
         obtenerTodosUsuarios()
             .then((us) => setUsuariosDisponibles(us.filter(
                 (u) => !grupo.miembros.some((m) => String(m.usuarioId) === String(u.id))
@@ -80,9 +82,11 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
         catch (e) { setError(e.message) }
     }
 
+    // Miembros visibles: excluir superadmin de la lista que ven los usuarios
+    const miembrosVisibles = grupo.miembros.filter((m) => !esSuperAdminPorEmail(m.email))
+
     return (
         <div>
-            {/* Cabecera */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
                 <button onClick={() => onVolver()} style={btnStyle('#4a6fa5')}>← Volver</button>
                 <div style={{ flex: 1 }}>
@@ -110,7 +114,6 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                 </div>
             )}
 
-            {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
                 {tabs.map((t) => (
                     <button key={t} onClick={() => setTabActiva(t)} style={{
@@ -174,11 +177,12 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
                         ))}
                     </div>
 
+                    {/* Conteo visible excluye al superadmin */}
                     <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em', marginBottom: 10 }}>
-                        MIEMBROS ({grupo.miembros.length})
+                        MIEMBROS ({miembrosVisibles.length})
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {grupo.miembros.map((m) => {
+                        {miembrosVisibles.map((m) => {
                             const esMiSelf    = String(m.usuarioId) === String(usuario.id)
                             const esElCreador = String(m.usuarioId) === String(grupo.creadoPor)
                             return (

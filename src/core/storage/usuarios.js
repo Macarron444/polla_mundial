@@ -1,4 +1,5 @@
 import { get, post } from './httpClient.js'
+import { filtrarSuperAdmin, esSuperAdminPorEmail } from '../constants/superadmin.js'
 
 export async function getUsuarioPorEmail(email) {
     const todos = await get('/usuarios/todos')
@@ -11,7 +12,8 @@ export async function getUsuarioPorId(id) {
 }
 
 export async function obtenerTodosUsuarios() {
-    return get('/usuarios/todos')
+    const todos = await get('/usuarios/todos')
+    return filtrarSuperAdmin(todos)
 }
 
 export async function registrarUsuario(nuevoUsuario) {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getPredicionesPorGrupo } from '../../../core/storage/prediccionesGrupo.js'
+import { esSuperAdminPorEmail } from '../../../core/constants/superadmin.js'
 
 function BarraProgreso({ valor, total, color }) {
     const pct = total > 0 ? Math.round((valor / total) * 100) : 0
@@ -48,18 +49,21 @@ function TabEstadisticasGrupo({ grupo, usuario }) {
     }
 
     const resueltas = preds.filter((p) => p.estado !== 'PENDIENTE')
-    const miembros  = Array.isArray(grupo.miembros) ? grupo.miembros : []
+
+    // Excluir superadmin de la lista de miembros visible
+    const miembros = (Array.isArray(grupo.miembros) ? grupo.miembros : [])
+        .filter((m) => !esSuperAdminPorEmail(m.email))
 
     const statsPorUsuario = miembros.map((m) => {
-        const mias       = preds.filter((p) => String(p.usuarioId) === String(m.usuarioId))
-        const exactas    = mias.filter((p) => p.estado === 'EXACTA').length
-        const correctas  = mias.filter((p) => p.estado === 'CORRECTA').length
-        const fallidas   = mias.filter((p) => p.estado === 'FALLIDA').length
-        const pendientes = mias.filter((p) => p.estado === 'PENDIENTE').length
-        const pts        = mias.reduce((s, p) => s + (p.pts ?? 0), 0)
-        const total      = exactas + correctas + fallidas
+        const mias        = preds.filter((p) => String(p.usuarioId) === String(m.usuarioId))
+        const exactas     = mias.filter((p) => p.estado === 'EXACTA').length
+        const correctas   = mias.filter((p) => p.estado === 'CORRECTA').length
+        const fallidas    = mias.filter((p) => p.estado === 'FALLIDA').length
+        const pendientes  = mias.filter((p) => p.estado === 'PENDIENTE').length
+        const pts         = mias.reduce((s, p) => s + (p.pts ?? 0), 0)
+        const total       = exactas + correctas + fallidas
         const efectividad = total > 0 ? Math.round(((exactas + correctas) / total) * 100) : 0
-        const usaComodin = mias.some((p) => p.usaComodin)
+        const usaComodin  = mias.some((p) => p.usaComodin)
         return { ...m, exactas, correctas, fallidas, pendientes, pts, efectividad, total, usaComodin }
     }).sort((a, b) => b.efectividad - a.efectividad)
 
@@ -68,16 +72,15 @@ function TabEstadisticasGrupo({ grupo, usuario }) {
 
     return (
         <div>
-            {/* Resumen global */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
                 {[
-                    { label: 'PREDICCIONES', val: preds.length,                     color: '#3b5bdb' },
-                    { label: 'RESUELTAS',    val: resueltas.length,                 color: '#16a34a' },
-                    { label: 'PENDIENTES',   val: preds.length - resueltas.length,  color: '#d97706' },
+                    { label: 'PREDICCIONES', val: preds.length,                    color: '#3b5bdb' },
+                    { label: 'RESUELTAS',    val: resueltas.length,                color: '#16a34a' },
+                    { label: 'PENDIENTES',   val: preds.length - resueltas.length, color: '#d97706' },
                 ].map((s) => (
                     <div key={s.label} style={{
                         flex: 1, minWidth: 100, background: '#ffffff',
-                        border: `1px solid #e2e8f0`, borderRadius: 10, padding: '12px 16px',
+                        border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 16px',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
                     }}>
                         <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', letterSpacing: '0.07em' }}>{s.label}</div>
@@ -86,7 +89,6 @@ function TabEstadisticasGrupo({ grupo, usuario }) {
                 ))}
             </div>
 
-            {/* Curiosidades */}
             {mejorExacto?.exactas > 0 && (
                 <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 11, color: '#166534' }}>
                     🎯 Mejor marcador exacto: <strong>{mejorExacto.nombre}</strong> con {mejorExacto.exactas} exactas

@@ -1,11 +1,14 @@
 import { get, post } from './httpClient.js'
 import { getPredicionesPorGrupo } from './prediccionesGrupo.js'
+import { esSuperAdminPorEmail } from '../constants/superadmin.js'
 
 export async function calcularRanking(grupo) {
     const preds = await getPredicionesPorGrupo(grupo.id)
     const mapa  = {}
 
-    grupo.miembros.forEach((m) => {
+    const miembrosVisibles = grupo.miembros.filter((m) => !esSuperAdminPorEmail(m.email))
+
+    miembrosVisibles.forEach((m) => {
         mapa[m.usuarioId] = {
             usuarioId: m.usuarioId,
             nombre: m.nombre,
