@@ -10,10 +10,10 @@ function FilaPrediccion({ pred }) {
     return (
         <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '8px 12px', borderBottom: '1px solid #0d1628',
+            padding: '8px 12px', borderBottom: '1px solid #f1f5f9',
         }}>
-            <span style={{ fontSize: 12, color: '#e2e8f0', flex: 1 }}>{pred.nombre ?? pred.usuarioId}</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', width: 60, textAlign: 'center' }}>
+            <span style={{ fontSize: 12, color: '#1e293b', flex: 1 }}>{pred.nombre ?? pred.usuarioId}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', width: 60, textAlign: 'center' }}>
                 {pred.golesL} – {pred.golesV} {pred.usaComodin ? '⚡' : ''}
             </span>
             <span style={{
@@ -27,14 +27,14 @@ function FilaPrediccion({ pred }) {
 }
 
 function CardPartidoHistorial({ partido, equipos, grupo, esAdmin, onResuelto }) {
-    const [golesLR, setGolesLR] = useState(partido.golesL ?? '')
-    const [golesVR, setGolesVR] = useState(partido.golesV ?? '')
+    const [golesLR, setGolesLR]     = useState(partido.golesL ?? '')
+    const [golesVR, setGolesVR]     = useState(partido.golesV ?? '')
     const [resolviendo, setResolviendo] = useState(false)
-    const [msg, setMsg] = useState('')
+    const [msg, setMsg]             = useState('')
 
-    const local = equipos.find((e) => e.id === partido.local)
+    const local     = equipos.find((e) => e.id === partido.local)
     const visitante = equipos.find((e) => e.id === partido.visitante)
-    const preds = getPredicionesPorGrupoPartido(grupo.id, partido.id)
+    const preds     = getPredicionesPorGrupoPartido(grupo.id, partido.id)
     const yaFinalizado = partido.estado === 'FINALIZADO'
 
     const handleResolver = () => {
@@ -48,17 +48,18 @@ function CardPartidoHistorial({ partido, equipos, grupo, esAdmin, onResuelto }) 
 
     return (
         <div style={{
-            background: '#0d1628', border: '1px solid #1e2a45',
+            background: '#ffffff', border: '1px solid #e2e8f0',
             borderRadius: 12, marginBottom: 12, overflow: 'hidden',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
         }}>
             <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 10, color: '#4a6fa5', marginBottom: 4 }}>{partido.fecha} · {partido.fase}</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#e2e8f0' }}>
+                    <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4 }}>{partido.fecha} · {partido.fase}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
                         {local?.flag} {local?.nombre} vs {visitante?.flag} {visitante?.nombre}
                     </div>
                     {yaFinalizado && (
-                        <div style={{ fontSize: 16, fontWeight: 800, color: '#69db7c', marginTop: 4 }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: '#16a34a', marginTop: 4 }}>
                             Resultado: {partido.golesL} – {partido.golesV}
                         </div>
                     )}
@@ -72,22 +73,22 @@ function CardPartidoHistorial({ partido, equipos, grupo, esAdmin, onResuelto }) 
             </div>
 
             {resolviendo && (
-                <div style={{ padding: '12px 16px', background: '#060c18', borderTop: '1px solid #1e2a45', display: 'flex', gap: 10, alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: '#4a6fa5' }}>{local?.nombre}</span>
+                <div style={{ padding: '12px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, color: '#475569' }}>{local?.nombre}</span>
                     <input type="number" min="0" max="20" value={golesLR} onChange={(e) => setGolesLR(e.target.value)}
-                        style={{ width: 48, textAlign: 'center', background: '#0d1628', border: '1px solid #3b5bdb', color: '#e2e8f0', fontSize: 16, fontWeight: 800, borderRadius: 6, padding: '4px 0', fontFamily: 'inherit' }} />
-                    <span style={{ color: '#4a6fa5', fontWeight: 700 }}>–</span>
+                        style={{ width: 48, textAlign: 'center', background: '#ffffff', border: '1px solid #c7d2fe', color: '#1e293b', fontSize: 16, fontWeight: 800, borderRadius: 6, padding: '4px 0', fontFamily: 'inherit' }} />
+                    <span style={{ color: '#475569', fontWeight: 700 }}>–</span>
                     <input type="number" min="0" max="20" value={golesVR} onChange={(e) => setGolesVR(e.target.value)}
-                        style={{ width: 48, textAlign: 'center', background: '#0d1628', border: '1px solid #3b5bdb', color: '#e2e8f0', fontSize: 16, fontWeight: 800, borderRadius: 6, padding: '4px 0', fontFamily: 'inherit' }} />
-                    <span style={{ fontSize: 12, color: '#4a6fa5' }}>{visitante?.nombre}</span>
+                        style={{ width: 48, textAlign: 'center', background: '#ffffff', border: '1px solid #c7d2fe', color: '#1e293b', fontSize: 16, fontWeight: 800, borderRadius: 6, padding: '4px 0', fontFamily: 'inherit' }} />
+                    <span style={{ fontSize: 12, color: '#475569' }}>{visitante?.nombre}</span>
                     <button onClick={handleResolver} style={btnStyle('#2f9e44')}>✓ Confirmar</button>
-                    {msg && <span style={{ fontSize: 11, color: '#69db7c' }}>{msg}</span>}
+                    {msg && <span style={{ fontSize: 11, color: '#16a34a' }}>{msg}</span>}
                 </div>
             )}
 
             {preds.length > 0 && (
-                <div style={{ borderTop: '1px solid #1e2a45' }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', padding: '8px 12px' }}>
+                <div style={{ borderTop: '1px solid #f1f5f9' }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em', padding: '8px 12px' }}>
                         PREDICCIONES ({preds.length})
                     </div>
                     {preds.map((p) => <FilaPrediccion key={p.usuarioId} pred={p} />)}
@@ -99,28 +100,30 @@ function CardPartidoHistorial({ partido, equipos, grupo, esAdmin, onResuelto }) 
 
 function TabHistorialGrupo({ grupo, usuario, partidos, equipos }) {
     const [refresh, setRefresh] = useState(0)
-    const esAdmin = getRolEnGrupo(grupo, usuario.id) === 'ADMIN'
+    const esAdmin     = getRolEnGrupo(grupo, usuario.id) === 'ADMIN'
     const finalizados = partidos.filter((p) => p.estado === 'FINALIZADO')
-    const enCurso = partidos.filter((p) => p.estado === 'EN_CURSO')
+    const enCurso     = partidos.filter((p) => p.estado === 'EN_CURSO')
     const programados = partidos.filter((p) => p.estado === 'PROGRAMADO')
+
+    const sectionLabel = (color) => ({ fontSize: 9, fontWeight: 700, color, letterSpacing: '0.07em', marginBottom: 10 })
 
     return (
         <div key={refresh}>
             {enCurso.length > 0 && (
                 <>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#69db7c', letterSpacing: '0.07em', marginBottom: 10 }}>EN CURSO</div>
+                    <div style={sectionLabel('#16a34a')}>EN CURSO</div>
                     {enCurso.map((p) => <CardPartidoHistorial key={p.id} partido={p} equipos={equipos} grupo={grupo} esAdmin={esAdmin} onResuelto={() => setRefresh(r => r + 1)} />)}
                 </>
             )}
             {programados.length > 0 && (
                 <>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#748ffc', letterSpacing: '0.07em', marginBottom: 10, marginTop: enCurso.length ? 16 : 0 }}>PRÓXIMOS</div>
+                    <div style={{ ...sectionLabel('#3b5bdb'), marginTop: enCurso.length ? 16 : 0 }}>PRÓXIMOS</div>
                     {programados.map((p) => <CardPartidoHistorial key={p.id} partido={p} equipos={equipos} grupo={grupo} esAdmin={esAdmin} onResuelto={() => setRefresh(r => r + 1)} />)}
                 </>
             )}
             {finalizados.length > 0 && (
                 <>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#555', letterSpacing: '0.07em', marginBottom: 10, marginTop: 16 }}>FINALIZADOS</div>
+                    <div style={{ ...sectionLabel('#94a3b8'), marginTop: 16 }}>FINALIZADOS</div>
                     {finalizados.map((p) => <CardPartidoHistorial key={p.id} partido={p} equipos={equipos} grupo={grupo} esAdmin={esAdmin} onResuelto={() => setRefresh(r => r + 1)} />)}
                 </>
             )}

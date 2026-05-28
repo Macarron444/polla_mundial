@@ -1,6 +1,6 @@
 const ROL_META = {
-    ADMIN: { label: 'ADMIN', icon: '🛡️', color: '#748ffc', bg: '#1a1e3a' },
-    PARTICIPANTE: { label: 'PARTICIPANTE', icon: '👤', color: '#4a6fa5', bg: '#0d1628' },
+    ADMIN:        { label: 'ADMIN',        icon: '🛡️', color: '#3b5bdb', bg: '#eef2ff', border: '#c7d2fe' },
+    PARTICIPANTE: { label: 'PARTICIPANTE', icon: '👤', color: '#475569', bg: '#f1f5f9', border: '#cbd5e1' },
 }
 
 function BadgeMiembro({ rol }) {
@@ -8,11 +8,11 @@ function BadgeMiembro({ rol }) {
     return (
         <span style={{
             background: m.bg,
-            border: `1px solid ${m.color}44`,
+            border: `1px solid ${m.border}`,
             color: m.color,
             fontSize: 9,
             fontWeight: 700,
-            padding: '2px 8px',
+            padding: '3px 9px',
             borderRadius: 20,
             letterSpacing: '0.07em',
         }}>

@@ -93,29 +93,29 @@ function TabGrupos({ usuario, partidos, equipos }) {
     return (
         <div className="tab-section">
             <div className="stat-cards">
-                <StatCard label="MIS GRUPOS"       value={grupos.length}                accent="#748ffc" />
-                <StatCard label="SOY ADMIN"         value={gruposComoAdmin.length}        accent="#ffd43b" />
-                <StatCard label="SOY PARTICIPANTE"  value={gruposComoParticipante.length} accent="#69db7c" />
+                <StatCard label="MIS GRUPOS"       value={grupos.length}                accent="#3b5bdb" />
+                <StatCard label="SOY ADMIN"         value={gruposComoAdmin.length}        accent="#d97706" />
+                <StatCard label="SOY PARTICIPANTE"  value={gruposComoParticipante.length} accent="#16a34a" />
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
                 <button onClick={() => setCreando(true)} style={btnStyle('#3b5bdb')}>+ Crear grupo</button>
                 <button onClick={() => { setVerToken(!verToken); setTokenMsg(''); setTokenError('') }}
-                    style={btnStyle(verToken ? '#748ffc' : '#2a3a5a')}>
+                    style={btnStyle(verToken ? '#3b5bdb' : '#64748b')}>
                     🔑 {verToken ? 'Ocultar' : 'Unirse con código'}
                 </button>
                 <button onClick={() => setVerPublicos(!verPublicos)}
-                    style={btnStyle(verPublicos ? '#748ffc' : '#2a3a5a')}>
+                    style={btnStyle(verPublicos ? '#3b5bdb' : '#64748b')}>
                     🌐 {verPublicos ? 'Ocultar públicos' : 'Ver grupos públicos'}
                 </button>
             </div>
 
             {verToken && (
-                <div style={{ background: '#0d1628', border: '1px solid #3b5bdb44', borderRadius: 12, padding: '16px 18px', marginBottom: 20 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#748ffc', marginBottom: 12, letterSpacing: '0.05em' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #c7d2fe', borderRadius: 12, padding: '16px 18px', marginBottom: 20, boxShadow: '0 2px 8px rgba(59,91,219,0.08)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#3b5bdb', marginBottom: 12, letterSpacing: '0.05em' }}>
                         🔑 UNIRSE A UN GRUPO PRIVADO
                     </div>
-                    <div style={{ fontSize: 10, color: '#4a6fa5', marginBottom: 12 }}>
+                    <div style={{ fontSize: 10, color: '#64748b', marginBottom: 12 }}>
                         Ingresa el código que te compartió el administrador del grupo.
                     </div>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -127,9 +127,9 @@ function TabGrupos({ usuario, partidos, equipos }) {
                             maxLength={10}
                             style={{
                                 flex: 1, minWidth: 160,
-                                background: '#060c18', border: '1px solid #3b5bdb55',
+                                background: '#f8fafc', border: '1px solid #c7d2fe',
                                 borderRadius: 8, padding: '8px 14px',
-                                color: '#748ffc', fontSize: 18, fontWeight: 800,
+                                color: '#1e293b', fontSize: 18, fontWeight: 800,
                                 letterSpacing: '0.15em', textTransform: 'uppercase',
                                 fontFamily: 'inherit',
                             }}
@@ -138,13 +138,13 @@ function TabGrupos({ usuario, partidos, equipos }) {
                         <button onClick={() => { setVerToken(false); setToken(''); setTokenMsg(''); setTokenError('') }}
                             style={btnStyle('#555')}>✕</button>
                     </div>
-                    {tokenError && <div style={{ fontSize: 11, color: '#ff8787', marginTop: 10 }}>⚠️ {tokenError}</div>}
-                    {tokenMsg   && <div style={{ fontSize: 11, color: '#69db7c', marginTop: 10 }}>{tokenMsg}</div>}
+                    {tokenError && <div style={{ fontSize: 11, color: '#dc2626', marginTop: 10 }}>⚠️ {tokenError}</div>}
+                    {tokenMsg   && <div style={{ fontSize: 11, color: '#16a34a', marginTop: 10 }}>{tokenMsg}</div>}
                 </div>
             )}
 
             {tokenMsg && !verToken && (
-                <div style={{ fontSize: 11, color: '#69db7c', marginBottom: 14 }}>{tokenMsg}</div>
+                <div style={{ fontSize: 11, color: '#16a34a', marginBottom: 14 }}>{tokenMsg}</div>
             )}
 
             {verPublicos && (
@@ -154,22 +154,21 @@ function TabGrupos({ usuario, partidos, equipos }) {
             )}
 
             {!cargando && grupos.length === 0 && !verPublicos && !verToken && (
-                <div style={{ background: '#0d1628', border: '1px solid #1e2a45', borderRadius: 12, padding: '36px 24px', textAlign: 'center' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '36px 24px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                     <div style={{ fontSize: 36, marginBottom: 12 }}>🏆</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', marginBottom: 8 }}>Aún no tienes grupos</div>
-                    <div style={{ fontSize: 11, color: '#4a6fa5', marginBottom: 16 }}>Crea uno, únete con un código o busca grupos públicos.</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Aún no tienes grupos</div>
+                    <div style={{ fontSize: 11, color: '#64748b', marginBottom: 16 }}>Crea uno, únete con un código o busca grupos públicos.</div>
                     <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                         <button onClick={() => setCreando(true)} style={btnStyle('#3b5bdb')}>+ Crear grupo</button>
                         <button onClick={() => setVerToken(true)} style={btnStyle('#748ffc')}>🔑 Tengo un código</button>
-                        <button onClick={() => setVerPublicos(true)} style={btnStyle('#2a3a5a')}>🌐 Ver públicos</button>
+                        <button onClick={() => setVerPublicos(true)} style={btnStyle('#64748b')}>🌐 Ver públicos</button>
                     </div>
                 </div>
             )}
 
-            {/* Grupos como admin */}
             {gruposComoAdmin.length > 0 && (
                 <>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 10 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em', marginBottom: 10 }}>
                         GRUPOS QUE ADMINISTRO
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
@@ -180,10 +179,9 @@ function TabGrupos({ usuario, partidos, equipos }) {
                 </>
             )}
 
-            {/* Grupos como participante */}
             {gruposComoParticipante.length > 0 && (
                 <>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 10 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em', marginBottom: 10 }}>
                         GRUPOS EN LOS QUE PARTICIPO
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

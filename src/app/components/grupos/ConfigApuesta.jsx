@@ -33,10 +33,7 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
 
     useEffect(() => {
         const fasesDisponibles = [...new Set(partidos.map((p) => p.fase || 'Sin fase'))]
-        if (fasesDisponibles.length === 0) {
-            if (faseActiva) setFaseActiva('')
-            return
-        }
+        if (fasesDisponibles.length === 0) { if (faseActiva) setFaseActiva(''); return }
         if (!fasesDisponibles.includes(faseActiva)) setFaseActiva(fasesDisponibles[0])
     }, [partidos, faseActiva])
 
@@ -46,9 +43,7 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
             const { equipos: eq, partidos: ps } = await cargarDatosAPI()
             setEquipos(eq)
             setPartidos(ps)
-            if (grupo.partidosSeleccionados?.length > 0) {
-                setSeleccionados(new Set(grupo.partidosSeleccionados))
-            }
+            if (grupo.partidosSeleccionados?.length > 0) setSeleccionados(new Set(grupo.partidosSeleccionados))
         } catch (e) {
             setError('No se pudo cargar la API. Verifica tu conexion.')
         }
@@ -60,18 +55,18 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
         const numPartidos = grupo.partidosSeleccionados?.length ?? 0
         return (
             <div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 14 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em', marginBottom: 14 }}>
                     APUESTA DEL GRUPO
                 </div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
                     {[
-                        { label: 'APUESTA POR PERSONA', val: `$${(grupo.montoApuesta ?? 0).toLocaleString('es-CO')}`, color: '#ffd43b' },
-                        { label: 'CAJA TOTAL',          val: `$${total.toLocaleString('es-CO')}`,                      color: '#69db7c' },
-                        { label: 'PREMIACION',          val: grupo.premiacion === 'TODO_AL_PRIMERO' ? '1er lugar' : 'Top 3', color: '#748ffc' },
-                        { label: 'PARTIDOS',            val: numPartidos,                                              color: '#a9e34b' },
+                        { label: 'APUESTA POR PERSONA', val: `$${(grupo.montoApuesta ?? 0).toLocaleString('es-CO')}`, color: '#d97706' },
+                        { label: 'CAJA TOTAL',          val: `$${total.toLocaleString('es-CO')}`,                      color: '#16a34a' },
+                        { label: 'PREMIACIÓN',          val: grupo.premiacion === 'TODO_AL_PRIMERO' ? '1er lugar' : 'Top 3', color: '#3b5bdb' },
+                        { label: 'PARTIDOS',            val: numPartidos,                                              color: '#0891b2' },
                     ].map((s) => (
-                        <div key={s.label} style={{ flex: 1, minWidth: 120, background: '#0d1628', border: `1px solid ${s.color}33`, borderRadius: 10, padding: '14px 16px' }}>
-                            <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em' }}>{s.label}</div>
+                        <div key={s.label} style={{ flex: 1, minWidth: 120, background: '#ffffff', border: `1px solid #e2e8f0`, borderRadius: 10, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+                            <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', letterSpacing: '0.07em' }}>{s.label}</div>
                             <div style={{ fontSize: 18, fontWeight: 800, color: s.color, marginTop: 4 }}>{s.val}</div>
                         </div>
                     ))}
@@ -132,57 +127,55 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
         setSeleccionados(nuevo)
     }
 
+    const labelStyle = { display: 'block', fontSize: 9, fontWeight: 700, color: '#64748b', letterSpacing: '0.07em', marginBottom: 6 }
+
     return (
         <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 14 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em', marginBottom: 14 }}>
                 CONFIGURAR APUESTA
             </div>
 
             <div className="apuesta-grid">
-                <div className="apuesta-panel">
+                <div className="apuesta-panel" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '18px 20px' }}>
                     <div style={{ marginBottom: 14 }}>
-                        <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 6 }}>
-                            MONTO POR PERSONA (COP)
-                        </label>
+                        <label style={labelStyle}>MONTO POR PERSONA (COP)</label>
                         <input type="number" min="0" className="login-input"
                             placeholder="Ej: 10000"
                             value={monto} onChange={(e) => setMonto(e.target.value)} />
                         {monto > 0 && (
-                            <div style={{ fontSize: 11, color: '#69db7c', marginTop: 6 }}>
+                            <div style={{ fontSize: 11, color: '#16a34a', marginTop: 6 }}>
                                 Caja total con {grupo.miembros.length} miembros: <strong>${total.toLocaleString('es-CO')}</strong>
                             </div>
                         )}
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 8 }}>
-                            DISTRIBUCION DEL PREMIO
-                        </label>
+                        <label style={labelStyle}>DISTRIBUCIÓN DEL PREMIO</label>
                         {[
                             { val: 'TODO_AL_PRIMERO', label: 'Todo al 1er lugar', desc: `$${total.toLocaleString('es-CO')}` },
                             { val: 'TOP_3',           label: 'Top 3',             desc: '60% / 30% / 10%' },
                         ].map((op) => (
                             <label key={op.val} style={{
                                 display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 10,
-                                background: premiacion === op.val ? '#0f1e3a' : 'transparent',
-                                border: `1px solid ${premiacion === op.val ? '#3b5bdb' : '#1e2a45'}`,
+                                background: premiacion === op.val ? '#eef2ff' : '#f8fafc',
+                                border: `1px solid ${premiacion === op.val ? '#818cf8' : '#e2e8f0'}`,
                                 borderRadius: 8, padding: '10px 14px',
                             }}>
                                 <input type="radio" name="premiacion" value={op.val}
                                     checked={premiacion === op.val}
                                     onChange={(e) => setPremiacion(e.target.value)} />
                                 <div>
-                                    <div style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0' }}>{op.label}</div>
-                                    <div style={{ fontSize: 10, color: '#4a6fa5' }}>{op.desc}</div>
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>{op.label}</div>
+                                    <div style={{ fontSize: 10, color: '#64748b' }}>{op.desc}</div>
                                 </div>
                             </label>
                         ))}
                     </div>
                 </div>
 
-                <div className="apuesta-panel apuesta-panel--partidos">
+                <div className="apuesta-panel apuesta-panel--partidos" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '18px 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em' }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em' }}>
                             PARTIDOS DEL GRUPO ({seleccionados.size}/{partidos.length})
                         </div>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -197,9 +190,7 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
                         </div>
                     </div>
 
-                    <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 6 }}>
-                        FASE
-                    </label>
+                    <label style={labelStyle}>FASE</label>
                     <select className="apuesta-select" value={faseActual} onChange={(e) => setFaseActiva(e.target.value)} disabled={fases.length === 0}>
                         {fases.map((fase) => (
                             <option key={fase} value={fase}>{fase} ({porFase[fase].length})</option>
@@ -208,7 +199,7 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
 
                     {faseActual && (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, margin: '12px 0 10px', flexWrap: 'wrap' }}>
-                            <div style={{ fontSize: 10, color: '#748ffc', fontWeight: 700 }}>
+                            <div style={{ fontSize: 10, color: '#3b5bdb', fontWeight: 700 }}>
                                 {faseActual}: {seleccionadosFase}/{partidosFase.length} seleccionados
                             </div>
                             <div style={{ display: 'flex', gap: 6 }}>
@@ -221,13 +212,13 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
                     )}
 
                     {cargandoApi && (
-                        <div style={{ fontSize: 12, color: '#748ffc', padding: '12px 0' }}>
+                        <div style={{ fontSize: 12, color: '#3b5bdb', padding: '12px 0' }}>
                             Cargando partidos de la API...
                         </div>
                     )}
 
                     {!cargandoApi && partidos.length === 0 && (
-                        <div style={{ fontSize: 12, color: '#ff8787', marginTop: 12 }}>
+                        <div style={{ fontSize: 12, color: '#dc2626', marginTop: 12 }}>
                             No se pudieron cargar los partidos. Haz clic en Actualizar para reintentar.
                         </div>
                     )}
@@ -240,17 +231,17 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
                                     <label key={p.id} style={{
                                         display: 'flex', alignItems: 'center', gap: 10,
                                         padding: '8px 12px', cursor: 'pointer',
-                                        background: sel ? '#0f1e3a' : '#060c18',
-                                        border: `1px solid ${sel ? '#3b5bdb' : '#1e2a45'}`,
+                                        background: sel ? '#eef2ff' : '#f8fafc',
+                                        border: `1px solid ${sel ? '#818cf8' : '#e2e8f0'}`,
                                         borderRadius: 8, transition: 'all 0.15s',
                                     }}>
                                         <input type="checkbox" checked={sel}
                                             onChange={() => togglePartido(p.id)}
                                             style={{ accentColor: '#3b5bdb' }} />
-                                        <span style={{ fontSize: 12, color: '#e2e8f0', flex: 1 }}>
+                                        <span style={{ fontSize: 12, color: '#1e293b', flex: 1 }}>
                                             {nombreEquipo(p.local)} vs {nombreEquipo(p.visitante)}
                                         </span>
-                                        <span style={{ fontSize: 10, color: '#4a6fa5' }}>{p.fecha}</span>
+                                        <span style={{ fontSize: 10, color: '#64748b' }}>{p.fecha}</span>
                                     </label>
                                 )
                             })}
@@ -259,11 +250,11 @@ function ConfigApuesta({ grupo, usuario, partidos: partidosProp = [], equipos: e
                 </div>
             </div>
 
-            {error && <div style={{ fontSize: 11, color: '#ff8787', marginTop: 12, marginBottom: 10 }}>{error}</div>}
+            {error && <div style={{ fontSize: 11, color: '#dc2626', marginTop: 12, marginBottom: 10 }}>{error}</div>}
 
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-end', marginTop: 16, flexWrap: 'wrap' }}>
                 <button onClick={handleGuardar} style={btnStyle('#3b5bdb')}>Guardar configuracion</button>
-                {msg && <span style={{ fontSize: 11, color: '#69db7c' }}>{msg}</span>}
+                {msg && <span style={{ fontSize: 11, color: '#16a34a' }}>{msg}</span>}
             </div>
         </div>
     )

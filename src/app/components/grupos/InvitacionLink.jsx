@@ -15,41 +15,43 @@ function InvitacionLink({ grupo }) {
         })
     }
 
+    const sectionLabel = { fontSize: 9, fontWeight: 700, color: '#64748b', letterSpacing: '0.07em', marginBottom: 8 }
+
     return (
         <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 14 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.07em', marginBottom: 14 }}>
                 🔗 INVITAR AL GRUPO
             </div>
 
-            <div style={{ background: '#0d1628', border: '1px solid #1e2a45', borderRadius: 12, padding: '18px 20px', marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: '#4a6fa5', marginBottom: 14 }}>
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '18px 20px', marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                <div style={{ fontSize: 11, color: '#64748b', marginBottom: 14 }}>
                     Comparte el código o el enlace. Cualquier usuario registrado puede usarlo para unirse al grupo.
                 </div>
 
                 <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 8 }}>CÓDIGO DE INVITACIÓN</div>
+                    <div style={sectionLabel}>CÓDIGO DE INVITACIÓN</div>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                         <div style={{
-                            flex: 1, background: '#060c18', border: '1px solid #3b5bdb55',
+                            flex: 1, background: '#f8fafc', border: '1px solid #c7d2fe',
                             borderRadius: 8, padding: '10px 16px',
-                            fontSize: 22, fontWeight: 800, letterSpacing: '0.15em', color: '#748ffc',
+                            fontSize: 22, fontWeight: 800, letterSpacing: '0.15em', color: '#3b5bdb',
                             textAlign: 'center',
                         }}>
                             {grupo.token}
                         </div>
-                        <button onClick={() => copiarTexto(grupo.token)} style={btnStyle('#748ffc')}>
+                        <button onClick={() => copiarTexto(grupo.token)} style={btnStyle('#3b5bdb')}>
                             {copiado ? '✓ Copiado' : 'Copiar'}
                         </button>
                     </div>
                 </div>
 
                 <div>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 8 }}>ENLACE DIRECTO</div>
+                    <div style={sectionLabel}>ENLACE DIRECTO</div>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                         <div style={{
-                            flex: 1, background: '#060c18', border: '1px solid #1e2a45',
+                            flex: 1, background: '#f8fafc', border: '1px solid #e2e8f0',
                             borderRadius: 8, padding: '8px 12px',
-                            fontSize: 10, color: '#4a6fa5', overflow: 'hidden',
+                            fontSize: 10, color: '#64748b', overflow: 'hidden',
                             textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
                             {link}
@@ -61,11 +63,11 @@ function InvitacionLink({ grupo }) {
                 </div>
 
                 <div style={{ marginTop: 16 }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#4a6fa5', letterSpacing: '0.07em', marginBottom: 8 }}>MENSAJE PARA COMPARTIR</div>
+                    <div style={sectionLabel}>MENSAJE PARA COMPARTIR</div>
                     <div style={{
-                        background: '#060c18', border: '1px solid #1e2a45',
+                        background: '#f8fafc', border: '1px solid #e2e8f0',
                         borderRadius: 8, padding: '10px 12px',
-                        fontSize: 11, color: '#8aa4d6', lineHeight: 1.5,
+                        fontSize: 11, color: '#475569', lineHeight: 1.5,
                         marginBottom: 10,
                     }}>
                         {mensaje}
@@ -84,7 +86,7 @@ function InvitacionLink({ grupo }) {
                 </div>
             </div>
 
-            <div style={{ fontSize: 10, color: '#2a3a5a' }}>
+            <div style={{ fontSize: 10, color: '#94a3b8' }}>
                 💡 Las personas invitadas entran directamente al grupo con este código.
             </div>
         </div>

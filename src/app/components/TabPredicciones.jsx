@@ -16,26 +16,20 @@ function TabPredicciones({ usuario, partidos, equipos }) {
     const [dbStatus, setDbStatus]         = useState('Cargando predicciones...')
     const hydratedRef = useRef(false)
 
-    // Cargar predicciones personales del usuario desde el backend
     useEffect(() => {
         hydratedRef.current = false
         setDbStatus('Cargando predicciones...')
         if (!usuario?.id) return
-
         get('/predicciones-personales')
             .then((todas) => {
                 const mias = todas.filter((p) => String(p.usuarioId) === String(usuario.id))
                 setPreds(mias)
                 setDbStatus(`${mias.length} predicciones cargadas`)
             })
-            .catch(() => {
-                setPreds([])
-                setDbStatus('No se pudieron cargar las predicciones')
-            })
+            .catch(() => { setPreds([]); setDbStatus('No se pudieron cargar las predicciones') })
             .finally(() => { hydratedRef.current = true })
     }, [usuario?.id])
 
-    // Guardar predicciones cuando cambian
     useEffect(() => {
         if (!hydratedRef.current || !usuario?.id) return
         preds.forEach((p) => {
@@ -53,13 +47,7 @@ function TabPredicciones({ usuario, partidos, equipos }) {
         if (!id) { alert('Selecciona un partido'); return }
         const partido = partidos.find((p) => p.id === id)
         if (!partido || getBetStatus(partido) !== 'ABIERTA') { alert('Este partido ya no acepta apuestas'); return }
-        setPreds((prev) => [...prev, {
-            partidoId: id,
-            golesL: parseInt(newGl, 10) || 0,
-            golesV: parseInt(newGv, 10) || 0,
-            estado: 'PENDIENTE',
-            pts: 0,
-        }])
+        setPreds((prev) => [...prev, { partidoId: id, golesL: parseInt(newGl, 10) || 0, golesV: parseInt(newGv, 10) || 0, estado: 'PENDIENTE', pts: 0 }])
         setNewPartidoId(''); setNewGl('0'); setNewGv('0'); setShowAddForm(false)
     }
 
@@ -80,21 +68,21 @@ function TabPredicciones({ usuario, partidos, equipos }) {
     const totalPts = preds.reduce((a, p) => a + p.pts, 0)
 
     const scoreInputStyle = {
-        width: 32, textAlign: 'center', background: '#1e2a45',
-        border: '1px solid #3b5bdb', color: '#e2e8f0', borderRadius: 5,
+        width: 32, textAlign: 'center', background: '#ffffff',
+        border: '1px solid #c7d2fe', color: '#1e293b', borderRadius: 5,
         padding: '3px', fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
     }
 
     return (
         <div className="tab-section">
             <div className="stat-cards">
-                <StatCard label="MIS PUNTOS"  value={totalPts} accent="#ffd43b" />
-                <StatCard label="EXACTAS"    value={preds.filter((p) => p.estado === 'EXACTA').length}    accent="#69db7c" />
-                <StatCard label="CORRECTAS"  value={preds.filter((p) => p.estado === 'CORRECTA').length}  accent="#a9e34b" />
-                <StatCard label="FALLIDAS"   value={preds.filter((p) => p.estado === 'FALLIDA').length}   accent="#ff8787" />
+                <StatCard label="MIS PUNTOS"  value={totalPts} accent="#d97706" />
+                <StatCard label="EXACTAS"    value={preds.filter((p) => p.estado === 'EXACTA').length}    accent="#16a34a" />
+                <StatCard label="CORRECTAS"  value={preds.filter((p) => p.estado === 'CORRECTA').length}  accent="#65a30d" />
+                <StatCard label="FALLIDAS"   value={preds.filter((p) => p.estado === 'FALLIDA').length}   accent="#dc2626" />
             </div>
 
-            <div className="offline-storage-note">{dbStatus}</div>
+            <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 14 }}>{dbStatus}</div>
 
             <div style={{ marginBottom: 14 }}>
                 {!showAddForm ? (
@@ -102,9 +90,9 @@ function TabPredicciones({ usuario, partidos, equipos }) {
                         onClick={() => setShowAddForm(true)}
                         disabled={partidosDisponibles.length === 0}
                         style={{
-                            background: partidosDisponibles.length === 0 ? '#111' : '#1a2744',
-                            border: `1px solid ${partidosDisponibles.length === 0 ? '#2a2a2a' : '#3b5bdb'}`,
-                            color: partidosDisponibles.length === 0 ? '#444' : '#748ffc',
+                            background: partidosDisponibles.length === 0 ? '#f1f5f9' : '#eef2ff',
+                            border: `1px solid ${partidosDisponibles.length === 0 ? '#e2e8f0' : '#c7d2fe'}`,
+                            color: partidosDisponibles.length === 0 ? '#94a3b8' : '#3b5bdb',
                             fontSize: 11, fontWeight: 700, padding: '8px 16px',
                             borderRadius: 8, cursor: partidosDisponibles.length === 0 ? 'not-allowed' : 'pointer',
                             letterSpacing: '0.05em', fontFamily: 'inherit',
@@ -112,16 +100,16 @@ function TabPredicciones({ usuario, partidos, equipos }) {
                     >
                         {partidosDisponibles.length === 0
                             ? '⚽ Sin partidos disponibles para apostar'
-                            : `+ Agregar Prediccion (${partidosDisponibles.length} disponible${partidosDisponibles.length > 1 ? 's' : ''})`}
+                            : `+ Agregar Predicción (${partidosDisponibles.length} disponible${partidosDisponibles.length > 1 ? 's' : ''})`}
                     </button>
                 ) : (
-                    <div style={{ background: '#0d1628', border: '1px solid #3b5bdb44', borderRadius: 10, padding: '16px 18px' }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#e2e8f0', marginBottom: 12, letterSpacing: '0.05em' }}>
-                            ⚽ Nueva Prediccion
+                    <div style={{ background: '#ffffff', border: '1px solid #c7d2fe', borderRadius: 10, padding: '16px 18px', boxShadow: '0 2px 8px rgba(59,91,219,0.08)' }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 12, letterSpacing: '0.05em' }}>
+                            ⚽ Nueva Predicción
                         </div>
                         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 200 }}>
-                                <label style={{ fontSize: 9, color: '#4a6fa5', fontWeight: 700, letterSpacing: '0.07em' }}>PARTIDO</label>
+                                <label style={{ fontSize: 9, color: '#64748b', fontWeight: 700, letterSpacing: '0.07em' }}>PARTIDO</label>
                                 <select value={newPartidoId} onChange={(e) => setNewPartidoId(e.target.value)} className="form-control--dark">
                                     <option value="">— Selecciona un partido —</option>
                                     {partidosDisponibles.map((p) => {
@@ -136,10 +124,10 @@ function TabPredicciones({ usuario, partidos, equipos }) {
                                 </select>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                <label style={{ fontSize: 9, color: '#4a6fa5', fontWeight: 700, letterSpacing: '0.07em' }}>MI PREDICCION</label>
+                                <label style={{ fontSize: 9, color: '#64748b', fontWeight: 700, letterSpacing: '0.07em' }}>MI PREDICCIÓN</label>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <input value={newGl} onChange={(e) => setNewGl(e.target.value)} type="number" min="0" max="20" style={{ ...scoreInputStyle, width: 38, fontSize: 16 }} />
-                                    <span style={{ color: '#4a6fa5', fontWeight: 800, fontSize: 16 }}>–</span>
+                                    <span style={{ color: '#94a3b8', fontWeight: 800, fontSize: 16 }}>–</span>
                                     <input value={newGv} onChange={(e) => setNewGv(e.target.value)} type="number" min="0" max="20" style={{ ...scoreInputStyle, width: 38, fontSize: 16 }} />
                                 </div>
                             </div>
@@ -159,23 +147,29 @@ function TabPredicciones({ usuario, partidos, equipos }) {
                     const loc = getEquipo(equipos, partido.local)
                     const vis = getEquipo(equipos, partido.visitante)
                     const c = PRED_COLOR[estado] || PRED_COLOR.PENDIENTE
-                    const betStatus = getBetStatus(partido)
-                    const editable = betStatus === 'ABIERTA'
+                    const betStatus        = getBetStatus(partido)
+                    const editable         = betStatus === 'ABIERTA'
                     const bloqueadoProximo = betStatus === 'BLOQUEADA_PRONTO'
-                    const finalizado = betStatus === 'FINALIZADO'
-                    const minsLeft = bloqueadoProximo ? minutosRestantes(partido) : null
-                    const isEdit = editId === partidoId
+                    const finalizado       = betStatus === 'FINALIZADO'
+                    const minsLeft         = bloqueadoProximo ? minutosRestantes(partido) : null
+                    const isEdit           = editId === partidoId
 
                     return (
                         <div key={partidoId} style={{
-                            background: finalizado ? '#0d1010' : bloqueadoProximo ? '#1a1500' : c.bg,
-                            border: `1px solid ${finalizado ? '#33444422' : bloqueadoProximo ? '#e6770066' : c.dot + '44'}`,
+                            background: finalizado ? '#f8fafc' : bloqueadoProximo ? '#fffbeb' : '#ffffff',
+                            border: `1px solid ${finalizado ? '#e2e8f0' : bloqueadoProximo ? '#fde68a' : '#c7d2fe'}`,
                             borderRadius: 12, padding: '14px 18px',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                         }}>
                             {betStatus !== 'ABIERTA' && (
-                                <div className={`pred-banner pred-banner--${finalizado ? 'finalizado' : 'bloqueado'}`}>
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                    background: finalizado ? '#f0fdf4' : '#fffbeb',
+                                    border: `1px solid ${finalizado ? '#bbf7d0' : '#fde68a'}`,
+                                    borderRadius: 8, padding: '6px 12px', marginBottom: 10,
+                                }}>
                                     <span style={{ fontSize: 13 }}>{finalizado ? '🏁' : '⏱️'}</span>
-                                    <span style={{ fontSize: 11, fontWeight: 700, color: finalizado ? '#69db7c' : '#ffa94d', letterSpacing: '0.05em' }}>
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: finalizado ? '#166534' : '#92400e', letterSpacing: '0.05em' }}>
                                         {finalizado
                                             ? `PARTIDO FINALIZADO · Resultado final: ${partido.golesL} – ${partido.golesV}`
                                             : bloqueadoProximo
@@ -190,17 +184,17 @@ function TabPredicciones({ usuario, partidos, equipos }) {
                                 </span>
                                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <span style={{ fontSize: 16 }}>{loc.flag}</span>
-                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{loc.nombre}</span>
-                                    <span style={{ color: '#4a6fa5', fontSize: 12 }}>vs</span>
-                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{vis.nombre}</span>
+                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>{loc.nombre}</span>
+                                    <span style={{ color: '#94a3b8', fontSize: 12 }}>vs</span>
+                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>{vis.nombre}</span>
                                     <span style={{ fontSize: 16 }}>{vis.flag}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{ fontSize: 11, color: '#4a6fa5' }}>Mi prediccion:</span>
+                                    <span style={{ fontSize: 11, color: '#64748b' }}>Mi predicción:</span>
                                     {isEdit ? (
                                         <>
                                             <input value={gl} onChange={(e) => setGl(e.target.value)} type="number" min="0" max="20" style={scoreInputStyle} />
-                                            <span style={{ color: '#4a6fa5' }}>–</span>
+                                            <span style={{ color: '#94a3b8' }}>–</span>
                                             <input value={gv} onChange={(e) => setGv(e.target.value)} type="number" min="0" max="20" style={scoreInputStyle} />
                                             <button onClick={() => savePred(partidoId)} style={btnStyle('#2f9e44')}>✓</button>
                                             <button onClick={() => setEditId(null)} style={btnStyle('#555')}>✕</button>
@@ -211,17 +205,17 @@ function TabPredicciones({ usuario, partidos, equipos }) {
                                             {editable && (
                                                 <button onClick={() => { setEditId(partidoId); setGl(golesL); setGv(golesV) }} style={btnStyle('#4a6fa5')}>✎</button>
                                             )}
-                                            {!editable && !finalizado && <span style={{ fontSize: 10, color: '#6b7280', fontStyle: 'italic' }}>🔒</span>}
+                                            {!editable && !finalizado && <span style={{ fontSize: 10, color: '#94a3b8', fontStyle: 'italic' }}>🔒</span>}
                                         </>
                                     )}
                                 </div>
                                 {partido.golesL !== null && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <span style={{ fontSize: 11, color: '#4a6fa5' }}>Real:</span>
-                                        <span style={{ fontSize: 16, fontWeight: 800, color: '#e2e8f0', letterSpacing: 3 }}>{partido.golesL} – {partido.golesV}</span>
+                                        <span style={{ fontSize: 11, color: '#64748b' }}>Real:</span>
+                                        <span style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', letterSpacing: 3 }}>{partido.golesL} – {partido.golesV}</span>
                                     </div>
                                 )}
-                                <span style={{ fontSize: 18, fontWeight: 800, color: pts > 0 ? '#ffd43b' : '#4a6fa5', minWidth: 40, textAlign: 'right' }}>+{pts}pts</span>
+                                <span style={{ fontSize: 18, fontWeight: 800, color: pts > 0 ? '#d97706' : '#94a3b8', minWidth: 40, textAlign: 'right' }}>+{pts}pts</span>
                             </div>
                         </div>
                     )
