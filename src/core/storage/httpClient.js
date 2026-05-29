@@ -185,7 +185,16 @@ async function request(method, path, body) {
     const opts = { method, headers: { 'Content-Type': 'application/json' } }
     if (body !== undefined) opts.body = JSON.stringify(body)
 
-    const res = await fetch(`${BASE}${path}`, opts)
+    let res
+    try {
+        res = await fetch(`${BASE}${path}`, opts)
+    } catch (cause) {
+        const error = new Error('Sin conexión — cambio guardado localmente')
+        error.offline = true
+        error.cause = cause
+        throw error
+    }
+
     if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }))
         const error = new Error(err.error ?? `Error ${res.status}`)
@@ -239,7 +248,7 @@ async function http(method, path, body) {
         const response = await request(method, path, body)
         writeGetResponseToCache(path, response)
         return collection ? applyPendingToPath(path, response) : response
-    } catch (error) {
+        } catch (error) {
         const cached = readGetResponseFromCache(path)
         if (cached !== null) return applyPendingToPath(path, cached)
         throw error
