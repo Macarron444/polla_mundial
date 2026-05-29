@@ -82,6 +82,13 @@ function CardPartidoPrediccion({ partido, equipos, grupo, usuario, onGuardado })
                 </div>
             )}
 
+            {!bloqueado && pred && (
+                <div className="g-pred-card__result" style={{ color: col.text, background: col.bg, marginTop: 10 }}>
+                    Tu predicción guardada: <strong>{pred.golesL} – {pred.golesV}</strong>
+                    {pred.usaComodin && ' ⚡'} · {pred.estado}
+                </div>
+            )}
+
             {bloqueado && pred && (
                 <div className="g-pred-card__result" style={{ color: col.text, background: col.bg }}>
                     Tu predicción: <strong>{pred.golesL} – {pred.golesV}</strong>

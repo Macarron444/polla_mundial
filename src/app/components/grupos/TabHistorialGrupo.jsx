@@ -3,7 +3,7 @@ import { resolverPredicciones } from '../../../core/storage/prediccionesGrupo.js
 import { guardarSnapshot, calcularRanking } from '../../../core/storage/puntuacion.js'
 import { btnStyle, PRED_COLOR, BadgeEstado } from '../../../shared/ui/index.jsx'
 import { getRolEnGrupo } from '../../../core/storage/grupos.js'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 function FilaPrediccion({ pred }) {
     const col = PRED_COLOR[pred.estado]
@@ -28,8 +28,16 @@ function CardPartidoHistorial({ partido, equipos, grupo, esAdmin, onResuelto }) 
 
     const local     = equipos.find((e) => e.id === partido.local)
     const visitante = equipos.find((e) => e.id === partido.visitante)
-    const preds     = getPredicionesPorGrupoPartido(grupo.id, partido.id)
+    const [preds, setPreds] = useState([])
     const yaFinalizado = partido.estado === 'FINALIZADO'
+
+    useEffect(() => {
+        let activo = true
+        getPredicionesPorGrupoPartido(grupo.id, partido.id)
+            .then((items) => { if (activo) setPreds(items) })
+            .catch(() => { if (activo) setPreds([]) })
+        return () => { activo = false }
+    }, [grupo.id, partido.id])
 
     const handleResolver = () => {
         if (golesLR === '' || golesVR === '') { setMsg('Ingresa el resultado real'); return }
