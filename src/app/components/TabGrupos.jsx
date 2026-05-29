@@ -34,6 +34,21 @@ function TabGrupos({ usuario, partidos, equipos }) {
     useEffect(() => { recargar() }, [])
 
     useEffect(() => {
+        const handleStorageChange = (event) => {
+            if (!event.detail || ['grupos', 'predicciones'].includes(event.detail.collection)) {
+                recargar()
+            }
+        }
+
+        window.addEventListener('polla_mundial:storage-change', handleStorageChange)
+        window.addEventListener('online', handleStorageChange)
+        return () => {
+            window.removeEventListener('polla_mundial:storage-change', handleStorageChange)
+            window.removeEventListener('online', handleStorageChange)
+        }
+    }, [recargar])
+
+    useEffect(() => {
         const params   = new URLSearchParams(window.location.search)
         const tokenUrl = params.get('token')
         if (tokenUrl) { setToken(tokenUrl.toUpperCase()); setVerToken(true) }

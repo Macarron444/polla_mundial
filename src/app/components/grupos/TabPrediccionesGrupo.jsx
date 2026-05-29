@@ -33,7 +33,9 @@ function CardPartidoPrediccion({ partido, equipos, grupo, usuario, onGuardado })
 
     const handleGuardar = async () => {
         if (golesL === '' || golesV === '') { setMsg('Ingresa ambos marcadores'); return }
-        await guardarPrediccion(grupo.id, usuario.id, partido.id, Number(golesL), Number(golesV), comodin)
+        const guardada = await guardarPrediccion(grupo.id, usuario.id, partido.id, Number(golesL), Number(golesV), comodin)
+        setPred(guardada)
+        setComodin(guardada.usaComodin ?? false)
         setMsg('✓ Guardado')
         setTimeout(() => { setMsg(''); onGuardado() }, 1200)
     }
@@ -104,6 +106,21 @@ function TabPrediccionesGrupo({ grupo, usuario, partidos, equipos }) {
     useEffect(() => {
         usaComodinDisponible(grupo.id, usuario.id).then((disp) => setComodinUsado(!disp))
     }, [grupo.id, usuario.id, refresh])
+
+    useEffect(() => {
+        const handleStorageChange = (event) => {
+            if (!event.detail || event.detail.collection === 'predicciones') {
+                setRefresh((r) => r + 1)
+            }
+        }
+
+        window.addEventListener('polla_mundial:storage-change', handleStorageChange)
+        window.addEventListener('online', handleStorageChange)
+        return () => {
+            window.removeEventListener('polla_mundial:storage-change', handleStorageChange)
+            window.removeEventListener('online', handleStorageChange)
+        }
+    }, [])
 
     return (
         <div>

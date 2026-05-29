@@ -56,6 +56,13 @@ function writeCache(collection, value) {
     writeJson(cacheKey(collection), value)
 }
 
+function notifyStorageChange(collection, reason) {
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(new CustomEvent('polla_mundial:storage-change', {
+        detail: { collection, reason },
+    }))
+}
+
 function upsertArray(items, id, body) {
     const next = Array.isArray(items) ? [...items] : []
     const idx = next.findIndex((item) => String(getItemId(item)) === String(id))
@@ -166,6 +173,7 @@ function queueMutation(method, path, body) {
 
     writePending(next)
     applyMutationToCache(method, path, body)
+    notifyStorageChange(getCollection(path), 'queued')
     return body ?? { ok: true, offline: true }
 }
 
@@ -217,6 +225,7 @@ async function flushPending() {
             try {
                 const response = await request(op.method, op.path, op.body)
                 applyMutationToCache(op.method, op.path, op.body, response)
+                notifyStorageChange(getCollection(op.path), 'synced')
             } catch (error) {
                 remaining.push(op)
                 if (error.offline || !isOnline()) break
@@ -234,6 +243,7 @@ async function http(method, path, body) {
         try {
             const response = await request(method, path, body)
             applyMutationToCache(method, path, body, response)
+            notifyStorageChange(getCollection(path), 'saved')
             return response
         } catch (error) {
             if (error.offline || !isOnline()) return queueMutation(method, path, body)
@@ -248,7 +258,7 @@ async function http(method, path, body) {
         const response = await request(method, path, body)
         writeGetResponseToCache(path, response)
         return collection ? applyPendingToPath(path, response) : response
-        } catch (error) {
+    } catch (error) {
         const cached = readGetResponseFromCache(path)
         if (cached !== null) return applyPendingToPath(path, cached)
         throw error
