@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { loginUsuario, registrarUsuario } from '../../core/storage/usuarios.js'
+import { useTheme } from '../../shared/hooks/useTheme.js'
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@(gmail|hotmail|outlook|yahoo|live|icloud)\.(com|es|co|net|org|com\.co)$/i
 
 function Login({ onLogin }) {
-    const [modo, setModo]           = useState('login')
-    const [nombre, setNombre]       = useState('')
-    const [email, setEmail]         = useState('')
-    const [password, setPassword]   = useState('')
+    const [modo, setModo] = useState('login')
+    const [nombre, setNombre] = useState('')
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
     const [confirmar, setConfirmar] = useState('')
-    const [error, setError]         = useState('')
-    const [exito, setExito]         = useState('')
-    const [loading, setLoading]     = useState(false)
+    const [error, setError] = useState('')
+    const [exito, setExito] = useState('')
+    const [loading, setLoading] = useState(false)
+    const { theme, toggleTheme } = useTheme()
 
     const resetForm = () => {
         setNombre(''); setEmail(''); setPassword('')
@@ -67,6 +69,18 @@ function Login({ onLogin }) {
     return (
         <div className="login-page">
             <div className="login-card">
+                <button
+                    className="theme-toggle theme-toggle--floating"
+                    onClick={toggleTheme}
+                    aria-pressed={theme === 'dark'}
+                    title="Cambiar tema"
+                >
+                    <span className="theme-toggle__icon">{theme === 'dark' ? '🌙' : '☀️'}</span>
+                    <span className="theme-toggle__text">
+                        {theme === 'dark' ? 'Oscuro' : 'Claro'}
+                    </span>
+                </button>
+
                 <div className="login-logo">
                     <div className="login-logo__icon">⚽</div>
                     <div className="login-logo__title">Polla Mundial 2026</div>

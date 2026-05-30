@@ -28,12 +28,19 @@ function mapearFase(stage) {
     const m = {
         GROUP_STAGE: 'GRUPOS',
         ROUND_OF_16: 'OCTAVOS',
+        LAST_16: 'OCTAVOS',
+        ROUND_OF_32: 'DIECISEISAVOS',
+        LAST_32: 'DIECISEISAVOS',
+        ROUND_OF_8: 'CUARTOS',
+        LAST_8: 'CUARTOS',
         QUARTER_FINALS: 'CUARTOS',
+        QUARTER_FINAL: 'CUARTOS',
         SEMI_FINALS: 'SEMIFINAL',
+        SEMI_FINAL: 'SEMIFINAL',
         FINAL: 'FINAL',
-        THIRD_PLACE: 'SEMIFINAL',
+        THIRD_PLACE: 'TERCER_PUESTO',
     }
-    return m[stage] || 'GRUPOS'
+    return m[stage] || 'ELIMINATORIAS'
 }
 
 function extraerGrupo(group) {
@@ -42,23 +49,30 @@ function extraerGrupo(group) {
     return m ? m[0] : group
 }
 
-function mapearPartidoAPI(match) {
+function mapearPartidoAPI(match, grupoMap) {
     const fecha = new Date(match.utcDate)
     const label =
         fecha.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }) +
         ' · ' +
         fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
 
+    const grupo = match.stage === 'GROUP_STAGE'
+        ? grupoMap[match.homeTeam?.id] || grupoMap[match.awayTeam?.id] || extraerGrupo(match.group)
+        : null
+
     return {
         id: match.id,
         local: match.homeTeam.id,
         visitante: match.awayTeam.id,
+        localNombre: match.homeTeam?.shortName || match.homeTeam?.name || 'Por definir',
+        visitanteNombre: match.awayTeam?.shortName || match.awayTeam?.name || 'Por definir',
         golesL: match.score.fullTime.home,
         golesV: match.score.fullTime.away,
         fecha: label,
         fechaISO: match.utcDate,
         estado: mapearEstado(match.status),
         fase: mapearFase(match.stage),
+        grupo,
     }
 }
 
@@ -84,15 +98,27 @@ export async function cargarDatosAPI() {
     ])
 
     const grupoMap = {}
+    const teamGroupMap = {}
+
+    for (const t of teamsData.teams) {
+        if (t.group) teamGroupMap[t.id] = extraerGrupo(t.group)
+    }
+
     for (const m of matchesData.matches) {
         if (m.stage === 'GROUP_STAGE') {
             const g = extraerGrupo(m.group)
-            grupoMap[m.homeTeam.id] = g
-            grupoMap[m.awayTeam.id] = g
+            if (g && g !== '?') {
+                grupoMap[m.homeTeam.id] = g
+                grupoMap[m.awayTeam.id] = g
+            }
         }
     }
 
+    for (const teamId of Object.keys(teamGroupMap)) {
+        if (!grupoMap[teamId]) grupoMap[teamId] = teamGroupMap[teamId]
+    }
+
     const equipos = teamsData.teams.map((t) => mapearEquipoAPI(t, grupoMap[t.id] || '?'))
-    const partidos = matchesData.matches.map(mapearPartidoAPI)
+    const partidos = matchesData.matches.map((m) => mapearPartidoAPI(m, grupoMap))
     return { equipos, partidos }
 }

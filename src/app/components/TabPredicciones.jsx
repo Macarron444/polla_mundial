@@ -8,20 +8,25 @@ import { get, put } from '../../core/storage/httpClient.js'
 function CardPartidoPersonal({ partido, equipos, predInicial, onGuardado }) {
     const [golesL, setGolesL] = useState(predInicial?.golesL ?? '')
     const [golesV, setGolesV] = useState(predInicial?.golesV ?? '')
-    const [msg, setMsg]       = useState('')
-    const pred                = predInicial
+    const [msg, setMsg] = useState('')
+    const pred = predInicial
 
-    const local     = equipos.find((e) => e.id === partido.local)
+    useEffect(() => {
+        setGolesL(predInicial?.golesL ?? '')
+        setGolesV(predInicial?.golesV ?? '')
+    }, [predInicial?.golesL, predInicial?.golesV])
+
+    const local = equipos.find((e) => e.id === partido.local)
     const visitante = equipos.find((e) => e.id === partido.visitante)
-    const betStatus        = getBetStatus(partido)
-    const bloqueado        = betStatus !== 'ABIERTA'
+    const betStatus = getBetStatus(partido)
+    const bloqueado = betStatus !== 'ABIERTA'
     const bloqueadoProximo = betStatus === 'BLOQUEADA_PRONTO'
-    const finalizado       = betStatus === 'FINALIZADO'
-    const minsLeft         = bloqueadoProximo ? minutosRestantes(partido) : null
-    const col              = PRED_COLOR[pred?.estado ?? 'PENDIENTE']
+    const finalizado = betStatus === 'FINALIZADO'
+    const minsLeft = bloqueadoProximo ? minutosRestantes(partido) : null
+    const col = PRED_COLOR[pred?.estado ?? 'PENDIENTE']
 
     const inputStyle = (dis) => ({
-        width: 48, textAlign: 'center',
+        width: 36, textAlign: 'center',
         background: dis ? '#f1f5f9' : '#ffffff',
         border: `1px solid ${dis ? '#e2e8f0' : '#c7d2fe'}`,
         color: '#1e293b', fontSize: 18, fontWeight: 800,
@@ -37,12 +42,14 @@ function CardPartidoPersonal({ partido, equipos, predInicial, onGuardado }) {
     }
 
     return (
-        <div style={{
-            background: finalizado ? '#f8fafc' : bloqueadoProximo ? '#fffbeb' : '#ffffff',
-            border: `1px solid ${finalizado ? '#e2e8f0' : bloqueadoProximo ? '#fde68a' : pred ? '#c7d2fe' : '#e2e8f0'}`,
-            borderRadius: 12, padding: '16px 18px', marginBottom: 10,
-            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-        }}>
+        <div
+            className="partido-card"
+            style={{
+                background: finalizado ? '#f8fafc' : bloqueadoProximo ? '#fffbeb' : '#ffffff',
+                border: `1px solid ${finalizado ? '#e2e8f0' : bloqueadoProximo ? '#fde68a' : pred ? '#c7d2fe' : '#e2e8f0'}`,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+            }}
+        >
             {/* Banner de estado */}
             {bloqueado && (
                 <div style={{
@@ -69,20 +76,38 @@ function CardPartidoPersonal({ partido, equipos, predInicial, onGuardado }) {
             </div>
 
             {/* Equipos + inputs */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#0f172a', textAlign: 'right' }}>
-                    {local?.flag} {local?.nombre}
-                </span>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <input type="number" min="0" max="20" value={golesL} disabled={bloqueado}
-                        onChange={(e) => setGolesL(e.target.value)} style={inputStyle(bloqueado)} />
-                    <span style={{ color: '#94a3b8', fontWeight: 700 }}>–</span>
-                    <input type="number" min="0" max="20" value={golesV} disabled={bloqueado}
-                        onChange={(e) => setGolesV(e.target.value)} style={inputStyle(bloqueado)} />
+            <div className="partido-card__teams" style={{ marginBottom: 14 }}>
+                <div className="partido-card__team-line">
+                    <span className="partido-card__score-chip">
+                        <input
+                            type="number"
+                            min="0"
+                            max="20"
+                            value={golesL}
+                            disabled={bloqueado}
+                            onChange={(e) => setGolesL(e.target.value)}
+                            style={inputStyle(bloqueado)}
+                        />
+                    </span>
+                    <span className="partido-card__flag">{local?.flag}</span>
+                    <span className="partido-card__team-name">{local?.nombre}</span>
                 </div>
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
-                    {visitante?.flag} {visitante?.nombre}
-                </span>
+
+                <div className="partido-card__team-line">
+                    <span className="partido-card__score-chip">
+                        <input
+                            type="number"
+                            min="0"
+                            max="20"
+                            value={golesV}
+                            disabled={bloqueado}
+                            onChange={(e) => setGolesV(e.target.value)}
+                            style={inputStyle(bloqueado)}
+                        />
+                    </span>
+                    <span className="partido-card__flag">{visitante?.flag}</span>
+                    <span className="partido-card__team-name">{visitante?.nombre}</span>
+                </div>
             </div>
 
             {/* Footer */}
@@ -117,62 +142,18 @@ function CardPartidoPersonal({ partido, equipos, predInicial, onGuardado }) {
     )
 }
 
-// ── Sección colapsable por fase ───────────────────────────────────────────────
-function SeccionFase({ fase, partidos, equipos, preds, onGuardado }) {
-    const [abierta, setAbierta] = useState(fase === 'GRUPOS')
-    const predsFase = partidos.filter((p) => preds.some((pr) => pr.partidoId === p.id)).length
-
-    return (
-        <div style={{ marginBottom: 12 }}>
-            <button
-                onClick={() => setAbierta(!abierta)}
-                style={{
-                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: abierta ? '10px 10px 0 0' : 10,
-                    padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit',
-                }}
-            >
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#3b5bdb', letterSpacing: '0.05em' }}>
-                    {fase} <span style={{ color: '#94a3b8', fontWeight: 400 }}>({partidos.length} partidos)</span>
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {predsFase > 0 && (
-                        <span style={{ fontSize: 10, color: '#16a34a', fontWeight: 700 }}>
-                            ✓ {predsFase}/{partidos.length} predichas
-                        </span>
-                    )}
-                    <span style={{ fontSize: 12, color: '#94a3b8' }}>{abierta ? '▲' : '▼'}</span>
-                </div>
-            </button>
-            {abierta && (
-                <div style={{ border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px 12px 2px' }}>
-                    {partidos.map((p) => (
-                        <CardPartidoPersonal
-                            key={p.id}
-                            partido={p}
-                            equipos={equipos}
-                            predInicial={preds.find((pr) => pr.partidoId === p.id) ?? null}
-                            onGuardado={onGuardado}
-                        />
-                    ))}
-                </div>
-            )}
-        </div>
-    )
-}
-
 // ── Predicción global personal ────────────────────────────────────────────────
 function PrediccionGlobalPersonal({ usuario, equipos }) {
-    const [campeon, setCampeon]   = useState('')
+    const [campeon, setCampeon] = useState('')
     const [goleador, setGoleador] = useState('')
-    const [msg, setMsg]           = useState('')
-    const [abierta, setAbierta]   = useState(false)
+    const [msg, setMsg] = useState('')
+    const [abierta, setAbierta] = useState(false)
     const [cargando, setCargando] = useState(true)
 
     useEffect(() => {
         get(`/prediccion-global-personal/${usuario.id}`)
             .then((d) => { setCampeon(d?.campeon ?? ''); setGoleador(d?.goleador ?? '') })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setCargando(false))
     }, [usuario.id])
 
@@ -265,9 +246,11 @@ function PrediccionGlobalPersonal({ usuario, equipos }) {
 
 // ── Componente principal ──────────────────────────────────────────────────────
 function TabPredicciones({ usuario, partidos, equipos }) {
-    const [preds, setPreds]       = useState([])
+    const [preds, setPreds] = useState([])
     const [dbStatus, setDbStatus] = useState('Cargando predicciones...')
-    const hydratedRef             = useRef(false)
+    const hydratedRef = useRef(false)
+    const [openGroup, setOpenGroup] = useState('Grupo A')
+    const [openSub, setOpenSub] = useState({})
 
     useEffect(() => {
         hydratedRef.current = false
@@ -296,23 +279,67 @@ function TabPredicciones({ usuario, partidos, equipos }) {
 
     const totalPts = preds.reduce((a, p) => a + (p.pts ?? 0), 0)
 
-    // Agrupar partidos por fase
-    const faseOrden = ['GRUPOS', 'OCTAVOS', 'CUARTOS', 'SEMIFINAL', 'FINAL']
-    const porFase   = partidos.reduce((acc, p) => {
-        const f = p.fase || 'OTROS'
-        if (!acc[f]) acc[f] = []
-        acc[f].push(p)
+    const faseLabel = {
+        GRUPOS: 'Fase de Grupos',
+        DIECISEISAVOS: 'Dieciseisavos de Final',
+        OCTAVOS: 'Octavos de Final',
+        CUARTOS: 'Cuartos',
+        SEMIFINAL: 'Semifinal',
+        FINAL: 'Final',
+        TERCER_PUESTO: 'Tercer Puesto',
+        ELIMINATORIAS: 'Eliminatorias',
+    }
+
+    const getGrupoPartido = (p) => {
+        const loc = getEquipo(equipos, p.local)
+        const vis = getEquipo(equipos, p.visitante)
+        return p.grupo || loc?.grupo || vis?.grupo || null
+    }
+
+    const partidosValidos = (partidos || []).filter(Boolean)
+
+    const partidosPorGrupo = partidosValidos.reduce((acc, p) => {
+        const grupo = getGrupoPartido(p)
+        const isGrupo = p.fase === 'GRUPOS' && grupo
+        const key = isGrupo ? `Grupo ${grupo}` : 'Eliminatorias'
+        if (!acc[key]) acc[key] = []
+        acc[key].push(p)
         return acc
     }, {})
-    const fases = [...faseOrden.filter((f) => porFase[f]), ...Object.keys(porFase).filter((f) => !faseOrden.includes(f))]
+
+    Object.keys(partidosPorGrupo).forEach((key) => {
+        partidosPorGrupo[key].sort((a, b) => {
+            const aTime = a.fechaISO ? new Date(a.fechaISO).getTime() : 0
+            const bTime = b.fechaISO ? new Date(b.fechaISO).getTime() : 0
+            return aTime - bTime
+        })
+    })
+
+    const ordenGrupos = Object.keys(partidosPorGrupo).sort((a, b) => {
+        if (a === 'Eliminatorias') return 1
+        if (b === 'Eliminatorias') return -1
+        return a.localeCompare(b, 'es', { numeric: true })
+    })
+
+    const faseOrdenElim = ['DIECISEISAVOS', 'OCTAVOS', 'CUARTOS', 'SEMIFINAL', 'TERCER_PUESTO', 'FINAL']
+
+    const isGroupOpen = (key) => openGroup === key
+    const toggleGroup = (key) => {
+        setOpenGroup((prev) => (prev === key ? null : key))
+    }
+
+    const isSubOpen = (key) => openSub[key] !== false
+    const toggleSub = (key) => {
+        setOpenSub((prev) => ({ ...prev, [key]: !isSubOpen(key) }))
+    }
 
     return (
         <div className="tab-section">
             <div className="stat-cards">
-                <StatCard label="MIS PUNTOS" value={totalPts}                                                      accent="#d97706" />
-                <StatCard label="EXACTAS"    value={preds.filter((p) => p.estado === 'EXACTA').length}    accent="#16a34a" />
-                <StatCard label="CORRECTAS"  value={preds.filter((p) => p.estado === 'CORRECTA').length}  accent="#65a30d" />
-                <StatCard label="FALLIDAS"   value={preds.filter((p) => p.estado === 'FALLIDA').length}   accent="#dc2626" />
+                <StatCard label="MIS PUNTOS" value={totalPts} accent="#d97706" />
+                <StatCard label="EXACTAS" value={preds.filter((p) => p.estado === 'EXACTA').length} accent="#16a34a" />
+                <StatCard label="CORRECTAS" value={preds.filter((p) => p.estado === 'CORRECTA').length} accent="#65a30d" />
+                <StatCard label="FALLIDAS" value={preds.filter((p) => p.estado === 'FALLIDA').length} accent="#dc2626" />
             </div>
 
             <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 16 }}>{dbStatus}</div>
@@ -325,16 +352,100 @@ function TabPredicciones({ usuario, partidos, equipos }) {
                 Predice el marcador exacto para ganar <strong style={{ color: '#3b5bdb' }}>3 pts</strong>, o solo el ganador para <strong style={{ color: '#3b5bdb' }}>1 pt</strong>.
             </div>
 
-            {/* Partidos por fase colapsables */}
-            {fases.map((fase) => (
-                <SeccionFase
-                    key={fase}
-                    fase={fase}
-                    partidos={porFase[fase]}
-                    equipos={equipos}
-                    preds={preds}
-                    onGuardado={handleGuardado}
-                />
+            {/* Partidos por grupo colapsables */}
+            {ordenGrupos.map((grupoKey) => (
+                <div key={grupoKey} style={{ marginBottom: 16 }}>
+                    <button
+                        onClick={() => toggleGroup(grupoKey)}
+                        style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: isGroupOpen(grupoKey) ? '10px 10px 0 0' : 10,
+                            padding: '10px 16px',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                        }}
+                    >
+                        <span style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            letterSpacing: '0.08em',
+                            color: '#3b5bdb',
+                            textTransform: 'uppercase',
+                        }}>
+                            {grupoKey === 'Grupo ?' ? 'Grupo sin definir' : grupoKey}
+                        </span>
+                        <span style={{ fontSize: 12, color: '#94a3b8' }}>{isGroupOpen(grupoKey) ? '▲' : '▼'}</span>
+                    </button>
+
+                    {isGroupOpen(grupoKey) && (
+                        <div style={{ border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px 12px 2px' }}>
+                            {grupoKey === 'Eliminatorias' ? (
+                                faseOrdenElim
+                                    .filter((f) => partidosPorGrupo[grupoKey].some((p) => p.fase === f))
+                                    .map((faseKey) => {
+                                        const faseLabelText = faseLabel[faseKey] || faseKey
+                                        const sectionKey = `${grupoKey}:${faseKey}`
+                                        const partidosFase = partidosPorGrupo[grupoKey].filter((p) => p.fase === faseKey)
+                                        return (
+                                            <div key={sectionKey} style={{ marginBottom: 12 }}>
+                                                <button
+                                                    onClick={() => toggleSub(sectionKey)}
+                                                    style={{
+                                                        width: '100%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        background: '#ffffff',
+                                                        border: '1px solid #e2e8f0',
+                                                        borderRadius: isSubOpen(sectionKey) ? '10px 10px 0 0' : 10,
+                                                        padding: '8px 14px',
+                                                        cursor: 'pointer',
+                                                        fontFamily: 'inherit',
+                                                    }}
+                                                >
+                                                    <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>{faseLabelText}</span>
+                                                    <span style={{ fontSize: 12, color: '#94a3b8' }}>{isSubOpen(sectionKey) ? '▲' : '▼'}</span>
+                                                </button>
+
+                                                {isSubOpen(sectionKey) && (
+                                                    <div style={{ border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '10px 10px 2px' }}>
+                                                        <div className="matches-grid">
+                                                            {partidosFase.map((p) => (
+                                                                <CardPartidoPersonal
+                                                                    key={p.id}
+                                                                    partido={p}
+                                                                    equipos={equipos}
+                                                                    predInicial={preds.find((pr) => String(pr.partidoId) === String(p.id)) ?? null}
+                                                                    onGuardado={handleGuardado}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    })
+                            ) : (
+                                <div className="matches-grid">
+                                    {partidosPorGrupo[grupoKey].map((p) => (
+                                        <CardPartidoPersonal
+                                            key={p.id}
+                                            partido={p}
+                                            equipos={equipos}
+                                            predInicial={preds.find((pr) => String(pr.partidoId) === String(p.id)) ?? null}
+                                            onGuardado={handleGuardado}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             ))}
 
             {partidos.length === 0 && (

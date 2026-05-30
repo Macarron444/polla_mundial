@@ -13,13 +13,13 @@ import { EQUIPOS_DEFAULT } from '../core/data/defaults.js'
 const esAdmin = (u) => u?.rol === 'CREADOR' || u?.rol === 'ADMINISTRADOR'
 
 function App() {
-    const [usuario, setUsuario]         = useState(null)
-    const [tab, setTab]                 = useState('Partidos')
-    const [partidos, setPartidos]       = useState([])
+    const [usuario, setUsuario] = useState(null)
+    const [tab, setTab] = useState('Partidos')
+    const [partidos, setPartidos] = useState([])
     const [participantes, setParticipantes] = useState([])
-    const [equipos, setEquipos]         = useState(EQUIPOS_DEFAULT)
-    const [apiStatus, setApiStatus]     = useState('idle')
-    const [apiMsg, setApiMsg]           = useState('')
+    const [equipos, setEquipos] = useState(EQUIPOS_DEFAULT)
+    const [apiStatus, setApiStatus] = useState('idle')
+    const [apiMsg, setApiMsg] = useState('')
 
     const handleLogin = (usuarioAutenticado) => {
         setUsuario(usuarioAutenticado)
@@ -67,46 +67,47 @@ function App() {
         )
     }
 
-    const apiBtnColor = apiStatus === 'ok' ? '#2f9e44' : apiStatus === 'error' ? '#c92a2a' : '#3b5bdb'
-    const apiBtnText  = apiStatus === 'loading' ? '⏳ Sincronizando…'
-                      : apiStatus === 'ok'      ? '🔄 Actualizar'
-                      : '🌐 Sincronizar API'
+    const apiBtnText = apiStatus === 'loading' ? '⏳ Sincronizando…'
+        : apiStatus === 'ok' ? '🔄 Actualizar'
+            : '🌐 Sincronizar API'
+
+    const apiBtnClass = `btn-api btn-api--${apiStatus}`
+    const apiMsgClass = `api-message api-message--${apiStatus}`
 
     const tabContent = {
-        'Partidos':           <TabPartidos partidos={partidos} setPartidos={setPartidos} equipos={equipos} usuario={usuario} />,
+        'Partidos': <TabPartidos partidos={partidos} setPartidos={setPartidos} equipos={equipos} usuario={usuario} />,
         ...(esAdmin(usuario) && {
             'Gestionar Partidos': <TabGestionarPartidos partidos={partidos} setPartidos={setPartidos} equipos={equipos} />,
         }),
-        'Ranking':            <TabRanking usuario={usuario} />,
-        'Mis Predicciones':   <TabPredicciones usuario={usuario} partidos={partidos} equipos={equipos} />,
-        'Mis Grupos':         <TabGrupos usuario={usuario} partidos={partidos} equipos={equipos} />,
+        'Ranking': <TabRanking usuario={usuario} />,
+        'Mis Predicciones': <TabPredicciones usuario={usuario} partidos={partidos} equipos={equipos} />,
+        'Mis Grupos': <TabGrupos usuario={usuario} partidos={partidos} equipos={equipos} />,
     }
 
     // Si el tab activo ya no está disponible (ej: perdió permisos), volver a Partidos
     const tabSeguro = tabContent[tab] ? tab : 'Partidos'
 
     return (
-        <div style={{ background: '#060c18', minHeight: '100vh' }}>
+        <div className="app-shell">
             <Header tab={tab} setTab={setTab} usuario={usuario} onLogout={handleLogout} />
 
             <div className="api-banner">
                 <button
                     onClick={sincronizarConAPI}
                     disabled={apiStatus === 'loading'}
-                    className="btn-api"
-                    style={{ border: `1px solid ${apiBtnColor}`, color: apiBtnColor, opacity: apiStatus === 'loading' ? 0.6 : 1 }}
+                    className={apiBtnClass}
                 >
                     {apiBtnText}
                 </button>
 
                 {apiMsg && (
-                    <span style={{ fontSize: 10, color: apiStatus === 'ok' ? '#69db7c' : '#ff8787' }}>
+                    <span className={apiMsgClass}>
                         {apiMsg}
                     </span>
                 )}
 
                 {(!FOOTBALL_API_KEY || FOOTBALL_API_KEY === 'TU_API_KEY_AQUI') && (
-                    <span style={{ fontSize: 10, color: '#ffa94d' }}>
+                    <span className="api-message api-message--warn">
                         ⚠️ Configura tu API Key en core/config/footballData.js
                     </span>
                 )}

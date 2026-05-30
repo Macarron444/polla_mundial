@@ -20,6 +20,7 @@ export const PARTIDOS_DEFAULT = [
         fechaISO: new Date(Date.now() + 20 * 60000).toISOString(),
         estado: 'PROGRAMADO',
         fase: 'GRUPOS',
+        grupo: 'A',
     },
     {
         id: 2,
@@ -31,6 +32,7 @@ export const PARTIDOS_DEFAULT = [
         fechaISO: new Date(Date.now() - 120 * 60000).toISOString(),
         estado: 'FINALIZADO',
         fase: 'GRUPOS',
+        grupo: 'B',
     },
     {
         id: 3,
@@ -42,6 +44,7 @@ export const PARTIDOS_DEFAULT = [
         fechaISO: new Date(Date.now() + 10 * 60000).toISOString(),
         estado: 'EN_CURSO',
         fase: 'GRUPOS',
+        grupo: 'C',
     },
     {
         id: 4,
