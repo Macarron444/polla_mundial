@@ -980,10 +980,11 @@ button:hover {
     /* Header más compacto */
     .header__top {
         padding: 0 14px;
+        height: 48px;
     }
 
     .header__inner {
-        height: 50px;
+        /* height eliminada: permite que los tabs y el offline-banner sean visibles */
     }
 
     .header__logo {
@@ -1187,7 +1188,7 @@ button:hover {
     }
 
     .header__inner {
-        height: 46px;
+        /* height eliminada: permite que los tabs y el offline-banner sean visibles */
     }
 
     /* Status badge: solo el punto, sin texto */
