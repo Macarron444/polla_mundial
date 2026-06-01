@@ -2,6 +2,44 @@ import { get, post } from './httpClient.js'
 import { getPredicionesPorGrupo } from './prediccionesGrupo.js'
 import { esSuperAdminPorEmail } from '../constants/superadmin.js'
 
+// ── Puntos por predicción global personal ────────────────────────────────────
+// Campeón acertado: +5 pts, Goleador acertado: +3 pts
+const PTS_CAMPEON   = 5
+const PTS_GOLEADOR  = 3
+
+export async function resolverPrediccionGlobalPersonal(campeonReal, goleadorReal) {
+    const todas = await get('/prediccion-global-personal')
+    if (!Array.isArray(todas) && typeof todas !== 'object') return
+
+    const entradas = Array.isArray(todas)
+        ? todas
+        : Object.values(todas)
+
+    const actualizadas = entradas.map((pred) => {
+        if (!pred) return pred
+        let pts = pred.ptsGlobal ?? 0
+        let campeonAcertado = pred.campeonAcertado ?? false
+        let goleadorAcertado = pred.goleadorAcertado ?? false
+
+        // Solo calcular si no se ha resuelto aún
+        if (!pred.resuelta) {
+            campeonAcertado  = campeonReal  && pred.campeon?.trim().toLowerCase()  === campeonReal.trim().toLowerCase()
+            goleadorAcertado = goleadorReal && pred.goleador?.trim().toLowerCase() === goleadorReal.trim().toLowerCase()
+            pts = (campeonAcertado ? PTS_CAMPEON : 0) + (goleadorAcertado ? PTS_GOLEADOR : 0)
+        }
+
+        return { ...pred, ptsGlobal: pts, campeonAcertado, goleadorAcertado, resuelta: true }
+    })
+
+    // Guardar cada predicción actualizada
+    for (const pred of actualizadas) {
+        if (!pred?.usuarioId) continue
+        await post(`/prediccion-global-personal/${pred.usuarioId}`, pred)
+    }
+
+    return actualizadas
+}
+
 export async function calcularRanking(grupo) {
     const preds = await getPredicionesPorGrupo(grupo.id)
     const mapa  = {}

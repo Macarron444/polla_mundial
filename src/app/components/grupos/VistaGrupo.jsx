@@ -8,6 +8,7 @@ import PrediccionGlobalGrupo from './PrediccionGlobalGrupo.jsx'
 import ConfigApuesta from './ConfigApuesta.jsx'
 import SolicitudesIngreso from './SolicitudesIngreso.jsx'
 import InvitacionLink from './InvitacionLink.jsx'
+import ChatPartido from './ChatPartido.jsx'
 import { btnStyle } from '../../../shared/ui/index.jsx'
 import {
     agregarMiembro, cambiarRol, eliminarMiembro, eliminarGrupo, getRolEnGrupo,
@@ -16,8 +17,8 @@ import { obtenerTodosUsuarios } from '../../../core/storage/usuarios.js'
 import { getSolicitudesPorGrupo } from '../../../core/storage/solicitudes.js'
 import { esSuperAdminPorEmail } from '../../../core/constants/superadmin.js'
 
-const TABS_MIEMBRO = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', 'Global']
-const TABS_ADMIN   = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', 'Global', 'Miembros', 'Apuesta', 'Invitar']
+const TABS_MIEMBRO = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', 'Global', 'Chat']
+const TABS_ADMIN   = ['Predicciones', 'Ranking', 'Historial', 'Estadísticas', 'Global', 'Chat', 'Miembros', 'Apuesta', 'Invitar']
 
 function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
     const rolActual  = getRolEnGrupo(grupo, usuario.id) ?? null
@@ -141,6 +142,13 @@ function VistaGrupo({ grupo, usuario, partidos, equipos, onVolver, onCambio }) {
             {tabActiva === 'Historial'    && <TabHistorialGrupo    grupo={grupo} usuario={usuario} partidos={partidos} equipos={equipos} />}
             {tabActiva === 'Estadísticas' && <TabEstadisticasGrupo grupo={grupo} usuario={usuario} />}
             {tabActiva === 'Global'       && <PrediccionGlobalGrupo grupo={grupo} usuario={usuario} equipos={equipos} />}
+            {tabActiva === 'Chat'         && (
+                <ChatPartido
+                    grupoId={grupo.id}
+                    partidoId={`grupo_${grupo.id}`}
+                    usuario={usuario}
+                />
+            )}
 
             {tabActiva === 'Miembros' && esAdmin && (
                 <div>
